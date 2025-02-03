@@ -7,5 +7,10 @@
     "notification": "Notifications",
     "create": "Create",
     "menu": "More",
-    "profile":"Profile"
+    "profile":"Profile",
+    "posts":"posts",
+    "followers":"followers",
+    "following":"following",
+    "follow":"Follow",
+    "message":"Message"
   }
