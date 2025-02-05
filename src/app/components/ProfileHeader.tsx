@@ -45,16 +45,16 @@ export default function ProfileHeader(){
                 <HighLight/>
                 <HighLight/>
             </div>
-            <div className="flex md:hidden items-center py-3 justify-around border-y-[1px] border-s gap-4 my-4 w-full">
-                <div className='flex flex-col items-center'>
+            <div className="flex md:hidden items-center py-3 justify-around border-t-[1px] border-s gap-4 mt-4 w-full">
+                <div className='flex flex-col items-center w-4/12 justify-center'>
                     <span className='font-bold'>100</span>
                     {t('posts')}
                 </div>
-                <div className='flex flex-col items-center'>
+                <div className='flex flex-col items-center w-4/12 justify-center'>
                     <span className='font-bold'>245</span>
                     {t('followers')}
                 </div>
-                <div className='flex flex-col items-center'>
+                <div className='flex flex-col items-center w-4/12 justify-center'>
                     <span className='font-bold'>124</span>
                     {t('following')}
                 </div>

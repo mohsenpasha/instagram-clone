@@ -1,14 +1,11 @@
 'use client'
-import UserProfile from "@/components/UserProfile";
-import SideBar from "@/components/SideBar";
-import { useParams } from 'next/navigation'
+
+import PostList from "@/components/PostList"
 
 export default function Profile(){
-    const params = useParams()
-
-    return(
+        return(
         <>
-            test
+            <PostList />
         </>
     )
 }

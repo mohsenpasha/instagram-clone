@@ -12,5 +12,7 @@
     "followers":"followers",
     "following":"following",
     "follow":"Follow",
-    "message":"Message"
+    "message":"Message",
+    "post-t":"POSTS",
+    "tagged":"TAGGED"
   }

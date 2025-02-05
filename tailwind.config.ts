@@ -14,6 +14,9 @@ export default {
       },
       borderColor:{
         s:'#dbdbdb'
+      },
+      textColor:{
+        gray:'#737373'
       }
     },
   },
