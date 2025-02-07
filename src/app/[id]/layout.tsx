@@ -6,6 +6,7 @@ import ProfileHeader from "@/components/ProfileHeader";
 import Link from "next/link";
 import { useTranslation } from "next-i18next";
 import i18n  from '@/../../i18n'
+import { IconPosts, IconReels, IconTagged } from "@/components/Icons";
 
 export default function ProfileLayout({children} : {children : React.ReactNode}){
     const params = useParams()
@@ -22,13 +23,17 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                                 <ProfileHeader/>
                                 <div className="flex w-full border-t-[1px] border-d justify-center">
                                     <div className="w-full md:w-6/12 justify-around flex">
-                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center" href={`/${params.id}/#`}>
+                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center gap-[6px] items-center" href={`/${params.id}/#`}>
+                                            <IconPosts className="size-[12px]" />
+                                        
                                             {t('post-t')}
                                         </Link>
-                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center" href={`/${params.id}/reels`}>
+                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center gap-[6px] items-center" href={`/${params.id}/reels`}>
+                                            <IconReels className="size-[12px]" />
                                             REELS
                                         </Link>
-                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center" href={`/${params.id}/tagged`}>
+                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center gap-[6px] items-center" href={`/${params.id}/tagged`}>
+                                            <IconTagged className="size-[12px]" />
                                             {t('tagged')}
                                         </Link>
                                     </div>

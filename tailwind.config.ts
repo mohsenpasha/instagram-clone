@@ -13,7 +13,7 @@ export default {
         foreground: "var(--foreground)",
       },
       borderColor:{
-        s:'#dbdbdb'
+        ss:'#dbdbdb'
       },
       textColor:{
         gray:'#737373'

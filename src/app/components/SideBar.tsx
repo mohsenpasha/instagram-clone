@@ -6,7 +6,7 @@ import { IconAdd, IconDirect, IconExplore, IconHeart, IconHome, IconInstagram, I
 export default function SideBar(){
     const { t } = useTranslation();
     return(
-        <div className="fixed z-50 w-full h-fit bottom-0 md:sticky md:top-0 bg-white px-[12px] py-[2px] md:py-[8px] md:pb-[20px] border-t-[1px] md:border-t-0 md:border-x-[1px] border-s md:w-fit xl:w-2/12 md:h-screen">
+        <div className="fixed z-50 w-full h-fit bottom-0 md:sticky md:top-0 bg-white px-[12px] py-[2px] md:py-[8px] md:pb-[20px] border-t-[1px] md:border-t-0 md:border-x-[1px] border-ss md:w-fit xl:w-2/12 md:h-screen">
             <div className="flex flex-col justify-between h-full">
             <div className="hidden md:block p-[12px] pt-[25px] pb-[16px]">
                 <Image className="hidden xl:block w-28" src='/images/instagram.svg' alt="" width={500} height={300} />
@@ -49,7 +49,7 @@ export default function SideBar(){
                     <li className="block md:hidden">
                         <Link title={t('create')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
 ">
-                            <Image src='/images/new-post.svg' alt="" width={24} height={24}></Image>
+                            <IconAdd/>
                             <span className="hidden xl:inline-block">{t('create')}</span>
                         </Link>
                     </li>

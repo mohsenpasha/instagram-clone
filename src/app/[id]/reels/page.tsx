@@ -1,8 +1,11 @@
 'use client'
-export default function test(){
+
+import PostList from "@/components/PostList"
+
+export default function ReelPage(){
     return(
         <div>
-            reels page
+            <PostList isReel />
         </div>
     )
 }

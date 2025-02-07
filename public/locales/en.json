@@ -14,5 +14,11 @@
     "follow":"Follow",
     "message":"Message",
     "post-t":"POSTS",
-    "tagged":"TAGGED"
+    "tagged":"TAGGED",
+    "like":"Like",
+    "likes":"Likes",
+    "save":"Save",
+    "share":"Share Post",
+    "comment":"Comment",
+    "add-comment":"Add a comment…"
   }
