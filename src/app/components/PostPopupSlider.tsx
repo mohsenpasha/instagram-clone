@@ -8,10 +8,10 @@ export function PostPopupSlider(){
                 <SinglePost />
             </div>
             <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between z-20 px-4">
-                <span className="bg-white rounded-full w-8 h-8 flex items-center justify-center -rotate-90 cursor-pointer">
+                <span className="bg-white rounded-full w-8 h-8 flex items-center justify-center -rotate-90 rtl:rotate-90 cursor-pointer">
                     <IconArrow className="size-4"/>
                 </span>
-                <span className="bg-white rounded-full w-8 h-8 flex items-center justify-center rotate-90 cursor-pointer">
+                <span className="bg-white rounded-full w-8 h-8 flex items-center justify-center rotate-90 rtl:-rotate-90 cursor-pointer">
                     <IconArrow className="size-4"/>
                 </span>
             </div>
