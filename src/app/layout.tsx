@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 // import i18n  from '../../i18n'
 import i18n  from '@/../../i18n'
 
@@ -22,18 +22,28 @@ const geistMono = Geist_Mono({
 // };
 
 export default function RootLayout({
+  
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let [defaultLang,setDefaultLang] = useState('en')
   useEffect(()=>{
     console.log('etsttesttete root')
-    const default_lang :string = localStorage.getItem('lang') ?? 'en'
-    i18n.changeLanguage(default_lang)
+    console.log()
+    if(!localStorage.getItem('lang')){
+      localStorage.setItem('lang','en')
+    }
+    setDefaultLang(localStorage.getItem('lang') || 'en')
 },[])
+  useEffect(()=>{
+    i18n.changeLanguage(defaultLang)
+  },[defaultLang])
+  console.log('this is first page speaking')
+  console.log(defaultLang)
   return (
     <html lang="en">
-      <body
+      <body dir={defaultLang == 'en' ? 'ltr' : 'rtl' }
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
