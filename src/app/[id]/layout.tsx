@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useTranslation } from "next-i18next";
 import i18n  from '@/../../i18n'
 import { IconPosts, IconReels, IconTagged } from "@/components/Icons";
-import Provider from "@/context/provider"
 
 
 export default function ProfileLayout({children} : {children : React.ReactNode}){
@@ -18,7 +17,6 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     },[])
     console.log(params.id)
     return(
-        <Provider>
             <div className={`flex`}>
                 <SideBar/>
                 <div className="flex justify-center w-full md:w-11/12 lg:10/12">
@@ -46,6 +44,5 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                         </div>
                 
             </div>
-        </Provider>
     )
 }

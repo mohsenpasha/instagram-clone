@@ -9,10 +9,6 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import { InfoContext } from "@/context/provider";
 
 export default function SinglePost(){
-    const {lang} = useContext(InfoContext)
-    console.log('lang')
-    console.log(lang)
-    console.log('lang')
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
@@ -285,7 +281,7 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
     },[likeBoxToggle])
     return(
         <>
-        <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-2 pr-0 flex-grow md:overflow-y-scroll z-40">
+        <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow md:overflow-y-scroll z-40">
             <div className="md:hidden h-11 flex items-center border-b-[1px] border-ss sticky top-0 bg-white">
                 <span onClick={closeCommentBox} className="px-6 cursor-pointer">
                     <IconArrow className="-rotate-90"/>

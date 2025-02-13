@@ -7,7 +7,6 @@ import { useState } from "react";
 
 export default function PostPage(){
     const { t } = useTranslation();
-    const [pageScroll,setPageScroll] = useState<boolean>(true)
     return(
         <div className={`flex flex-wrap justify-center [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 ${!pageScroll && 'overflow-hidden w-screen h-screen'}`}>
             <div className="flex w-full md:w-11/12 lg:10/12 justify-center">
