@@ -2,19 +2,20 @@
 import { List } from "postcss/lib/list";
 import PostPreview from "./PostPreview";
 type ListType = {
-    isReel: boolean
+    isReel: boolean,
+    noIcon?:boolean
 }
-export default function PostList({isReel}:ListType){
+export default function PostList({isReel,noIcon}:ListType){
     console.log(isReel)
     return(
-        <div className="flex w-full mb-6 gap-[4px] flex-wrap">
-            <PostPreview isReel={isReel}/> 
-            <PostPreview isReel={isReel}/> 
-            <PostPreview isReel={isReel}/> 
-            <PostPreview isReel={isReel}/> 
-            <PostPreview isReel={isReel}/> 
-            <PostPreview isReel={isReel}/> 
-            <PostPreview isReel={isReel}/> 
+        <div className="flex w-full gap-[4px] flex-wrap">
+            <PostPreview noIcon={noIcon} isReel={isReel}/> 
+            <PostPreview noIcon={noIcon} isReel={isReel}/> 
+            <PostPreview noIcon={noIcon} isReel={isReel}/> 
+            {/* <PostPreview noIcon={noIcon} isReel={isReel}/> 
+            <PostPreview noIcon={noIcon} isReel={isReel}/> 
+            <PostPreview noIcon={noIcon} isReel={isReel}/> 
+            <PostPreview noIcon={noIcon} isReel={isReel}/>  */}
         </div>
     )
 }

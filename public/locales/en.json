@@ -17,8 +17,15 @@
     "tagged":"TAGGED",
     "like":"Like",
     "likes":"Likes",
+    "reply":"Reply",
     "save":"Save",
     "share":"Share Post",
     "comment":"Comment",
-    "add-comment":"Add a comment…"
+    "add-comment":"Add a comment…",
+    "morepf":"More posts from",
+    "view-all":"View all",
+    "cs":"comment",
+    "comments":"Comments",
+    "day-ago":"days ago",
+    "like-t":"Likes"
   }

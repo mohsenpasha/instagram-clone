@@ -1,12 +1,13 @@
-import { createContext } from "vm";
+import { createContext } from "react";
 
-const InfoContext = createContext();
+export const InfoContext = createContext<{lang:string} | null>(null);
 
 
-export default function Provider({children} : {children:React.ReactNode}){
+export default function Provider({children} : {children:React.ReactNode}){/
+    
     return(
-        <InfoContext.prfovider>
+        <InfoContext.Provider value={{lang:'fa'}}>
             {children}
-        </InfoContext.prfovider>
+        </InfoContext.Provider>
     )
 }
