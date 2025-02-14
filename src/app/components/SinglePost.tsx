@@ -6,9 +6,8 @@ import { UserPreview } from "./UserPreview";
 import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { InfoContext } from "@/context/provider";
 
-export default function SinglePost(){
+export default function SinglePost({isPopup}:{isPopup?:boolean}){
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
@@ -62,7 +61,7 @@ export default function SinglePost(){
         handlePageResize()
     },[])
     return(
-        <div className="my-6 bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] flex-wrap md:flex-nowrap">
+        <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
             <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
                 <Image
                     src='/images/post-1.jpg'
@@ -281,7 +280,7 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
     },[likeBoxToggle])
     return(
         <>
-        <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow md:overflow-y-scroll z-40">
+        <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow md:overflow-y-scroll z-30">
             <div className="md:hidden h-11 flex items-center border-b-[1px] border-ss sticky top-0 bg-white">
                 <span onClick={closeCommentBox} className="px-6 cursor-pointer">
                     <IconArrow className="-rotate-90"/>

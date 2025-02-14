@@ -8,6 +8,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens:{
+        xs:'400px'
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -30,6 +33,7 @@ export default {
           "100%": { opacity: '1' },
         }
       },
+      
       animation: {
         fadeIn: "fadeIn 0.1s ease-out forwards",
         // fadeOut: "fadeOut 0.5s ease-out forwards",

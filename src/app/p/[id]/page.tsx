@@ -8,8 +8,8 @@ import { useState } from "react";
 export default function PostPage(){
     const { t } = useTranslation();
     return(
-        <div className={`flex flex-wrap justify-center [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 ${!pageScroll && 'overflow-hidden w-screen h-screen'}`}>
-            <div className="flex w-full md:w-11/12 lg:10/12 justify-center">
+        <div className={`flex flex-wrap justify-center [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300`}>
+            <div className="flex w-full md:w-11/12 lg:10/12 justify-center my-8">
                 <div className="w-full md:px-4 xl:px-0 lg:w-10/12 xl:w-8/12">
                     <SinglePost/>
                 </div>

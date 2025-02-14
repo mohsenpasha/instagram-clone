@@ -10,7 +10,6 @@ export default function Profile(){
         return(
         <>
             <PostList isReel={false} />
-            <PostPopupSlider/>
         </>
     )
 }
