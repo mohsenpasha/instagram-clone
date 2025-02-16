@@ -22,7 +22,8 @@ export default {
         bl:'#0095F6',
         bler:'#1877F2',
         gray:'#EFEFEF',
-        grayer:'#DBDBDB'
+        grayer:'#DBDBDB',
+        st:'#1a1a1a'
       },
       textColor:{
         gray:'#737373'

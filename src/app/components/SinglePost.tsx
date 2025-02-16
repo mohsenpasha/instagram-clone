@@ -79,7 +79,7 @@ export default function SinglePost({isPopup}:{isPopup?:boolean}){
                                 <Image className="rounded-full" src='/images/profile-img.jpeg' width={32} height={32} alt=""></Image>
                             </div>
                             <div className="w-9/12 sm:w-11/12 md:w-9/12">
-                                <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm font-medium">
+                                <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm font-medium inline-block">
                                     afshin_bizar
                                 </div>
                                 <div className="text-xs truncate">
@@ -92,6 +92,7 @@ export default function SinglePost({isPopup}:{isPopup?:boolean}){
                         </div>
                     </div>
                 </div>
+                {/* <PostCaption /> */}
                 {underMd 
                 ? 
                     commentToggle && <CommentBox textareaRef={textareaRef} closeCommentBox={handleCommentToggle} />
@@ -143,6 +144,37 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
                 </span>
             </div>
         </div>
+    )
+}
+export function PostCaption(){
+    
+    return(
+        <div className="flex justify-between py-3 px-2 md:px-0">
+        <div className="flex gap-2">
+            <div className="rounded-full flex-shrink-0 cursor-pointer size-8">
+                <Image className="rounded-full" src='/images/profile-img-2.jpg' width={32} height={32} alt=""></Image>
+            </div>
+            <div className="flex-col md:flex">
+                <div className="block">
+                    <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
+                        afshin_bizar
+                    </div>
+                    <div className="text-sm whitespace-break-spaces">
+                        <span className="leading-3">
+
+                    چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
+                        </span>
+                    </div>
+                </div>
+                <div className="text-xs text-gray flex gap-2 font-medium mt-2">
+                            <div className="font-normal"><span>3</span>d</div>
+                        </div>
+            </div>
+        </div>
+        <div className="flex items-center cursor-pointer px-2">
+            
+        </div>
+    </div>
     )
 }
 export function CommentInput({className,textareaRef} : {className?:string,textareaRef:RefObject<HTMLTextAreaElement | null>}){
@@ -288,6 +320,7 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
                 <span className="font-medium absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{t('comments')}</span>
             </div>
             <div className="mx-2 mr-0 overflow-y-scroll md:overflow-auto h-[calc(100%-44px)] md:h-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300">
+                <PostCaption />
                 <Comment showLikeList={()=>setLikeBoxToggle(true)} />
                 <Comment showLikeList={()=>setLikeBoxToggle(true)} />
                 <Comment showLikeList={()=>setLikeBoxToggle(true)} />
@@ -320,11 +353,16 @@ function Comment({showLikeList}:{showLikeList?:()=>void}){
                     <Image className="rounded-full" src='/images/profile-img-2.jpg' width={32} height={32} alt=""></Image>
                 </div>
                 <div className="flex-col md:flex">
-                    <div className="text-sm inline-block mr-1 md:mr-0 md:block font-medium leading-none">
-                        afshin_bizar
-                    </div>
-                    <div className="text-sm whitespace-break-spaces inline md:block">
-                    چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
+                    <div className="block">
+                        <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
+                            afshin_bizar
+                        </div>
+                        <div className="text-sm whitespace-break-spaces">
+                            <span className="leading-3">
+
+                        چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
+                            </span>
+                        </div>
                     </div>
                     <div className="text-xs text-gray flex gap-2 font-medium mt-2">
                         <div className="font-normal"><span>3</span>d</div>
