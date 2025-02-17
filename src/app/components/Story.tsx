@@ -1,20 +1,62 @@
-import Image from "next/image"
-import { IconClose, IconDirect, IconHeart, IconPause, IconPlay } from "./Icons"
+import Image from "next/image";
+import { IconClose, IconDirect, IconHeart, IconPause, IconPlay } from "./Icons";
+import { useEffect, useRef, useState } from "react";
 
+export function StoryList() {
+    const storySlider = useRef(null);
+    const activeStory = useRef(null);
+    const allStory = useRef(null);
+    const [storyLeftPosition, setStoryLeftPosition] = useState(0);
+    const [storyList, setStoryList] = useState([false, false, false, true]);
+    const timerStatus = useRef(true);
+    const prevLeftPosition = useRef(0);
+    
+    function fixHolderPosition() {
+        if (timerStatus.current) {
+            const storyWidth = activeStory.current?.getBoundingClientRect().width || 0;
+            const storyLeft = activeStory.current?.getBoundingClientRect().left || 0;
+            const centerPosition = (window.innerWidth / 2) - (storyWidth / 2);
+            const final_place = prevLeftPosition.current + (centerPosition - storyLeft);
 
-export function StoryList(){
-    return(
+            timerStatus.current = false;
+            setTimeout(() => {
+                timerStatus.current = true;
+            }, 50);
+            
+            prevLeftPosition.current = final_place;
+            setStoryLeftPosition(final_place);
+        }
+    }
+    useEffect(()=>{
+        fixHolderPosition()
+    },[storyList])
+    function changeActive(id) {
+        setStoryList(storyList.map((item,index)=>{
+            return index == id ? true : false
+        }))
+        console.log(id);
+    }
+    
+    useEffect(() => {
+        window.addEventListener('resize', fixHolderPosition);
+        fixHolderPosition();
+        return () => window.removeEventListener('resize', fixHolderPosition);
+    }, []);
+    
+    return (
         <div className="fixed top-0 left-0 w-full h-full bg-st z-50 flex items-center">
-            <IconClose className="text-white"/>
-            <StoryHolder active={false}/>
-            <StoryHolder active={true}/>
+            <IconClose className="text-white" />
+            <div style={{ left: storyLeftPosition }} ref={storySlider} className="absolute top-1/2 -translate-y-1/2 w-[1000vw] flex transition-all duration-300">
+                {storyList.map((active, index) => (
+                    <StoryHolder changeHandler={()=>changeActive(index)} key={index} ref={active ? activeStory : allStory} active={active} />
+                ))}
+            </div>
         </div>
-    )
+    );
 }
-
-export default function StoryHolder({active}:{active:boolean}){
+export default function StoryHolder({active,ref,changeHandler}:{active:boolean}){
     return(
-        <div className={`bg-slate-500 relative h-[90vh] w-[calc(90vh*9/16)] rounded-lg ${!active && 'scale-[.35] cursor-pointer'}`}>
+        <div onClick={changeHandler} ref={ref} className={`bg-slate-500 relative h-[90vh] w-[calc(90vh*9/16)] rounded-lg transition duration-300 ${!active && 'scale-[.35] cursor-pointer'}`}>
             <div className={`relative z-40 bg-[linear-gradient(180deg, rgba(38, 38, 38, .8) 0%, rgba(38, 38, 38, 0) 100%);] ${!active && 'h-full flex items-center justify-center'}`}>
                 {active &&
                         <div className="w-full flex flex-nowrap gap-[2px] p-4">
