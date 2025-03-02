@@ -114,7 +114,7 @@ export default function SinglePost({isPopup}:{isPopup?:boolean}){
                 </div>
             </div>
             {likeBoxToggle && 
-                <LikeList ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
+                <LikeList ref={Ref} closePopup={()=>setLikeBoxToggle(false)} />
             }
             <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
         </div>

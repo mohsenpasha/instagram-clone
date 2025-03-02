@@ -18,9 +18,9 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     },[])
     console.log(params.id)
     return(
-            <div className={`flex`}>
+            <div className={`flex justify-between`}>
                 <SideBar/>
-                <div className="flex justify-center w-full md:w-11/12 lg:10/12">
+                <div className="flex justify-center w-full md:w-10/12 xl:10/12">
                     <div className="w-full md:px-4 xl:px-0 lg:w-11/12 xl:w-9/12">
                         <ProfileHeader/>
                         <div className="flex w-full border-t-[1px] border-d justify-center">
@@ -42,7 +42,7 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                         {children}
                     </div>
                 </div>
-                <StoryList />
+                {/* <StoryList /> */}
             </div>
     )
 }
