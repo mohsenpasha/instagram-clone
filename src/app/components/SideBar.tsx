@@ -8,10 +8,15 @@ import { useEffect, useState } from "react";
 import { isSea } from "node:sea";
 import { useAnimationEnd } from "@/hooks/useAnimationEnd";
 import { useClickOutside } from "@/hooks/useClickOutside";
-export default function SideBar(){
+export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
     const [isSearchActive,setIsSearchActive] = useState(false)
     const [isSearchCloseAnimationStarted,setIsSearchCloseAnimationStarted] = useState(false)
     const [isMinimal,setIsMinimal] = useState(false)
+    useEffect(()=>{
+        if(isAlwaysMinimal){
+            setIsMinimal(true)
+            }
+    },[])
     const { t } = useTranslation();
     const searchRef = useAnimationEnd(() => {
         if(isSearchCloseAnimationStarted){
@@ -26,11 +31,13 @@ export default function SideBar(){
         else{
             setIsSearchActive(true)
         }
-        setIsMinimal(!isMinimal)
+        if(!isAlwaysMinimal){
+            setIsMinimal(!isMinimal)
+        }
     }
     useClickOutside(searchRef, () => SearchBarToggle());
     return(
-        <div className={`${isMinimal ? 'w-[74px]' : 'w-full md:w-fit xl:w-2/12'} transition-all duration-300 fixed z-50 h-fit bottom-0 md:sticky md:top-0 bg-white px-[12px] py-[2px] md:py-[8px] md:pb-[20px] border-t-[1px] md:border-t-0 md:border-x-[1px] border-ss md:h-screen`}>
+        <div className={`${isMinimal ? 'md:w-[74px] w-full' : 'w-full md:w-fit xl:w-2/12'} transition-all duration-300 fixed z-50 h-fit bottom-0 md:sticky md:top-0 bg-white px-[12px] py-[2px] md:py-[8px] md:pb-[20px] border-t-[1px] md:border-t-0 md:border-x-[1px] border-ss md:h-screen`}>
             <div className="flex flex-col justify-between h-full">
             <div className="hidden md:block p-[12px] pt-[25px] pb-[16px]">
 

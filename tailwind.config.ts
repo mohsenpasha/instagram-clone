@@ -10,7 +10,8 @@ export default {
   theme: {
     extend: {
       screens:{
-        xs:'400px'
+        xs:'400px',
+        mdl:'875px'
       },
       colors: {
         background: "var(--background)",
@@ -64,6 +65,12 @@ export default {
           "80%" :{opacity:'0'}, 
           "100%":{transform:"scale(0)",opacity:'0'}
         },
+        FadeInOut: {
+          "0%" : {opacity:'0'},
+          "10%":{opacity:'1'},
+          "90%":{opacity:'1'},
+          "100%":{opacity:'0'}
+        },
       },
       animation: {
         fadeIn: "fadeIn 0.1s ease-out forwards",
@@ -72,6 +79,7 @@ export default {
         scale: "scale 0.3s ease-out forwards",
         scaleOut: "scaleOut 0.2s ease-out forwards",
         scaleInOut: "scaleInOut 1s ease-out",
+        FadeInOut: "FadeInOut 5s ease-out infinite",
         // fadeOut: "fadeOut 0.5s ease-out forwards",
       }
     },
