@@ -35,6 +35,9 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
         if(isHover){
             doFetch()
         }
+        else{
+            setUserHoverInfo(null)
+        }
         },[isHover])
     const [underMd,setUnderMd] = useState<boolean>(false)
     function handlePageResize(){
@@ -58,47 +61,54 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
     }
     const { t } = useTranslation();
     if(underMd) return
-    if(!userHoverInfo) return
-    console.log(userHoverInfo.recent_posts)
+    // if(!userHoverInfo) return
     return(
         <div ref={ref} style={{left:position.left | 0, top:top | 0}} className={`fixed text-sm py-4 top-0 flex flex-col justify-between bg-white z-[1000] w-[366px] h-[338px] shadow-[0_4px_12px_rgba(0,0,0,.15)] rounded-lg animate-fadeIn ${isHover ? 'flex' : 'hidden'} hover:flex`}>
-            <div className="flex items-center gap-4 px-4">
-                <div className="size-[56px] overflow-hidden">
-                    <Image className="rounded-full w-full h-full object-cover" src={userHoverInfo.profile_pic || "/images/profile-img.jpeg"} alt='' width={56} height={56}></Image>
-                </div>
-                <div className="flex flex-col leading-4">
-                    <span className="text-base font-bold">{userHoverInfo.username}</span>
-                    <span>{userHoverInfo.name}</span>
-                </div>
-            </div>
-            <div className="flex items-center gap-4">
-                <div className='gap-1 flex flex-col items-center w-1/3 leading-4'>
-                    <span className='font-bold'>{userHoverInfo.post_count}</span>
-                    {t('posts')}
-                </div>
-                <div className='gap-1 flex flex-col items-center w-1/3 leading-4'>
-                    <span className='font-bold'>{userHoverInfo.follower_count}</span>
-                    {t('followers')}
-                </div>
-                <div className='gap-1 flex flex-col items-center w-1/3 leading-4'>
-                    <span className='font-bold'>{userHoverInfo.following_count}</span>
-                    {t('following')}
-                </div>
-            </div>
-            {
-            userHoverInfo.is_private ?
-                <PostListUnavailable mode='private' username="test"/>
+            {!userHoverInfo ? 
+            <HoverUserPreviewLoading/>
             :
-            userHoverInfo.recent_posts.length == 0 ? 
-                <PostListUnavailable mode='noPost' username="test"/>
-            :
-                <PostList isHoverPreview={true} postList={userHoverInfo.recent_posts} isReel={false} noIcon={true}/>
+            <>
+                <div className="flex items-center gap-4 px-4">
+                    <div className="size-[56px] overflow-hidden">
+                        <Image className="rounded-full w-full h-full object-cover" src={userHoverInfo.profile_pic || "/images/profile-img.jpeg"} alt='' width={56} height={56}></Image>
+                    </div>
+                    <div className="flex flex-col leading-4">
+                        <span className="text-base font-bold">{userHoverInfo.username}</span>
+                        <span>{userHoverInfo.name}</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className='gap-1 flex flex-col items-center w-1/3 leading-4'>
+                        <span className='font-bold'>{userHoverInfo.post_count}</span>
+                        {t('posts')}
+                    </div>
+                    <div className='gap-1 flex flex-col items-center w-1/3 leading-4'>
+                        <span className='font-bold'>{userHoverInfo.follower_count}</span>
+                        {t('followers')}
+                    </div>
+                    <div className='gap-1 flex flex-col items-center w-1/3 leading-4'>
+                        <span className='font-bold'>{userHoverInfo.following_count}</span>
+                        {t('following')}
+                    </div>
+                </div>
+                {
+                userHoverInfo.is_private ?
+                    <PostListUnavailable mode='private' username="test"/>
+                :
+                userHoverInfo.recent_posts.length == 0 ? 
+                    <PostListUnavailable mode='noPost' username="test"/>
+                :
+                    <PostList isHoverPreview={true} postList={userHoverInfo.recent_posts} isReel={false} noIcon={true}/>
+                }
+                <div className="px-4 flex w-full gap-2">
+                    <div className="w-full">
+                        <FollowBtn fullSize={true} userData={userDatailHover[0]}/>
+                    </div>
+                </div>
+            </>
+
             }
-            <div className="px-4 flex w-full gap-2">
-                <div className="w-full">
-                    <FollowBtn fullSize={true} userData={userDatailHover[0]}/>
-                </div>
-            </div>
+
         </div>
     )
 }
@@ -111,6 +121,41 @@ export function PostListUnavailable({username,mode}:{username:string,mode:'priva
             </div>
             <span className="font-bold">{mode == 'private' ? "The account is private" : "No posts yet"}</span>
             <span className="text-gray">{mode == 'private' ? "Follow this account to see their photos and videos." : `When ${username} shares photos and reels, you'll see them here.`}</span>
+        </div>
+    )
+}
+
+
+export function HoverUserPreviewLoading(){
+    return(
+        <div className="flex flex-col w-full justify-around flex-1">
+            <div className="flex px-4 items-center gap-4">
+                <span className="size-14 flex-shrink-0 rounded-full animate-Skeleton"></span>
+                <div className="w-full flex flex-col gap-1">
+                    <span className="w-8/12 h-4 animate-Skeleton rounded-[4px]"></span>
+                    <span className="w-6/12 h-4 animate-Skeleton rounded-[4px]"></span>
+                </div>
+            </div>
+            <div className="flex">
+                {[...Array(3)].map((_,index)=>{
+                    return(
+                        <div key={index} className="w-1/3 flex flex-col items-center gap-1">
+                            <span className="w-4/12 h-[14px] animate-Skeleton rounded-[4px]"></span>
+                            <span className="w-6/12 h-[14px] animate-Skeleton rounded-[4px]"></span>
+                        </div>
+                    )
+                })}
+            </div>
+            <div className="flex gap-[2px]">
+            {[...Array(3)].map((_,index)=>{
+                return <span key={index} className="w-1/3 aspect-square animate-Skeleton"></span>
+            })}
+            </div>
+            <div className="px-4 w-full flex">
+                <span className="w-full h-9 rounded-lg animate-Skeleton">
+
+                </span>
+            </div>
         </div>
     )
 }

@@ -71,6 +71,11 @@ export default {
           "90%":{opacity:'1'},
           "100%":{opacity:'0'}
         },
+        SkeletonLoading: {
+          "0%" : {background: "#efefef66"},
+          "50%" : {background: "#efefef"},
+          "100%":{background: "#efefef66"}
+        },
       },
       animation: {
         fadeIn: "fadeIn 0.1s ease-out forwards",
@@ -80,6 +85,7 @@ export default {
         scaleOut: "scaleOut 0.2s ease-out forwards",
         scaleInOut: "scaleInOut 1s ease-out",
         FadeInOut: "FadeInOut 5s ease-out infinite",
+        Skeleton: "SkeletonLoading 2s ease-out infinite",
         // fadeOut: "fadeOut 0.5s ease-out forwards",
       }
     },
