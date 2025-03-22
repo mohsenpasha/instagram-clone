@@ -6,8 +6,18 @@ import { UserPreview } from "./UserPreview";
 import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useSelector,useDispatch } from "react-redux";
+import { likePost, savePost, unlikePost, unsavePost, changeLikeUrl, addUserList, toggleIsLoading, clearUserList } from '@/store/slices/postSlice'
+import { fetchGetPostLikeList, fetchLikePost, fetchUnlikePost } from "@/api/likesApi";
+import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
+import { RootState } from "@/store/store";
+import { changeUnfollow } from "@/store/slices/userSlice";
 
-export default function SinglePost({isPopup}:{isPopup?:boolean}){
+
+export default function SinglePost({isPopup}:{isPopup:boolean}){
+    const dispatch = useDispatch()
+    const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
+    const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
@@ -15,7 +25,9 @@ export default function SinglePost({isPopup}:{isPopup?:boolean}){
     const [underMd,setUnderMd] = useState<boolean>(false)
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const likeBoxRef = useRef<HTMLElement | null>(null)
-    useClickOutside(likeBoxRef, () => setLikeBoxToggle(false));
+    const unfollowPopupRef = useRef<HTMLElement | null>(null)
+    useClickOutside(likeBoxRef, () => !unfollowDetail ? setLikeBoxToggle(false) : {});
+    useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
     function mouseEnter(event : React.MouseEvent<Element, MouseEvent>){
         setIsHover(true)
@@ -32,6 +44,8 @@ export default function SinglePost({isPopup}:{isPopup?:boolean}){
             disableScroll()
         }
         else{
+            dispatch(changeLikeUrl(null))
+            dispatch(clearUserList())
             enableScroll()
         }
     },[likeBoxToggle])
@@ -61,108 +75,149 @@ export default function SinglePost({isPopup}:{isPopup?:boolean}){
         handlePageResize()
     },[])
     return(
-        <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
-            <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
-                <Image
-                    src='/images/post-1.jpg'
-                    alt="Sample"
-                    width={1080}
-                    height={1080}
-                    className="object-cover w-full h-full static"
-                />
-            </div>
-            <div className="flex-1 flex flex-col h-full">
-                <div className="flex items-center absolute md:static top-0 right-0 w-full">
-                    <div className="flex h-[70px] md:h-auto items-center gap-2 px-[16px] py-[14px] w-full border-b-[1px] md:border-b-0 border-ss justify-between">
-                        <div className="flex gap-2 w-11/12 sm:w-10/12 truncate items-center">
-                            <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="rounded-full cursor-pointer size-8">
-                                <Image className="rounded-full" src='/images/profile-img.jpeg' width={32} height={32} alt=""></Image>
-                            </div>
-                            <div className="w-9/12 sm:w-11/12 md:w-9/12">
-                                <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm font-medium inline-block">
-                                    afshin_bizar
+        <>
+            <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
+                <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
+                    <Image
+                        src={postDetail.media[0].file}
+                        alt="Sample"
+                        width={1080}
+                        height={1080}
+                        className="object-cover w-full h-full static"
+                    />
+                </div>
+                <div className="flex-1 flex flex-col h-full">
+                    <div className="flex items-center absolute md:static top-0 right-0 w-full">
+                        <div className="flex h-[70px] md:h-auto items-center gap-2 px-[16px] py-[14px] w-full border-b-[1px] md:border-b-0 border-ss justify-between">
+                            <div className="flex gap-2 w-11/12 sm:w-10/12 truncate items-center">
+                                <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="rounded-full cursor-pointer size-8 overflow-hidden">
+                                    <Image className="rounded-full" src={postDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
                                 </div>
-                                <div className="text-xs truncate">
-                                    Dariu$h, Saeed Dehghan • Jadid Free$Tyle
+                                <div className="w-9/12 sm:w-11/12 md:w-9/12">
+                                    <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm font-medium inline-block">
+                                        {postDetail.user.username}
+                                    </div>
+                                    <div className="text-xs truncate">
+                                        Dariu$h, Saeed Dehghan • Jadid Free$Tyle
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div>
-                            <IconMore className="cursor-pointer"/>
+                            <div>
+                                <IconMore className="cursor-pointer"/>
+                            </div>
                         </div>
                     </div>
+                    <div className="flex-1 overflow-auto">
+                            
+                        <PostCaption caption={postDetail.caption} user={postDetail.user} />
+                        {underMd 
+                        ? 
+                        commentToggle && <CommentBox textareaRef={textareaRef} closeCommentBox={handleCommentToggle} />
+                        :
+                        <>
+                            <CommentBox textareaRef={textareaRef}/>
+                        </>
+                        }
+                    </div>
+                    <div className="px-2">
+                        <PostAction handleCommentToggle={handleCommentToggle} />
+                        <div onClick={()=>setLikeBoxToggle(true)} className="mx-2 font-bold text-sm cursor-pointer">
+                            <span>{postDetail.like_count}</span> {t('likes')}
+                        </div>
+                        <div onClick={handleCommentToggle} className="block mx-2 md:hidden text-gray text-sm cursor-pointer">
+                            {t('view-all')} <span>23</span> {t('cs')}
+                        </div>
+                        <div className="mx-2 text-xs cursor-pointer text-gray m-2">
+                            1 {t('day-ago')}
+                        </div>
+                        <CommentInput textareaRef={textareaRef} className="hidden md:flex" />
+                    </div>
                 </div>
-                {/* <PostCaption /> */}
-                {underMd 
-                ? 
-                    commentToggle && <CommentBox textareaRef={textareaRef} closeCommentBox={handleCommentToggle} />
-                :
-                    <CommentBox textareaRef={textareaRef}/>
+                {likeBoxToggle && 
+                    <LikeList contentId={postDetail.id} ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
                 }
-                <div className="px-2">
-                    <PostAction handleCommentToggle={handleCommentToggle} />
-                    <div onClick={()=>setLikeBoxToggle(true)} className="mx-2 font-bold text-sm cursor-pointer">
-                        <span>934</span> {t('likes')}
-                    </div>
-                    <div onClick={handleCommentToggle} className="block mx-2 md:hidden text-gray text-sm cursor-pointer">
-                        {t('view-all')} <span>23</span> {t('cs')}
-                    </div>
-                    <div className="mx-2 text-xs cursor-pointer text-gray m-2">
-                        1 {t('day-ago')}
-                    </div>
-                    <CommentInput textareaRef={textareaRef} className="hidden md:flex" />
-                </div>
+                <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
             </div>
-            {likeBoxToggle && 
-                <LikeList ref={Ref} closePopup={()=>setLikeBoxToggle(false)} />
+            {unfollowDetail &&
+                <UnfollowPopup ref={unfollowPopupRef}/>
             }
-            <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
-        </div>
+        </>
+        
     )
 }
 
 export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void}){
+    const dispatch = useDispatch()
+    const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const { t } = useTranslation();
-
+    async function likePostHandler(fetchLess=false){
+        dispatch(likePost())
+        if(!fetchLess){
+            const respose = await fetchLikePost(postDetail.id)
+            if(respose.status != 200){
+                console.log(respose)
+                unlikePostHandler(fetchLess=true)
+            }
+        }
+    }
+    function unlikePostHandler(fetchLess=false){
+        if(!fetchLess){
+            fetchUnlikePost(postDetail.id)
+        }
+        dispatch(unlikePost())
+    }
+    async function savePostHandler(){
+        dispatch(savePost())
+        const response = await fetchSavePost(postDetail.id)
+    }
+    async function unsavePostHandler(){
+        dispatch(unsavePost())
+        const response = await fetchUnsavePost(postDetail.id)
+    }
     return(
         <div className="py-2 pt-[6px] flex justify-between w-full items-center">
             <div className="flex items-center">
-                <span title={t('like')}>
-                    <IconHeart className="cursor-pointer m-2 size-6 hover:text-zinc-500"/>
+                <span className="cursor-pointer" onClick={()=>postDetail.is_liked ? unlikePostHandler() : likePostHandler()} title={t('like')}>
+                    {postDetail.is_liked ?
+                        <IconHeart active className="cursor-pointer m-2 size-6 text-[#ff3041]"/>
+                        :
+                        <IconHeart className="cursor-pointer m-2 size-6 hover:text-zinc-500"/>
+                    }
                 </span>
                 <span onClick={handleCommentToggle} title={t('comment')}>
                     <IconComment className="cursor-pointer m-2 size-6 hover:text-zinc-500"/>
-                    {/* <IconHeart className="text-red-700" active/> */}
                 </span>
                 <span title={t('share')}>
                     <IconDirect  className="cursor-pointer m-2 size-6 hover:text-zinc-500"/>
                 </span>
             </div>
             <div>
-                <span title={t('save')}>
-                    <IconSave className="cursor-pointer m-2 size-6 hover:text-zinc-500"/>
+                <span onClick={()=> postDetail.is_saved ? unsavePostHandler() : savePostHandler()} title={t('save')}>
+                    {postDetail.is_saved ?
+                        <IconSave active className="cursor-pointer m-2 size-6"/>
+                    :
+                        <IconSave className="cursor-pointer m-2 size-6 hover:text-zinc-500"/>
+                    }
                 </span>
             </div>
         </div>
     )
 }
-export function PostCaption(){
-    
+export function PostCaption({caption,user}){
     return(
-        <div className="flex justify-between py-3 px-2 md:px-0">
+        <div className="flex justify-between py-3 px-2 md:px-0 ltr:md:pl-6 rtl:md:pr-6">
         <div className="flex gap-2">
-            <div className="rounded-full flex-shrink-0 cursor-pointer size-8">
-                <Image className="rounded-full" src='/images/profile-img-2.jpg' width={32} height={32} alt=""></Image>
+            <div className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
+                <Image className="rounded-full" src={user.profile_pic || '/images/profile-img-2.jpg'} width={32} height={32} alt=""></Image>
             </div>
             <div className="flex-col md:flex">
                 <div className="block">
                     <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
-                        afshin_bizar
+                        {user.username}
                     </div>
                     <div className="text-sm whitespace-break-spaces">
                         <span className="leading-3">
-
-                    چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
+                            {caption}
                         </span>
                     </div>
                 </div>
@@ -312,7 +367,7 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
     },[likeBoxToggle])
     return(
         <>
-        <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow md:overflow-y-scroll z-30">
+        <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow z-30">
             <div className="md:hidden h-11 flex items-center border-b-[1px] border-ss sticky top-0 bg-white">
                 <span onClick={closeCommentBox} className="px-6 cursor-pointer">
                     <IconArrow className="-rotate-90"/>
@@ -320,7 +375,6 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
                 <span className="font-medium absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{t('comments')}</span>
             </div>
             <div className="mx-2 mr-0 overflow-y-scroll md:overflow-auto h-[calc(100%-44px)] md:h-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300">
-                <PostCaption />
                 <Comment showLikeList={()=>setLikeBoxToggle(true)} />
                 <Comment showLikeList={()=>setLikeBoxToggle(true)} />
                 <Comment showLikeList={()=>setLikeBoxToggle(true)} />
@@ -359,8 +413,7 @@ function Comment({showLikeList}:{showLikeList?:()=>void}){
                         </div>
                         <div className="text-sm whitespace-break-spaces">
                             <span className="leading-3">
-
-                        چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
+                                    چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
                             </span>
                         </div>
                     </div>
@@ -392,13 +445,35 @@ function getPosition(element : HTMLElement){
     const distanceFromBottom = window.innerHeight - rect.bottom;
     return {left:distanceFromLeft,top:distanceFromTop,height:elmClientHeight,bottom:distanceFromBottom}
 }
-export function LikeList({closePopup,ref}:{closePopup:()=>void,ref:React.Ref<HTMLDivElement> | undefined}){
+export function LikeList({closePopup,ref,isComment=false,contentId}:{closePopup:()=>void,ref:React.Ref<HTMLDivElement> | undefined,isComment:boolean,contentId:string}){
+    const currentUrl = useSelector((state: RootState) => state.popupPost.likeUrl);
+    const likeListData = useSelector((state: RootState) => state.popupPost.userList);
     const { t } = useTranslation()
     const [isHover,setIsHover] = useState<boolean>(false)
+    const [hoveringUsername,setHoveringUsername] = useState<null | string>(null)
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
-
-  
-    function mouseEnter(event : React.MouseEvent<Element, MouseEvent>){
+    const dispatch = useDispatch()
+    useEffect(()=>{
+        dispatch(changeLikeUrl(`http://localhost:8000/getpostlikes/${contentId}`))
+    },[])
+    useEffect(()=>{
+        if(!currentUrl) return
+            if(!isComment){
+                console.log('inside')
+                console.log(currentUrl)
+                async function fetchData(currentUrl){
+                        const response = await fetchGetPostLikeList(currentUrl)
+                        const jsonRes = await response.json()
+                        dispatch(addUserList(jsonRes.results))
+                    }
+                    fetchData(currentUrl)
+            }
+            else{
+                console.log('outside')
+            }
+    },[currentUrl])
+    function mouseEnter(event : React.MouseEvent<Element, MouseEvent>,username:string){
+        setHoveringUsername(username)
         setIsHover(true)
         const number = getPosition(event.target as HTMLElement)
         setUserPreviewHoverPosition(number)
@@ -411,7 +486,7 @@ export function LikeList({closePopup,ref}:{closePopup:()=>void,ref:React.Ref<HTM
     return(
         <div className="fixed w-screen h-screen top-0 left-0 z-50 bg-black bg-opacity-65">
             <div ref={ref} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[400px] bg-white rounded-lg flex flex-col">
-                <div className="w-full border-b-[1px] border-ss relative py-3 flex items-center">
+                <div className="w-full border-b-[1px] border-ss ltr:justify-end relative py-3 flex items-center">
                     <span onClick={closePopup} className="px-2 inline-block cursor-pointer">
                         <IconClose className="size-[18px]"/>
                     </span>
@@ -420,23 +495,40 @@ export function LikeList({closePopup,ref}:{closePopup:()=>void,ref:React.Ref<HTM
                     </span>
                 </div>
                 <div className="overflow-y-scroll flex-1">
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-                    <UserPreview mouseEnter={mouseEnter} mouseOut={mouseOut}/>
-
+                    {likeListData?.map((item,index)=>{
+                        return <UserPreview key={index} userData={item} mouseEnter={mouseEnter} mouseOut={mouseOut}/>
+                    })}
                 </div>
             </div>
-            <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
+            <UserHoverPreview ref={ref} username={hoveringUsername} isHover={isHover} position={userPreviewHoverPosition}/>
+        </div>
+    )
+}
+
+export function UnfollowPopup({ref}){
+    const dispatch = useDispatch()
+    const userDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
+    
+    return(
+        <div className="fixed z-50 top-0 right-0 w-[100vw] h-[100vh] bg-black bg-opacity-60 flex justify-center items-center">
+            <div ref={ref} className="w-[400px] flex flex-col justify-center items-center bg-white rounded-lg">
+                <div className="p-8 flex flex-col items-center justify-center">
+                    <div className="size-[90px] overflow-hidden rounded-full mb-4">
+                        <Image className="w-full h-full object-cover rounded-full" src={userDetail?.profile_pic || '/images/profile-img.jpeg'} alt="" width={90} height={90}></Image>
+                    </div>
+                    <span>
+                        Unfollow @{userDetail?.username}?
+                    </span>
+                </div>
+                <div className="flex flex-col w-full">
+                    <div onClick={()=>{dispatch(toggleIsLoading({username:userDetail?.username,result:true}));dispatch(changeUnfollow(null))}} className="border-t-[1px] font-semibold border-ss py-4 text-[#ED4956] cursor-pointer text-center">
+                        Unfollow
+                    </div>
+                    <div onClick={()=>dispatch(changeUnfollow(null))} className="border-t-[1px] border-ss py-4 cursor-pointer text-center">
+                        Cancel
+                    </div>
+                </div>
+            </div>            
         </div>
     )
 }
