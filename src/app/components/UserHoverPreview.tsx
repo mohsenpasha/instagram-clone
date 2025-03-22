@@ -5,6 +5,8 @@ import PostList from "./PostList";
 import { FollowBtn } from "./FollowBtn";
 import { MessageBtn } from "./MessageBtn";
 import { fetchGetUserHoverInfo } from "@/api/userHoverProfile";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 type hoverType = {
     position:{
@@ -19,6 +21,11 @@ type hoverType = {
 
 export default function UserHoverPreview({position,isHover,username,ref}:hoverType){
     const [userHoverInfo,setUserHoverInfo] = useState<null | {}>(null)
+    const userList = useSelector((state: RootState) => state.popupPost.userList);
+    const userDatailHover = userList?.filter((item)=>{
+        return item.username == username
+    })
+    console.log(userDatailHover)
     async function doFetch(){
         const respose = await fetchGetUserHoverInfo(username)
         const JsonRes = await respose.json()
@@ -86,7 +93,7 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
                     <MessageBtn bg={'blue'}/>
                 </div>
                 <div className="flex-1">
-                    <FollowBtn username={userHoverInfo.username} isFollowing={userHoverInfo.is_following}/>
+                    <FollowBtn userData={userDatailHover[0]}/>
                 </div>
             </div>
         </div>
