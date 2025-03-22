@@ -5,14 +5,15 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 
-// اسکیمای اعتبارسنجی با Zod
 const schema = z.object({
     username: z.string().min(3, "نام کاربری حداقل باید ۳ کاراکتر باشد"),
     password: z.string().min(8, "رمز عبور حداقل باید ۸ کاراکتر باشد"),
 });
 
 export default function Login() {
+    const router = useRouter();
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [activeImage, setActiveImage] = useState([true, false, false, false]);
     const [isInputActive,setIsInputActive] = useState([false,false])
@@ -36,7 +37,7 @@ export default function Login() {
     
     const loginSubmit = async (data: any) => {
             try {
-                const response = await fetch("http://localhost:8000/login/", { // آدرس API سرور
+                const response = await fetch("http://localhost:8000/login/", {
                     method: "POST",
                     credentials:'include',
                     headers: {
@@ -45,11 +46,10 @@ export default function Login() {
                     body: JSON.stringify(data),
                 });
         
-                const result = await response.json(); // دریافت پاسخ
-                console.log("نتیجه:", result);
+                const result = await response.json();
         
                 if (response.ok) {
-                    alert("ورود موفقیت‌آمیز بود!");
+                    router.push("/")
                 } else {
                     alert(result.message || "خطا در ورود!");
                 }
@@ -57,18 +57,6 @@ export default function Login() {
                 alert("مشکلی پیش آمد، دوباره تلاش کنید.");
             }
     };
-    async function checkProtected(){
-        const response = await fetch("http://localhost:8000/protected/", {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-        
-        const result = await response.json(); // دریافت پاسخ
-        console.log("نتیجه:", result);
-    }
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveImage((prevImages) => {
@@ -131,21 +119,21 @@ async function refreshToken() {
     try {
         const response = await fetch("http://localhost:8000/refresh/", {
             method: "POST",
-            credentials: "include", // کوکی‌ها رو ارسال کن
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },
         });
 
         if (response.ok) {
-            console.log("✅ توکن جدید دریافت شد.");
-            return true; // موفقیت‌آمیز بود
+            console.log("توکن جدید دریافت شد.");
+            return true;
         } else {
-            console.log("❌ رفرش توکن شکست خورد.");
-            return false; // ناموفق بود
+            console.log("رفرش توکن شکست خورد.");
+            return false;
         }
     } catch (error) {
-        console.error("❌ خطا در رفرش توکن:", error);
+        console.error("خطا در رفرش توکن:", error);
         return false;
     }
 }
