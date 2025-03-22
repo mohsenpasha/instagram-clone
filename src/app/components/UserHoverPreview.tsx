@@ -52,16 +52,14 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
     let top = 0
     if(position.top < position.bottom){
         top =  position.top + position.height
-        console.log('top')
     }
     else{
         top = window.innerHeight - (position.bottom + 338) - position.height
-        console.log('bottom')
     }
     const { t } = useTranslation();
-    console.log(position.bottom)
     if(underMd) return
     if(!userHoverInfo) return
+    console.log(userHoverInfo.recent_posts)
     return(
         <div ref={ref} style={{left:position.left | 0, top:top | 0}} className={`fixed text-sm py-4 top-0 flex flex-col justify-between bg-white z-[1000] w-[366px] h-[338px] shadow-[0_4px_12px_rgba(0,0,0,.15)] rounded-lg animate-fadeIn ${isHover ? 'flex' : 'hidden'} hover:flex`}>
             <div className="flex items-center gap-4 px-4">
@@ -69,7 +67,7 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
                     <Image className="rounded-full w-full h-full object-cover" src={userHoverInfo.profile_pic || "/images/profile-img.jpeg"} alt='' width={56} height={56}></Image>
                 </div>
                 <div className="flex flex-col leading-4">
-                    <span className="text-base font-bold">ali_ambrose1</span>
+                    <span className="text-base font-bold">{userHoverInfo.username}</span>
                     <span>{userHoverInfo.name}</span>
                 </div>
             </div>
@@ -87,12 +85,32 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
                     {t('following')}
                 </div>
             </div>
-            <PostList postList={userHoverInfo.recent_posts} isReel={false} noIcon={true}/>
+            {
+            userHoverInfo.is_private ?
+                <PostListUnavailable mode='private' username="test"/>
+            :
+            userHoverInfo.recent_posts.length == 0 ? 
+                <PostListUnavailable mode='noPost' username="test"/>
+            :
+                <PostList isHoverPreview={true} postList={userHoverInfo.recent_posts} isReel={false} noIcon={true}/>
+            }
             <div className="px-4 flex w-full gap-2">
                 <div className="w-full">
                     <FollowBtn fullSize={true} userData={userDatailHover[0]}/>
                 </div>
             </div>
+        </div>
+    )
+}
+
+export function PostListUnavailable({username,mode}:{username:string,mode:'private' | 'noPost'}){
+    return(
+        <div className="flex flex-col items-center justify-center gap-1 p-4 border-t-[1px] border-b-[1px] border-ss text-sm text-center">
+            <div className="relative size-12 overflow-hidden">
+                <Image className="absolute top-0" src='/images/np-s-i.png' alt="" width={49} height={98}></Image>
+            </div>
+            <span className="font-bold">{mode == 'private' ? "The account is private" : "No posts yet"}</span>
+            <span className="text-gray">{mode == 'private' ? "Follow this account to see their photos and videos." : `When ${username} shares photos and reels, you'll see them here.`}</span>
         </div>
     )
 }
