@@ -8,16 +8,17 @@ import { changeUrl, remove } from '@/store/slices/postSlice'
 type postType = {
     isReel: boolean
     noIcon?:boolean
-    postDetail:{id:string,preview_image:string,like_count:number,comment_count?:number,disable_comments?:boolean}
+    postDetail:{id:string,preview_image:string,like_count:number,comment_count?:number,disable_comments?:boolean},
+    isHoverPreview?:boolean
 }
-export default function PostPreview({isReel,noIcon,postDetail}:postType){
+export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=false}:postType){
     const dispatch = useDispatch();
     function clickHandle(event){
         event.preventDefault()
         dispatch(changeUrl(`/p/${postDetail.id}`))
     }
     return(
-        <Link onClick={(event)=>clickHandle(event)} href={`/p/${postDetail.id}`} className={"group overflow-hidden relative " + (isReel ? "w-[calc(25%-3px)] aspect-[2/3]" : "w-[calc(33.33%-3px)] aspect-[3/4]")}>
+        <Link onClick={(event)=>clickHandle(event)} href={`/p/${postDetail.id}`} className={"group overflow-hidden relative " + (isHoverPreview ? 'w-[calc(33.33%-3px)] aspect-square' : (isReel ? "w-[calc(25%-3px)] aspect-[2/3]" : "w-[calc(33.33%-3px)] aspect-[3/4]"))}>
             {!noIcon && 
                 <IconReels white className="absolute right-2 top-2"/>
             }

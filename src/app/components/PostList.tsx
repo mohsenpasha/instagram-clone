@@ -6,13 +6,14 @@ import { useRef } from "react";
 type ListType = {
     isReel: boolean,
     noIcon?:boolean,
-    postList:[]
+    postList:[],
+    isHoverPreview?:boolean
 }
-export default function PostList({isReel,noIcon,postList}:ListType){
+export default function PostList({isReel,noIcon,postList,isHoverPreview=false}:ListType){
     return(
         <div className="flex pb-12 md:pb-0 w-full gap-[4px] flex-wrap">
             {postList?.map((item,index)=>{
-                return <PostPreview key={index} postDetail={item} noIcon={noIcon} isReel={isReel}/>
+                return <PostPreview key={index} postDetail={item} noIcon={noIcon} isReel={isReel} isHoverPreview={isHoverPreview}/>
             })}
         </div>
     )
