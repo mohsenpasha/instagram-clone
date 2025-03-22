@@ -500,7 +500,9 @@ export function LikeList({closePopup,ref,isComment=false,contentId}:{closePopup:
                     })}
                 </div>
             </div>
-            <UserHoverPreview ref={ref} username={hoveringUsername} isHover={isHover} position={userPreviewHoverPosition}/>
+            {isHover &&
+                <UserHoverPreview ref={ref} username={hoveringUsername} isHover={isHover} position={userPreviewHoverPosition}/>
+            }
         </div>
     )
 }
