@@ -5,6 +5,7 @@ import "./globals.css";
 import { useEffect, useState } from "react";
 // import i18n  from '../../i18n'
 import i18n  from '@/../../i18n'
+import ReduxProvider from "./store/ReduxProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,8 +30,6 @@ export default function RootLayout({
 }>) {
   let [defaultLang,setDefaultLang] = useState('en')
   useEffect(()=>{
-    console.log('etsttesttete root')
-    console.log()
     if(!localStorage.getItem('lang')){
       localStorage.setItem('lang','en')
     }
@@ -39,14 +38,14 @@ export default function RootLayout({
   useEffect(()=>{
     i18n.changeLanguage(defaultLang)
   },[defaultLang])
-  console.log('this is first page speaking')
-  console.log(defaultLang)
   return (
     <html lang="en">
       <body dir={defaultLang == 'en' ? 'ltr' : 'rtl' }
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ReduxProvider>
+          {children}
+        </ReduxProvider>
       </body>
     </html>
   );
