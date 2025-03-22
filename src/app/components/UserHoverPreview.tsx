@@ -89,11 +89,8 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
             </div>
             <PostList postList={userHoverInfo.recent_posts} isReel={false} noIcon={true}/>
             <div className="px-4 flex w-full gap-2">
-                <div className="flex-1">
-                    <MessageBtn bg={'blue'}/>
-                </div>
-                <div className="flex-1">
-                    <FollowBtn userData={userDatailHover[0]}/>
+                <div className="w-full">
+                    <FollowBtn fullSize={true} userData={userDatailHover[0]}/>
                 </div>
             </div>
         </div>

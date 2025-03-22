@@ -13,12 +13,13 @@ type FollowBtnType = {
         username:string,
         is_following:boolean,
         isLoading:boolean,
-        profile_pic:string
+        profile_pic:string,
+        fullSize:boolean
     },
     directUnfollow?:boolean
 }
 
-export function FollowBtn({haveIcon,bgTrasparent=false,userData,directUnfollow=false}:FollowBtnType){
+export function FollowBtn({haveIcon,bgTrasparent=false,fullSize=false,userData,directUnfollow=false}:FollowBtnType){
     const dispatch = useDispatch()
     let IconAvailable = true;
     if(haveIcon == false){
@@ -46,9 +47,9 @@ export function FollowBtn({haveIcon,bgTrasparent=false,userData,directUnfollow=f
     const { t } = useTranslation();
     return(
         <>
-        <button disabled={userData.isLoading} onClick={()=> userData.is_following ? (directUnfollow ? unFollowHandler() : openUnfollowPopup()) : followHandler()} className={`${bgTrasparent ? 'bg-transparent border-[1px] border-ss border-opacity-50' : userData.is_following ? 'bg-gray hover:bg-grayer' : 'bg-bl hover:bg-bler text-white'} ${bgTrasparent ? 'px-2 py-[6px]' : 'py-[7px] px-4'} rounded-lg flex justify-center items-center gap-2 cursor-pointer font-semibold relative`}>
+        <button disabled={userData.isLoading} onClick={()=> userData.is_following ? (directUnfollow ? unFollowHandler() : openUnfollowPopup()) : followHandler()} className={`${fullSize && 'w-full'} ${bgTrasparent ? 'bg-transparent border-[1px] border-ss border-opacity-50' : userData.is_following ? 'bg-gray hover:bg-grayer' : 'bg-bl hover:bg-bler text-white'} ${bgTrasparent ? 'px-2 py-[6px]' : 'py-[7px] px-4'} rounded-lg flex justify-center items-center gap-2 cursor-pointer font-semibold relative`}>
             {IconAvailable && !userData.is_following &&
-                <IconFollow className="size-[20px]"/>
+                <IconFollow className={`${userData.isLoading ? 'opacity-0' : 'opacity-1'} size-[20px]`}/>
             }
             {userData.isLoading &&
                 <div className={`absolute left-1/2 top-1/2 w-5 h-5 border-2 border-transparent border-t-white border-r-white rounded-full animate-spin`}></div>
