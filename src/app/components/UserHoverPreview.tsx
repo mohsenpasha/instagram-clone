@@ -61,7 +61,6 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
     }
     const { t } = useTranslation();
     if(underMd) return
-    // if(!userHoverInfo) return
     return(
         <div ref={ref} style={{left:position.left | 0, top:top | 0}} className={`fixed text-sm py-4 top-0 flex flex-col justify-between bg-white z-[1000] w-[366px] h-[338px] shadow-[0_4px_12px_rgba(0,0,0,.15)] rounded-lg animate-fadeIn ${isHover ? 'flex' : 'hidden'} hover:flex`}>
             {!userHoverInfo ? 
