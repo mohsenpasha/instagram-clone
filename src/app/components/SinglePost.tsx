@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconMore, IconSave } from "./Icons";
+import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconMore, IconSave } from "./Icons";
 import { useTranslation } from "next-i18next";
 import React, { Dispatch, RefObject, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { UserPreview } from "./UserPreview";
@@ -7,11 +7,12 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, changeLikeUrl, addUserList, toggleIsLoading, clearUserList } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl } from '@/store/slices/postSlice'
 import { fetchGetPostLikeList, fetchLikePost, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
-import { changeUnfollow } from "@/store/slices/userSlice";
+import { changeUnfollow, toggleIsLoading } from "@/store/slices/userSlice";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 
 export default function SinglePost({isPopup}:{isPopup:boolean}){
@@ -22,7 +23,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
     const [isHover,setIsHover] = useState<boolean>(false)
-    const [underMd,setUnderMd] = useState<boolean>(false)
+    const underMd = useMediaQuery("(max-width: 768px)");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const likeBoxRef = useRef<HTMLElement | null>(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
@@ -44,7 +45,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
             disableScroll()
         }
         else{
-            dispatch(changeLikeUrl(null))
+            dispatch(changeListUrl(null))
             dispatch(clearUserList())
             enableScroll()
         }
@@ -62,18 +63,6 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         textareaRef.current?.focus()
         console.log(textareaRef.current)
     }
-    function handlePageResize(){
-        if(window.innerWidth < 768){
-            setUnderMd(true)
-        }
-        else{
-            setUnderMd(false)
-        }
-    }
-    window.addEventListener('resize',handlePageResize)
-    useEffect(()=>{
-        handlePageResize()
-    },[])
     return(
         <>
             <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
@@ -134,9 +123,11 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     </div>
                 </div>
                 {likeBoxToggle && 
-                    <LikeList contentId={postDetail.id} ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
+                    <UserList targetId={postDetail.id} ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
                 }
-                <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
+                {!underMd &&
+                    <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
+                }
             </div>
             {unfollowDetail &&
                 <UnfollowPopup ref={unfollowPopupRef}/>
@@ -392,7 +383,7 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
             <CommentInput textareaRef={textareaRef} className="bg-white fixed pb-20 pt-8 bottom-0 left-0 w-full mx-0 p-4 flex md:hidden" />
         </div>
         {likeBoxToggle && 
-            <LikeList ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
+            <UserList ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
         }
         </>
     )
@@ -445,22 +436,41 @@ function getPosition(element : HTMLElement){
     const distanceFromBottom = window.innerHeight - rect.bottom;
     return {left:distanceFromLeft,top:distanceFromTop,height:elmClientHeight,bottom:distanceFromBottom}
 }
-export function LikeList({closePopup,ref,isComment=false,contentId}:{closePopup:()=>void,ref:React.Ref<HTMLDivElement> | undefined,isComment:boolean,contentId:string}){
-    const currentUrl = useSelector((state: RootState) => state.popupPost.likeUrl);
-    const likeListData = useSelector((state: RootState) => state.popupPost.userList);
+
+type userListType = {
+    closePopup:()=>void,
+    ref:React.Ref<HTMLDivElement> | undefined,
+    isComment:boolean,
+    targetId:string,
+    listType:'likeList' | 'followerList' | 'followingList'
+}
+export function UserList({closePopup,listType='likeList',ref,isComment=false,targetId}:userListType){
+    const currentUrl = useSelector((state: RootState) => state.popupPost.listUrl);
+    const userListData = useSelector((state: RootState) => state.popupPost.userList);
+    const underMd = useMediaQuery("(max-width: 768px)");
+    console.log('underMd')
+    console.log(underMd)
+    console.log('underMd')
     const { t } = useTranslation()
     const [isHover,setIsHover] = useState<boolean>(false)
     const [hoveringUsername,setHoveringUsername] = useState<null | string>(null)
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const dispatch = useDispatch()
     useEffect(()=>{
-        dispatch(changeLikeUrl(`http://localhost:8000/getpostlikes/${contentId}`))
+        if(listType == 'likeList'){
+            dispatch(changeListUrl(`http://localhost:8000/getpostlikes/${targetId}`))
+        }
+        else if(listType == 'followerList'){
+            dispatch(changeListUrl(`http://localhost:8000/${targetId}/followers`))
+        }
+        else{
+            dispatch(changeListUrl(`http://localhost:8000/${targetId}/following`))
+        }
     },[])
     useEffect(()=>{
+        console.log(currentUrl)
         if(!currentUrl) return
             if(!isComment){
-                console.log('inside')
-                console.log(currentUrl)
                 async function fetchData(currentUrl){
                         const response = await fetchGetPostLikeList(currentUrl)
                         const jsonRes = await response.json()
@@ -473,6 +483,7 @@ export function LikeList({closePopup,ref,isComment=false,contentId}:{closePopup:
             }
     },[currentUrl])
     function mouseEnter(event : React.MouseEvent<Element, MouseEvent>,username:string){
+        if(underMd) return
         setHoveringUsername(username)
         setIsHover(true)
         const number = getPosition(event.target as HTMLElement)
@@ -491,26 +502,46 @@ export function LikeList({closePopup,ref,isComment=false,contentId}:{closePopup:
                         <IconClose className="size-[18px]"/>
                     </span>
                     <span className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 font-semibold">
-                        {t('like-t')}
+                    {listType == 'likeList' ? 
+                        <span>
+                            {t('like-t')}
+                        </span>
+                    :
+                    <>
+                        {listType == 'followerList' ?
+                            <span>Followers</span>
+                            :
+                            <span>Following</span>
+                        }
+                    </>
+                    }
                     </span>
                 </div>
                 <div className="overflow-y-scroll flex-1">
-                    {likeListData?.map((item,index)=>{
+                    {userListData?.map((item,index)=>{
                         return <UserPreview key={index} userData={item} mouseEnter={mouseEnter} mouseOut={mouseOut}/>
                     })}
                 </div>
             </div>
-            {isHover &&
+            {!underMd && isHover &&
                 <UserHoverPreview ref={ref} username={hoveringUsername} isHover={isHover} position={userPreviewHoverPosition}/>
             }
         </div>
     )
 }
 
-export function UnfollowPopup({ref}){
+export function UnfollowPopup({ref,inList=true}){
     const dispatch = useDispatch()
     const userDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
-    
+    function unfollowHandler(){
+        if(inList){
+            dispatch(listToggleIsLoading({username:userDetail?.username,result:true}))
+        }
+        else{
+            dispatch(toggleIsLoading(true))
+        }
+        dispatch(changeUnfollow(null))
+    }
     return(
         <div className="fixed z-50 top-0 right-0 w-[100vw] h-[100vh] bg-black bg-opacity-60 flex justify-center items-center">
             <div ref={ref} className="w-[400px] flex flex-col justify-center items-center bg-white rounded-lg">
@@ -519,11 +550,12 @@ export function UnfollowPopup({ref}){
                         <Image className="w-full h-full object-cover rounded-full" src={userDetail?.profile_pic || '/images/profile-img.jpeg'} alt="" width={90} height={90}></Image>
                     </div>
                     <span>
+                        <IconLoading className="size-8 fill-[#555555]"/>
                         Unfollow @{userDetail?.username}?
                     </span>
                 </div>
                 <div className="flex flex-col w-full">
-                    <div onClick={()=>{dispatch(toggleIsLoading({username:userDetail?.username,result:true}));dispatch(changeUnfollow(null))}} className="border-t-[1px] font-semibold border-ss py-4 text-[#ED4956] cursor-pointer text-center">
+                    <div onClick={unfollowHandler} className="border-t-[1px] font-semibold border-ss py-4 text-[#ED4956] cursor-pointer text-center">
                         Unfollow
                     </div>
                     <div onClick={()=>dispatch(changeUnfollow(null))} className="border-t-[1px] border-ss py-4 cursor-pointer text-center">
