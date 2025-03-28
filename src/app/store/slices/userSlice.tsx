@@ -4,23 +4,34 @@ type UserDetail = null | {
 
 }
 
-const initialState : {username:null | string,unfollowDetail:null | {username:string,profile_pic:string}} = {
-  username: null,
-  unfollowDetail:null
+const initialState : {myUsername:null | string,unfollowDetail:null | {username:string,profile_pic:string},currentVisitingUser:null | {}} = {
+  myUsername: null,
+  unfollowDetail:null,
+  currentVisitingUser:null
 };
 
 const userSlice = createSlice({
   name: "userSlice",
   initialState,
   reducers: {
-    changeUsername: (state, action) => {
-      state.username = action.payload;
+    changeMyUsername: (state, action) => {
+      state.myUsername = action.payload;
     },
     changeUnfollow: (state, action) => {
         state.unfollowDetail = action.payload;
       },
+    changeCurrentVisitingUser: (state, action) => {
+      action.payload['isLoading'] = false
+      state.currentVisitingUser = action.payload
+    },
+    toggleIsLoading: (state, action) => {
+      state.currentVisitingUser.isLoading = action.payload
+    },
+    toggleIsFollowing: (state, action) => {
+      state.currentVisitingUser.is_following = action.payload
+    },
   },
 });
 
-export const { changeUsername, changeUnfollow } = userSlice.actions;
+export const { changeMyUsername, changeUnfollow, changeCurrentVisitingUser, toggleIsLoading, toggleIsFollowing} = userSlice.actions;
 export default userSlice.reducer;

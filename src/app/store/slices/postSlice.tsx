@@ -16,10 +16,11 @@ type postDetail = null | {
     }]
 }
 
-const initialState : {url:string | null,postDetail:postDetail,likeUrl:string | null,userList:[] | null} = {
+const initialState : {url:string | null,postDetail:postDetail,listTitle:string | null,listUrl:string | null,userList:[] | null} = {
   url: null,
   postDetail:null,
-  likeUrl:null,
+  listUrl:null,
+  listTitle:null,
   userList:null
 };
 
@@ -34,8 +35,12 @@ const postSlice = createSlice({
     changeUrl: (state, action) => {
       state.url = action.payload; 
     },
-    changeLikeUrl: (state, action) => {
-      state.likeUrl = action.payload; 
+    changeListUrl: (state, action) => {
+      if(action.payload == state.listUrl) return
+      state.listUrl = action.payload; 
+    },
+    changeListTitle: (state, action) => {
+      state.listTitle = action.payload; 
     },
     addPostDetail: (state, action) => {
       state.postDetail = action.payload;
@@ -91,7 +96,7 @@ const postSlice = createSlice({
         }
       })
     },
-    toggleIsLoading: (state, action) => {
+    listToggleIsLoading: (state, action) => {
       state.userList.map((item)=>{
         if(item.username == action.payload.username){
           item.isLoading = action.payload.result
@@ -101,5 +106,5 @@ const postSlice = createSlice({
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeLikeUrl, addUserList, followUserList, toggleIsLoading, clearUserList} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList} = postSlice.actions;
 export default postSlice.reducer;
