@@ -7,18 +7,20 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl } from '@/store/slices/postSlice'
-import { fetchGetPostLikeList, fetchLikePost, fetchUnlikePost } from "@/api/likesApi";
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment } from '@/store/slices/postSlice'
+import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
 import { changeUnfollow, toggleIsLoading } from "@/store/slices/userSlice";
 import useMediaQuery from "@/hooks/useMediaQuery";
+import { fetchSimpleGet } from "@/api/simpleGet";
 
 
 export default function SinglePost({isPopup}:{isPopup:boolean}){
     const dispatch = useDispatch()
     const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
+    const commentId = useSelector((state: RootState) => state.popupPost.commentId);
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
@@ -27,7 +29,8 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const likeBoxRef = useRef<HTMLElement | null>(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
-    useClickOutside(likeBoxRef, () => !unfollowDetail ? setLikeBoxToggle(false) : {});
+    const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
+    useClickOutside(likeBoxRef, () => !unfollowDetail ? emptyLikeList() : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
     function mouseEnter(event : React.MouseEvent<Element, MouseEvent>){
@@ -40,16 +43,26 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
             setIsHover(false)
         }, 100);
     }
+    function handleLikeList(){
+        dispatch(changeListTitle('Likes'))
+    }
+    function emptyLikeList(){
+        dispatch(changeListTitle(null))
+        dispatch(changeListUrl(null))
+        dispatch(changeCommentId(null))
+        dispatch(clearUserList())
+    }
     useEffect(()=>{
-        if(likeBoxToggle){
-            disableScroll()
+        if(!listTitle){
+            enableScroll()
+            setLikeBoxToggle(false)
+            emptyLikeList()
         }
         else{
-            dispatch(changeListUrl(null))
-            dispatch(clearUserList())
-            enableScroll()
+            disableScroll()
+            setLikeBoxToggle(true)
         }
-    },[likeBoxToggle])
+    },[listTitle])
     function handleCommentToggle(){
         if(underMd){
             if(commentToggle){
@@ -61,7 +74,6 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         }
         setCommentToggle(!commentToggle)
         textareaRef.current?.focus()
-        console.log(textareaRef.current)
     }
     return(
         <>
@@ -110,7 +122,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     </div>
                     <div className="px-2">
                         <PostAction handleCommentToggle={handleCommentToggle} />
-                        <div onClick={()=>setLikeBoxToggle(true)} className="mx-2 font-bold text-sm cursor-pointer">
+                        <div onClick={()=>handleLikeList()} className="mx-2 font-bold text-sm cursor-pointer">
                             <span>{postDetail.like_count}</span> {t('likes')}
                         </div>
                         <div onClick={handleCommentToggle} className="block mx-2 md:hidden text-gray text-sm cursor-pointer">
@@ -123,7 +135,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     </div>
                 </div>
                 {likeBoxToggle && 
-                    <UserList targetId={postDetail.id} ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
+                    <UserList listType={commentId ? 'commentlikeList' : 'likeList'} targetId={commentId ? commentId : postDetail.id} ref={likeBoxRef} closePopup={()=>emptyLikeList()} />
                 }
                 {!underMd &&
                     <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
@@ -344,18 +356,27 @@ export function EmojiBox({isBottom0,emojiBoxRef,insertEmoji} : {isBottom0? : boo
 
 
 export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>void,textareaRef:RefObject<HTMLTextAreaElement | null>}){
-    const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
+    const commentList = useSelector((state: RootState) => state.popupPost.commentList);
+    // const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
     const { t } = useTranslation()
+    const [currentUrl,setCurrentUrl] = useState('')
     const likeBoxRef = useRef<HTMLElement>(null)
-    useClickOutside(likeBoxRef, () => setLikeBoxToggle(false));
+    const dispatch = useDispatch()
+    async function fetchComments(){
+        const reposnse = await fetchSimpleGet(currentUrl)
+        const jsonRes = await reposnse.json()
+        dispatch(addCommentList(jsonRes.results))
+        
+    }
     useEffect(()=>{
-        if(likeBoxToggle){
-            disableScroll()
+        if(currentUrl){
+            fetchComments()
         }
-        else{
-            enableScroll()
-        }
-    },[likeBoxToggle])
+    },[currentUrl])
+    useEffect(()=>{
+        setCurrentUrl('http://localhost:8000/comments/101')
+    },[])
+    
     return(
         <>
         <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow z-30">
@@ -366,62 +387,82 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
                 <span className="font-medium absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{t('comments')}</span>
             </div>
             <div className="mx-2 mr-0 overflow-y-scroll md:overflow-auto h-[calc(100%-44px)] md:h-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300">
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
-                <Comment showLikeList={()=>setLikeBoxToggle(true)} />
+                {commentList && commentList.map((item,index)=>{
+                    return <Comment commentDetail={item} key={index} />
+                })}
             </div>
             <CommentInput textareaRef={textareaRef} className="bg-white fixed pb-20 pt-8 bottom-0 left-0 w-full mx-0 p-4 flex md:hidden" />
         </div>
-        {likeBoxToggle && 
-            <UserList ref={likeBoxRef} closePopup={()=>setLikeBoxToggle(false)} />
-        }
         </>
     )
 }
-function Comment({showLikeList}:{showLikeList?:()=>void}){
-    
+function Comment({commentDetail}:{commentDetail:{}}){
+    const dispatch = useDispatch()
+    if(!commentDetail) return
+    function handleLikeList(){
+        dispatch(changeListTitle('Likes'))
+        dispatch(changeCommentId(commentDetail.id))
+    }
+    async function fetchLike(){
+        const response = await fetchlikeComment(commentDetail.id)
+        if(response.status != 200){
+            dispatch(toggleLikeComment({id:commentDetail.id,action:'unlike'}))
+        }
+    }
+    async function fetchUnlike(){
+        const response = await fetchUnlikeComment(commentDetail.id)
+        if(response.status != 200){
+            dispatch(toggleLikeComment({id:commentDetail.id,action:'like'}))
+        }
+    }
+    function handleLikeComment(){
+        if(commentDetail.is_liked){
+            dispatch(toggleLikeComment({id:commentDetail.id,action:'unlike'}))
+            fetchUnlike()
+
+        }
+        else{
+            dispatch(toggleLikeComment({id:commentDetail.id,action:'like'}))
+            fetchLike()
+        }
+    }
     const { t } = useTranslation()
     return(
         <div className="flex justify-between py-3 px-2 md:px-0">
             <div className="flex gap-2">
                 <div className="rounded-full flex-shrink-0 cursor-pointer size-8">
-                    <Image className="rounded-full" src='/images/profile-img-2.jpg' width={32} height={32} alt=""></Image>
+                    <Image className="rounded-full" src={commentDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
                 </div>
                 <div className="flex-col md:flex">
                     <div className="block">
                         <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
-                            afshin_bizar
+                            {commentDetail.user.username}
                         </div>
                         <div className="text-sm whitespace-break-spaces">
                             <span className="leading-3">
-                                    چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود چقدر کسشعر بود 
+                                {commentDetail.comment}
                             </span>
                         </div>
                     </div>
                     <div className="text-xs text-gray flex gap-2 font-medium mt-2">
                         <div className="font-normal"><span>3</span>d</div>
-                        <div onClick={()=>showLikeList()} className="cursor-pointer">
-                            <span>1</span> {t('likes')}
-                        </div>
+                        {commentDetail.like_count &&
+                            <div onClick={()=>handleLikeList()} className="cursor-pointer">
+                                <span>{commentDetail.like_count}</span> {t('likes')}
+                            </div>
+                        }
                         <div className="cursor-pointer">
                             { t('reply') }
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="flex items-center cursor-pointer px-2">
-                <IconHeart className="size-[12px] md:size-[16px]  text-zinc-400"/>
-                {/* <IconHeart active className="size-[16px] text-red-600"/> */}
+            <div onClick={handleLikeComment} className="flex items-center cursor-pointer px-2">
+                {commentDetail.is_liked ?
+                    <IconHeart active className="size-[16px] text-[#ff3041]"/>
+                :
+                    <IconHeart className="size-[12px] md:size-[16px]  text-zinc-400"/>
+                }
             </div>
         </div>
 
@@ -440,25 +481,25 @@ function getPosition(element : HTMLElement){
 type userListType = {
     closePopup:()=>void,
     ref:React.Ref<HTMLDivElement> | undefined,
-    isComment:boolean,
     targetId:string,
-    listType:'likeList' | 'followerList' | 'followingList'
+    listType:'likeList' | 'followerList' | 'followingList' | 'commentlikeList'
 }
-export function UserList({closePopup,listType='likeList',ref,isComment=false,targetId}:userListType){
+export function UserList({closePopup,listType='likeList',ref,targetId}:userListType){
     const currentUrl = useSelector((state: RootState) => state.popupPost.listUrl);
     const userListData = useSelector((state: RootState) => state.popupPost.userList);
     const underMd = useMediaQuery("(max-width: 768px)");
-    console.log('underMd')
-    console.log(underMd)
-    console.log('underMd')
     const { t } = useTranslation()
     const [isHover,setIsHover] = useState<boolean>(false)
     const [hoveringUsername,setHoveringUsername] = useState<null | string>(null)
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const dispatch = useDispatch()
     useEffect(()=>{
+        if(currentUrl) return
         if(listType == 'likeList'){
             dispatch(changeListUrl(`http://localhost:8000/getpostlikes/${targetId}`))
+        }
+        else if(listType == 'commentlikeList'){
+            dispatch(changeListUrl(`http://localhost:8000/comment/${targetId}/likes`))
         }
         else if(listType == 'followerList'){
             dispatch(changeListUrl(`http://localhost:8000/${targetId}/followers`))
@@ -470,17 +511,12 @@ export function UserList({closePopup,listType='likeList',ref,isComment=false,tar
     useEffect(()=>{
         console.log(currentUrl)
         if(!currentUrl) return
-            if(!isComment){
-                async function fetchData(currentUrl){
-                        const response = await fetchGetPostLikeList(currentUrl)
-                        const jsonRes = await response.json()
-                        dispatch(addUserList(jsonRes.results))
-                    }
-                    fetchData(currentUrl)
-            }
-            else{
-                console.log('outside')
-            }
+            async function fetchData(currentUrl){
+                    const response = await fetchSimpleGet(currentUrl)
+                    const jsonRes = await response.json()
+                    dispatch(addUserList(jsonRes.results))
+                }
+                fetchData(currentUrl)
     },[currentUrl])
     function mouseEnter(event : React.MouseEvent<Element, MouseEvent>,username:string){
         if(underMd) return
@@ -502,7 +538,7 @@ export function UserList({closePopup,listType='likeList',ref,isComment=false,tar
                         <IconClose className="size-[18px]"/>
                     </span>
                     <span className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 font-semibold">
-                    {listType == 'likeList' ? 
+                    {listType == 'likeList' || listType == 'commentlikeList' ? 
                         <span>
                             {t('like-t')}
                         </span>
