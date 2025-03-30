@@ -53,9 +53,6 @@ export function StoryList() {
         fixHolderPosition();
         return () => window.removeEventListener('resize', fixHolderPosition);
     }, []);
-    console.log('isUnderMd')
-    console.log(isUnderMd)
-    console.log('isUnderMd')
     return (
         <div className="fixed top-0 left-0 w-full h-full bg-st z-50 flex items-center">
             <IconClose className="text-white" />

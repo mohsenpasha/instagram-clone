@@ -113,27 +113,3 @@ export default function Login() {
         </div>
     );
 }
-
-
-async function refreshToken() {
-    try {
-        const response = await fetch("http://localhost:8000/refresh/", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (response.ok) {
-            console.log("توکن جدید دریافت شد.");
-            return true;
-        } else {
-            console.log("رفرش توکن شکست خورد.");
-            return false;
-        }
-    } catch (error) {
-        console.error("خطا در رفرش توکن:", error);
-        return false;
-    }
-}

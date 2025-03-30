@@ -82,7 +82,6 @@ export function MessagesStarterInfo(){
     )
 }
 export function MessageInput({mode='input'}:{mode?: 'invite' | 'input'}){
-    console.log(mode)
     return(
         <div className="h-16 border-t-[1px] border-ss">
             {mode == 'invite' ?

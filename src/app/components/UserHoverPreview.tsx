@@ -25,7 +25,6 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
     const userDatailHover = userList?.filter((item)=>{
         return item.username == username
     })
-    console.log(userDatailHover)
     async function doFetch(){
         const respose = await fetchGetUserHoverInfo(username)
         const JsonRes = await respose.json()

@@ -60,7 +60,6 @@ export default function Profile(){
     }
     
     useEffect(()=>{
-        console.log(userInfo)
         if(!userInfo.is_private){
             fetchPosts()
             window.addEventListener("scroll", handleScroll);
@@ -79,7 +78,6 @@ export default function Profile(){
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 && !isLoading) {
         if(postRef.current){
-            console.log(postRef)
             setIsLoading(true)
         }
       }

@@ -66,7 +66,6 @@ export function SingleSearchResult({type,id,subtitle}:{type:'page' | 'tag',id:st
     const t = getSearchHistory()
     function deleteSavedSearch(e:MouseEvent<HTMLDivElement, MouseEvent>){
         e.preventDefault()
-        console.log('test')
     }
     return(
         <Link href='/testtetete/' className="py-2 px-6 flex gap-3 items-center cursor-pointer bg-white hover:bg-gray">
