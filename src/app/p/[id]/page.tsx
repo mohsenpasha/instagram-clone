@@ -1,18 +1,24 @@
 'use client'
 import PostList from "@/components/PostList";
-import SinglePost from "@/components/SinglePost";
+import SinglePost, { UserList } from "@/components/SinglePost";
 import Link from "next/link";
 import { useTranslation } from "next-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { changeUrl, remove, addPostDetail} from '@/store/slices/postSlice'
 import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 export default function PostPage(){
     const params = useParams()
     const [singlePostDetail,setSinglePostDetail] = useState(null)
+    const [likeListToggle,setLikeListToggle] = useState(false)
     const dispatch = useDispatch();
-    dispatch(changeUrl(`/p/${params.id}`))
+    useEffect(()=>{
+        fetchPost()
+    },[])
+    
     const { t } = useTranslation();
     async function fetchPost(){
         const response = await fetch(`http://localhost:8000/getpost/${params.id}`, {
@@ -27,9 +33,7 @@ export default function PostPage(){
 
         setSinglePostDetail(jsonRes)
     }
-    useEffect(()=>{
-        fetchPost()
-    },[])
+    
 
     return(
         <div className={`flex flex-wrap xl:w-10/12 justify-center [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300`}>
