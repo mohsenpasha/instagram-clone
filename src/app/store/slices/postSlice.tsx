@@ -65,6 +65,38 @@ const postSlice = createSlice({
         })
       }
     },
+    toggleLikeReplyComment: (state,action) => {
+      if(!state.commentList) return
+
+        state.commentList.map((item)=>{
+          if(item.id != action.payload.commentId) return
+            item.replyList.map((replyItem)=>{
+              if(replyItem.id != action.payload.replyId) return
+              if(action.payload.action == 'like'){
+                if(!replyItem.is_liked){
+                  replyItem.is_liked = true
+                  if(replyItem.like_count){
+                    replyItem.like_count += 1
+                  }
+                  else{
+                    replyItem.like_count = 1
+                  }
+                }
+              }
+              else{
+                if(replyItem.is_liked){
+                  replyItem.is_liked = false
+                  if(replyItem.like_count == 1){
+                    replyItem.like_count = null
+                  }
+                  else{
+                    replyItem.like_count -= 1
+                  }
+                }
+              }
+            })
+        })
+    },
     changeCommentId: (state, action) => {
       state.commentId = action.payload
     },
@@ -110,6 +142,31 @@ const postSlice = createSlice({
           state.userList = action.payload.map(item => ({ ...item, isLoading: false }));
       }
     },
+    addReplyList: (state, action) => {
+      console.log(action.payload);
+      if (!state.commentList) return;
+      state.commentList = state.commentList.map((item) => {
+          if (action.payload.id === item.id) {
+              return {
+                  ...item,
+                  replyList: [
+                      ...(item.replyList || []),
+                      action.payload.newReply
+                  ]
+              };
+          }
+          return item;
+      });
+  },
+  clearReplyList: (state, action) => {
+    if (!state.commentList) return;
+    state.commentList = state.commentList.map((item) => {
+        if (action.payload === item.id) {
+            item.replyList = null
+        }
+        return item;
+    });
+},
     addCommentList: (state, action) => {
       if (state.commentList) {
         state.commentList = [
@@ -142,5 +199,5 @@ const postSlice = createSlice({
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList} = postSlice.actions;
 export default postSlice.reducer;
