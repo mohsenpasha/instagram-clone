@@ -7,13 +7,14 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList } from '@/store/slices/postSlice'
 import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
 import { changeUnfollow, toggleIsLoading } from "@/store/slices/userSlice";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { fetchSimpleGet } from "@/api/simpleGet";
+import Link from "next/link";
 
 
 export default function SinglePost({isPopup}:{isPopup:boolean}){
@@ -396,9 +397,11 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
         </>
     )
 }
-function Comment({commentDetail}:{commentDetail:{}}){
+function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
     const dispatch = useDispatch()
     if(!commentDetail) return
+    const repliedTo = useRef(commentDetail.user.username)
+    const commentUrl = useRef(`http://localhost:8000/comment/replies/${commentDetail.id}`)
     function handleLikeList(){
         dispatch(changeListTitle('Likes'))
         dispatch(changeCommentId(commentDetail.id))
@@ -417,54 +420,109 @@ function Comment({commentDetail}:{commentDetail:{}}){
     }
     function handleLikeComment(){
         if(commentDetail.is_liked){
-            dispatch(toggleLikeComment({id:commentDetail.id,action:'unlike'}))
+            if(isReply){
+                dispatch(toggleLikeReplyComment({replyId:commentDetail.id,commentId:commentDetail.parentCommentId,action:'unlike'}))
+            }
+            else{
+                dispatch(toggleLikeComment({id:commentDetail.id,action:'unlike'}))
+            }
             fetchUnlike()
-
         }
         else{
-            dispatch(toggleLikeComment({id:commentDetail.id,action:'like'}))
+            if(isReply){
+                dispatch(toggleLikeReplyComment({replyId:commentDetail.id,commentId:commentDetail.parentCommentId,action:'like'}))
+            }
+            else{
+                dispatch(toggleLikeComment({id:commentDetail.id,action:'like'}))
+            }
             fetchLike()
         }
     }
     const { t } = useTranslation()
+    async function fetchReplies(){
+        const response = await fetchSimpleGet(commentUrl.current)
+        const jsonRes = await response.json()
+        fixReplies(jsonRes.results)
+        commentUrl.current = jsonRes.next
+    } 
+    function getReplies(){
+        fetchReplies()
+    }
+    function hideReplies(){
+        commentUrl.current = `http://localhost:8000/comment/replies/${commentDetail.id}`
+        dispatch(clearReplyList(commentDetail.id))
+
+    }
+    function fixReplies(repliedCommentDetail){
+        repliedCommentDetail.map((item)=>{
+            let { replies, reply_count, ...newCommentDetail } = item;
+            newCommentDetail = {...newCommentDetail,replied_to:repliedTo.current}
+            newCommentDetail = {...newCommentDetail,parentCommentId:commentDetail.id}
+            dispatch(addReplyList({id:commentDetail.id,newReply:newCommentDetail}))
+            if(item.replies){
+                repliedTo.current = item.user.username
+                fixReplies(item.replies)
+            }
+            repliedTo.current = commentDetail.user.username
+        })
+    }
     return(
-        <div className="flex justify-between py-3 px-2 md:px-0">
-            <div className="flex gap-2">
-                <div className="rounded-full flex-shrink-0 cursor-pointer size-8">
-                    <Image className="rounded-full" src={commentDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
-                </div>
-                <div className="flex-col md:flex">
-                    <div className="block">
-                        <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
-                            {commentDetail.user.username}
-                        </div>
-                        <div className="text-sm whitespace-break-spaces">
-                            <span className="leading-3">
-                                {commentDetail.comment}
-                            </span>
-                        </div>
+        <>
+            <div className={`flex justify-between py-3 px-2 md:px-0 ${isReply && '!pl-8'}`}>
+                <div className="flex flex-1 gap-2">
+                    <div className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
+                        <Image className="rounded-full" src={commentDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
                     </div>
-                    <div className="text-xs text-gray flex gap-2 font-medium mt-2">
-                        <div className="font-normal"><span>3</span>d</div>
-                        {commentDetail.like_count &&
-                            <div onClick={()=>handleLikeList()} className="cursor-pointer">
-                                <span>{commentDetail.like_count}</span> {t('likes')}
+                    <div className="flex-col flex-1 md:flex">
+                        <div className="block">
+                            <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
+                                {commentDetail.user.username}
                             </div>
-                        }
-                        <div className="cursor-pointer">
-                            { t('reply') }
+                            <div className="text-sm whitespace-break-spaces">
+                                <span className="leading-3">
+                                    {isReply &&
+                                    <Link className="text-bll" href={`/${commentDetail.replied_to}`}>@{commentDetail.replied_to} </Link>
+                                    }
+                                    {commentDetail.comment}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-xs text-gray flex gap-2 font-medium mt-2">
+                            <div className="font-normal"><span>3</span>d</div>
+                            {commentDetail.like_count &&
+                                <div onClick={()=>handleLikeList()} className="cursor-pointer">
+                                    <span>{commentDetail.like_count}</span> {t('likes')}
+                                </div>
+                            }
+                            <div className="cursor-pointer">
+                                { t('reply') }
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div onClick={handleLikeComment} className="flex items-center cursor-pointer px-2">
+                    {commentDetail.is_liked ?
+                        <IconHeart active className="size-[16px] text-[#ff3041]"/>
+                        :
+                        <IconHeart className="size-[12px] md:size-[16px]  text-zinc-400"/>
+                    }
+                </div>
             </div>
-            <div onClick={handleLikeComment} className="flex items-center cursor-pointer px-2">
-                {commentDetail.is_liked ?
-                    <IconHeart active className="size-[16px] text-[#ff3041]"/>
-                :
-                    <IconHeart className="size-[12px] md:size-[16px]  text-zinc-400"/>
-                }
-            </div>
-        </div>
+            {commentDetail.reply_count && 
+                <div onClick={()=> commentUrl.current ? getReplies() : hideReplies()} className="pl-10 flex items-center gap-4 text-xs text-gray font-semibold cursor-pointer">
+                    <span className="w-6 block border-b-[1px] border-[#737373]"></span>
+                    {commentUrl.current 
+                        ? 
+                        <span>View replies ({commentDetail.reply_count - (commentDetail.replyList?.length || 0)})</span>
+                        :
+                        <span>Hide replies</span>
+                    }
+                </div>
+            }
+            {commentDetail.replyList?.map((item,index)=>{
+                return <Comment key={index} isReply={true} commentDetail={item}/>
+            })}
+        </>
 
 
     )
@@ -509,7 +567,6 @@ export function UserList({closePopup,listType='likeList',ref,targetId}:userListT
         }
     },[])
     useEffect(()=>{
-        console.log(currentUrl)
         if(!currentUrl) return
             async function fetchData(currentUrl){
                     const response = await fetchSimpleGet(currentUrl)
