@@ -7,7 +7,7 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount } from '@/store/slices/postSlice'
 import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
@@ -15,6 +15,7 @@ import { changeUnfollow, toggleIsLoading } from "@/store/slices/userSlice";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { fetchSimpleGet } from "@/api/simpleGet";
 import Link from "next/link";
+import { fetchAddComment } from "@/api/commentApi";
 
 
 export default function SinglePost({isPopup}:{isPopup:boolean}){
@@ -243,6 +244,14 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
     const [emojiBottom,setEmojiBottom] = useState<boolean>(false)
     const [emojiBoxToggle,setEmojiBoxToggle] = useState<boolean>(false)
     const emojiBoxRef = useRef<HTMLDivElement>(null);
+    const repliedTo = useSelector((state: RootState) => state.popupPost.replied_to);
+    const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
+    const dispatch = useDispatch()
+    useEffect(()=>{
+        if(!repliedTo) return
+        setValue('@' + repliedTo.username + ' ')
+        textareaRef.current?.focus()
+    },[repliedTo])
     useClickOutside(emojiBoxRef, () => setEmojiBoxToggle(false));
     const handleInput = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
         setValue(e.target.value);
@@ -284,6 +293,37 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
           }, 0);
         }
       };
+    async function fetchSend(){
+        let requestData;
+        console.log(repliedTo)
+        if(repliedTo){
+            requestData = {comment:value,postId:String(postDetail.id),replied_to:repliedTo.id}
+        }
+        else{
+            requestData = {comment:value,postId:String(postDetail.id)}
+        }
+        const response = await fetchAddComment(requestData)
+        console.log(response)
+        console.log(response.status)
+        if(response.status == 200){
+            console.log(repliedTo)
+            const jsonRes = await response.json()
+            if(repliedTo){
+                dispatch(addReplyList({id:(repliedTo.parentId || repliedTo.id),newReply:jsonRes}))
+                dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
+            }
+            else{
+                console.log('else')
+                console.log(jsonRes)
+                dispatch(addCommentList([jsonRes]))
+            }
+            console.log(jsonRes)
+        }
+
+    }
+    function handleSendComment(){
+            fetchSend()
+    }
     const { t } = useTranslation()
     return(
         <div className={`border-t-[1px] border-ss py-[6px] items-center flex gap-2 ${className}`}>
@@ -295,7 +335,7 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
                 <Image className="rounded-full" src='/images/profile-img.jpeg' width={32} height={32} alt=""></Image>
             </div>
             <textarea ref={textareaRef} className={`resize-none outline-none max-h-20 flex-1 text-sm items-center flex pr-1`} rows={1} onInput={handleInput} placeholder={t('add-comment')} value={value} name="" id=""></textarea>
-            <span>Post</span>
+            <button onClick={handleSendComment} disabled={!value} className="text-bl disabled:opacity-30 disabled:hover:text-bl hover:text-bll">Post</button>
         </div>
     )
 }
@@ -468,6 +508,14 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
             repliedTo.current = commentDetail.user.username
         })
     }
+    function handleReply(){
+        if(commentDetail.parentCommentId){
+            dispatch(changeRepliedTo({id:commentDetail.id,username:commentDetail.user.username,parentId:commentDetail.parentCommentId}))
+        }
+        else{
+            dispatch(changeRepliedTo({id:commentDetail.id,username:commentDetail.user.username}))
+        }
+    }
     return(
         <>
             <div className={`flex justify-between py-3 px-2 md:px-0 ${isReply && '!pl-8'}`}>
@@ -502,7 +550,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                                     <span>{commentDetail.like_count}</span> {t('likes')}
                                 </div>
                             }
-                            <div className="cursor-pointer">
+                            <div onClick={handleReply} className="cursor-pointer">
                                 { t('reply') }
                             </div>
                         </div>
@@ -517,9 +565,9 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                 </div>
             </div>
             {commentDetail.reply_count && 
-                <div onClick={()=> commentUrl.current ? getReplies() : hideReplies()} className="pl-10 flex items-center gap-4 text-xs text-gray font-semibold cursor-pointer">
+                <div onClick={()=> (commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0) ? getReplies() : hideReplies()} className="pl-10 flex items-center gap-4 text-xs text-gray font-semibold cursor-pointer">
                     <span className="w-6 block border-b-[1px] border-[#737373]"></span>
-                    {commentUrl.current 
+                    {commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0
                         ? 
                         <span>View replies ({commentDetail.reply_count - (commentDetail.replyList?.length || 0)})</span>
                         :
