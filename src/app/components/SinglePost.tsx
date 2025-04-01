@@ -111,7 +111,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     </div>
                     <div className="flex-1 overflow-auto">
                             
-                        <PostCaption caption={postDetail.caption} user={postDetail.user} />
+                        <PostCaption caption={postDetail.caption} user={postDetail.user} updated_at={postDetail.updated_at} />
                         {underMd 
                         ? 
                         commentToggle && <CommentBox textareaRef={textareaRef} closeCommentBox={handleCommentToggle} />
@@ -130,7 +130,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                             {t('view-all')} <span>23</span> {t('cs')}
                         </div>
                         <div className="mx-2 text-xs cursor-pointer text-gray m-2">
-                            1 {t('day-ago')}
+                            {postDetail.updated_at.t_ago}{postDetail.updated_at.t}
                         </div>
                         <CommentInput textareaRef={textareaRef} className="hidden md:flex" />
                     </div>
@@ -207,7 +207,7 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
         </div>
     )
 }
-export function PostCaption({caption,user}){
+export function PostCaption({caption,user,updated_at}){
     return(
         <div className="flex justify-between py-3 px-2 md:px-0 ltr:md:pl-6 rtl:md:pr-6">
         <div className="flex gap-2">
@@ -226,8 +226,10 @@ export function PostCaption({caption,user}){
                     </div>
                 </div>
                 <div className="text-xs text-gray flex gap-2 font-medium mt-2">
-                            <div className="font-normal"><span>3</span>d</div>
-                        </div>
+                    {updated_at.t_ago &&
+                        <div className="font-normal"><span>{updated_at.t_ago}</span>{updated_at.t}</div>
+                    }
+                </div>
             </div>
         </div>
         <div className="flex items-center cursor-pointer px-2">
@@ -488,7 +490,13 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                             </div>
                         </div>
                         <div className="text-xs text-gray flex gap-2 font-medium mt-2">
-                            <div className="font-normal"><span>3</span>d</div>
+                            <div className="font-normal">
+                                {commentDetail.updated_at.t_ago ? 
+                                <span>{commentDetail.updated_at.t_ago}{commentDetail.updated_at.t}</span>
+                                :
+                                <span>3</span>
+                                }
+                                </div>
                             {commentDetail.like_count &&
                                 <div onClick={()=>handleLikeList()} className="cursor-pointer">
                                     <span>{commentDetail.like_count}</span> {t('likes')}
