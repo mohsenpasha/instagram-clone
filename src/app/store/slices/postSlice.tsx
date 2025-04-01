@@ -16,14 +16,15 @@ type postDetail = null | {
     }]
 }
 
-const initialState : {url:string | null,postDetail:postDetail,listTitle:string | null,listUrl:string | null,commentId:string | null,userList:[] | null,commentList:[] | null} = {
+const initialState : {url:string | null,postDetail:postDetail,listTitle:string | null,listUrl:string | null,commentId:string | null,userList:[] | null,commentList:[] | null, replied_to:{id:string,username:string} | null} = {
   url: null,
   postDetail:null,
   listUrl:null,
   listTitle:null,
   userList:null,
   commentId:null,
-  commentList:null
+  commentList:null,
+  replied_to:null
 };
 
 const postSlice = createSlice({
@@ -52,13 +53,21 @@ const postSlice = createSlice({
             if(action.payload.action == 'like'){
               if(!item.is_liked){
                 item.is_liked = true
+                if(!item.like_count){
+                  item.like_count = 0
+                }
                 item.like_count += 1
               }
             }
             else{
               if(item.is_liked){
                 item.is_liked = false
-                item.like_count -= 1
+                if(item.like_count - 1 == 0){
+                  item.like_count = null
+                }
+                else{
+                  item.like_count -= 1
+                }
               }
             }
           }
@@ -103,6 +112,9 @@ const postSlice = createSlice({
     addPostDetail: (state, action) => {
       state.postDetail = action.payload;
     },
+    changeRepliedTo: (state, action) => {
+      state.replied_to = action.payload;
+    },
     likePost: (state) => {
       if(state.postDetail){
         if(!state.postDetail.is_liked){
@@ -143,7 +155,6 @@ const postSlice = createSlice({
       }
     },
     addReplyList: (state, action) => {
-      console.log(action.payload);
       if (!state.commentList) return;
       state.commentList = state.commentList.map((item) => {
           if (action.payload.id === item.id) {
@@ -158,6 +169,19 @@ const postSlice = createSlice({
           return item;
       });
   },
+  increaseReplyCount: (state, action) => {
+    if (!state.commentList) return;
+    state.commentList = state.commentList.map((item) => {
+        if (action.payload === item.id) {
+          if(!item.reply_count){
+            item.reply_count = 0
+          }
+          item.reply_count += 1
+            return item
+        }
+        return item;
+    });
+},
   clearReplyList: (state, action) => {
     if (!state.commentList) return;
     state.commentList = state.commentList.map((item) => {
@@ -199,5 +223,5 @@ const postSlice = createSlice({
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount} = postSlice.actions;
 export default postSlice.reducer;
