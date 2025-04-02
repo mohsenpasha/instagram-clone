@@ -16,15 +16,18 @@ type hoverType = {
         height:number
     },
     isHover:boolean,
-    username:string
+    username:string,
+    inComment?:boolean
 }
 
-export default function UserHoverPreview({position,isHover,username,ref}:hoverType){
+export default function UserHoverPreview({position,isHover,username,ref,inComment=false}:hoverType){
+    console.log(username)
     const [userHoverInfo,setUserHoverInfo] = useState<null | {}>(null)
     const userList = useSelector((state: RootState) => state.popupPost.userList);
     const userDatailHover = userList?.filter((item)=>{
         return item.username == username
     })
+    console.log(userDatailHover)
     async function doFetch(){
         const respose = await fetchGetUserHoverInfo(username)
         const JsonRes = await respose.json()
@@ -35,7 +38,7 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
             doFetch()
         }
         else{
-            setUserHoverInfo(null)
+            // setUserHoverInfo(null)
         }
         },[isHover])
     const [underMd,setUnderMd] = useState<boolean>(false)
@@ -100,7 +103,12 @@ export default function UserHoverPreview({position,isHover,username,ref}:hoverTy
                 }
                 <div className="px-4 flex w-full gap-2">
                     <div className="w-full">
-                        <FollowBtn fullSize={true} userData={userDatailHover[0]}/>
+                        {inComment ?
+                            <FollowBtn directUnfollow={true} inComment={inComment} fullSize={true} userData={userHoverInfo}/>
+                        :
+                        userDatailHover &&
+                            <FollowBtn directUnfollow={true} fullSize={true} userData={userDatailHover[0]}/>
+                        }
                     </div>
                 </div>
             </>

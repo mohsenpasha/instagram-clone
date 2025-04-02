@@ -23,28 +23,17 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const commentId = useSelector((state: RootState) => state.popupPost.commentId);
-    const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
-    const [isHover,setIsHover] = useState<boolean>(false)
     const underMd = useMediaQuery("(max-width: 768px)");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const hoverPreviewRef = useRef<HTMLTextAreaElement | null>(null);
     const likeBoxRef = useRef<HTMLElement | null>(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
     useClickOutside(likeBoxRef, () => !unfollowDetail ? emptyLikeList() : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
-    function mouseEnter(event : React.MouseEvent<Element, MouseEvent>){
-        setIsHover(true)
-        const number = getPosition(event.target as HTMLElement)
-        setUserPreviewHoverPosition(number)
-        }
-    function mouseOut(event : React.MouseEvent<Element, MouseEvent>){
-        setTimeout(() => {
-            setIsHover(false)
-        }, 100);
-    }
     function handleLikeList(){
         dispatch(changeListTitle('Likes'))
     }
@@ -93,11 +82,11 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     <div className="flex items-center absolute md:static top-0 right-0 w-full">
                         <div className="flex h-[70px] md:h-auto items-center gap-2 px-[16px] py-[14px] w-full border-b-[1px] md:border-b-0 border-ss justify-between">
                             <div className="flex gap-2 w-11/12 sm:w-10/12 truncate items-center">
-                                <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="rounded-full cursor-pointer size-8 overflow-hidden">
+                                <div className="rounded-full cursor-pointer size-8 overflow-hidden">
                                     <Image className="rounded-full" src={postDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
                                 </div>
                                 <div className="w-9/12 sm:w-11/12 md:w-9/12">
-                                    <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm font-medium inline-block">
+                                    <div className="text-sm font-medium inline-block">
                                         {postDetail.user.username}
                                     </div>
                                     <div className="text-xs truncate">
@@ -138,9 +127,6 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                 </div>
                 {likeBoxToggle && 
                     <UserList listType={commentId ? 'commentlikeList' : 'likeList'} targetId={commentId ? commentId : postDetail.id} ref={likeBoxRef} closePopup={()=>emptyLikeList()} />
-                }
-                {!underMd &&
-                    <UserHoverPreview isHover={isHover} position={userPreviewHoverPosition}/>
                 }
             </div>
             {unfollowDetail &&
@@ -444,6 +430,22 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
     if(!commentDetail) return
     const repliedTo = useRef(commentDetail.user.username)
     const commentUrl = useRef(`http://localhost:8000/comment/replies/${commentDetail.id}`)
+    const [isHover,setIsHover] = useState<boolean>(false)
+    const [hoveringUsername,setHoveringUsername] = useState<null | string>(null)
+    const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
+    const underMd = useMediaQuery("(max-width: 768px)");
+    function mouseEnter(event : React.MouseEvent<Element, MouseEvent>,username:string){
+        if(underMd) return
+        setHoveringUsername(username)
+        setIsHover(true)
+        const number = getPosition(event.target as HTMLElement)
+        setUserPreviewHoverPosition(number)
+        }
+    function mouseOut(event : React.MouseEvent<Element, MouseEvent>){
+        setTimeout(() => {
+            setIsHover(false)
+        }, 100);
+    }
     function handleLikeList(){
         dispatch(changeListTitle('Likes'))
         dispatch(changeCommentId(commentDetail.id))
@@ -520,7 +522,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
         <>
             <div className={`flex justify-between py-3 px-2 md:px-0 ${isReply && '!pl-8'}`}>
                 <div className="flex flex-1 gap-2">
-                    <div className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
+                    <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
                         <Image className="rounded-full" src={commentDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
                     </div>
                     <div className="flex-col flex-1 md:flex">
@@ -564,6 +566,9 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                     }
                 </div>
             </div>
+            {!underMd &&
+                <UserHoverPreview inComment={true} username={commentDetail.user.username} isHover={isHover} position={userPreviewHoverPosition}/>
+            }
             {commentDetail.reply_count && 
                 <div onClick={()=> (commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0) ? getReplies() : hideReplies()} className="pl-10 flex items-center gap-4 text-xs text-gray font-semibold cursor-pointer">
                     <span className="w-6 block border-b-[1px] border-[#737373]"></span>
@@ -672,7 +677,7 @@ export function UserList({closePopup,listType='likeList',ref,targetId}:userListT
                     })}
                 </div>
             </div>
-            {!underMd && isHover &&
+            {!underMd &&
                 <UserHoverPreview ref={ref} username={hoveringUsername} isHover={isHover} position={userPreviewHoverPosition}/>
             }
         </div>

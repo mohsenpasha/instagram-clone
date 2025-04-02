@@ -16,7 +16,7 @@ type postDetail = null | {
     }]
 }
 
-const initialState : {url:string | null,postDetail:postDetail,listTitle:string | null,listUrl:string | null,commentId:string | null,userList:[] | null,commentList:[] | null, replied_to:{id:string,username:string} | null} = {
+const initialState : {url:string | null,postDetail:postDetail,listTitle:string | null,listUrl:string | null,commentId:string | null,userList:[] | null,commentList:[] | null, replied_to:{id:string,username:string} | null,commentHoverIsLoading:boolean} = {
   url: null,
   postDetail:null,
   listUrl:null,
@@ -24,7 +24,8 @@ const initialState : {url:string | null,postDetail:postDetail,listTitle:string |
   userList:null,
   commentId:null,
   commentList:null,
-  replied_to:null
+  replied_to:null,
+  commentHoverIsLoading:false
 };
 
 const postSlice = createSlice({
@@ -115,6 +116,10 @@ const postSlice = createSlice({
     changeRepliedTo: (state, action) => {
       state.replied_to = action.payload;
     },
+    toggleCommentHoverLoading: (state, action) => {
+      state.commentHoverIsLoading = action.payload;
+    },
+    
     likePost: (state) => {
       if(state.postDetail){
         if(!state.postDetail.is_liked){
@@ -223,5 +228,5 @@ const postSlice = createSlice({
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading} = postSlice.actions;
 export default postSlice.reducer;
