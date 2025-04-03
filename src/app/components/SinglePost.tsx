@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconMore, IconSave } from "./Icons";
+import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconLoadingButton, IconMore, IconPlusCircle, IconSave } from "./Icons";
 import { useTranslation } from "next-i18next";
 import React, { Dispatch, RefObject, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { UserPreview } from "./UserPreview";
@@ -236,6 +236,7 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
     useEffect(()=>{
         if(!repliedTo) return
         setValue('@' + repliedTo.username + ' ')
+        console.log('set')
         textareaRef.current?.focus()
     },[repliedTo])
     useClickOutside(emojiBoxRef, () => setEmojiBoxToggle(false));
@@ -281,7 +282,6 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
       };
     async function fetchSend(){
         let requestData;
-        console.log(repliedTo)
         if(repliedTo){
             requestData = {comment:value,postId:String(postDetail.id),replied_to:repliedTo.id}
         }
@@ -289,26 +289,21 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
             requestData = {comment:value,postId:String(postDetail.id)}
         }
         const response = await fetchAddComment(requestData)
-        console.log(response)
-        console.log(response.status)
         if(response.status == 200){
-            console.log(repliedTo)
             const jsonRes = await response.json()
             if(repliedTo){
                 dispatch(addReplyList({id:(repliedTo.parentId || repliedTo.id),newReply:jsonRes}))
                 dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
             }
             else{
-                console.log('else')
-                console.log(jsonRes)
                 dispatch(addCommentList([jsonRes]))
             }
-            console.log(jsonRes)
         }
 
     }
     function handleSendComment(){
             fetchSend()
+            setValue('')
     }
     const { t } = useTranslation()
     return(
@@ -386,16 +381,27 @@ export function EmojiBox({isBottom0,emojiBoxRef,insertEmoji} : {isBottom0? : boo
 
 export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>void,textareaRef:RefObject<HTMLTextAreaElement | null>}){
     const commentList = useSelector((state: RootState) => state.popupPost.commentList);
-    // const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
     const { t } = useTranslation()
     const [currentUrl,setCurrentUrl] = useState('')
+    const commentUrlRef = useRef('http://localhost:8000/comments/101')
+    const [hasMore,setHasMore] = useState(false)
     const likeBoxRef = useRef<HTMLElement>(null)
     const dispatch = useDispatch()
+    const [moreCommentLoading,setMoreCommentLoading] = useState(false)
     async function fetchComments(){
+        setMoreCommentLoading(true)
         const reposnse = await fetchSimpleGet(currentUrl)
         const jsonRes = await reposnse.json()
+        console.log(jsonRes)
         dispatch(addCommentList(jsonRes.results))
-        
+        commentUrlRef.current = jsonRes.next
+        if(jsonRes.next == null){
+            setHasMore(false)
+        }
+        else{
+            setHasMore(true)
+        }
+        setMoreCommentLoading(false)
     }
     useEffect(()=>{
         if(currentUrl){
@@ -403,9 +409,13 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
         }
     },[currentUrl])
     useEffect(()=>{
-        setCurrentUrl('http://localhost:8000/comments/101')
+        setHasMore(true)
+        setMoreCommentLoading(true)
+        setCurrentUrl(commentUrlRef.current)
     },[])
-    
+    function handleMoreComment(){
+        setCurrentUrl(commentUrlRef.current)
+    }
     return(
         <>
         <div className="fixed w-screen h-[calc(100vh-140px)] md:static md:w-auto md:h-auto md:block md:pb-0 top-0 right-0 bg-white px-4 pr-0 rtl:pr-4 flex-grow z-30">
@@ -419,6 +429,15 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
                 {commentList && commentList.map((item,index)=>{
                     return <Comment commentDetail={item} key={index} />
                 })}
+                {hasMore && 
+                    <div onClick={handleMoreComment} className="flex justify-center items-center p-2">
+                        {moreCommentLoading ? 
+                            <IconLoading className="size-5"/>
+                            :
+                            <IconPlusCircle className="cursor-pointer"/>
+                        }
+                    </div>
+                }
             </div>
             <CommentInput textareaRef={textareaRef} className="bg-white fixed pb-20 pt-8 bottom-0 left-0 w-full mx-0 p-4 flex md:hidden" />
         </div>
@@ -433,6 +452,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
     const [isHover,setIsHover] = useState<boolean>(false)
     const [hoveringUsername,setHoveringUsername] = useState<null | string>(null)
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
+    const [replyLoading,setReplyLoading] = useState(false)
     const underMd = useMediaQuery("(max-width: 768px)");
     function mouseEnter(event : React.MouseEvent<Element, MouseEvent>,username:string){
         if(underMd) return
@@ -484,10 +504,12 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
     }
     const { t } = useTranslation()
     async function fetchReplies(){
+        setReplyLoading(true)
         const response = await fetchSimpleGet(commentUrl.current)
         const jsonRes = await response.json()
         fixReplies(jsonRes.results)
         commentUrl.current = jsonRes.next
+        setReplyLoading(false)
     } 
     function getReplies(){
         fetchReplies()
@@ -527,7 +549,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                     </div>
                     <div className="flex-col flex-1 md:flex">
                         <div className="block">
-                            <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
+                            <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
                                 {commentDetail.user.username}
                             </div>
                             <div className="text-sm whitespace-break-spaces">
@@ -574,7 +596,10 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                     <span className="w-6 block border-b-[1px] border-[#737373]"></span>
                     {commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0
                         ? 
+                        <>
                         <span>View replies ({commentDetail.reply_count - (commentDetail.replyList?.length || 0)})</span>
+                        {replyLoading && <IconLoadingButton className="size-4"/>}
+                        </>
                         :
                         <span>Hide replies</span>
                     }
