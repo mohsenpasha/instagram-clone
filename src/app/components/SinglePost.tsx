@@ -16,6 +16,7 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import { fetchSimpleGet } from "@/api/simpleGet";
 import Link from "next/link";
 import { fetchAddComment } from "@/api/commentApi";
+import { stringToLink } from "@/utils/idAndHastagConvertor";
 
 
 export default function SinglePost({isPopup}:{isPopup:boolean}){
@@ -82,16 +83,16 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     <div className="flex items-center absolute md:static top-0 right-0 w-full">
                         <div className="flex h-[70px] md:h-auto items-center gap-2 px-[16px] py-[14px] w-full border-b-[1px] md:border-b-0 border-ss justify-between">
                             <div className="flex gap-2 w-11/12 sm:w-10/12 truncate items-center">
-                                <div className="rounded-full cursor-pointer size-8 overflow-hidden">
+                                <Link href={'/' + postDetail?.user.username} className="rounded-full cursor-pointer size-8 overflow-hidden">
                                     <Image className="rounded-full" src={postDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
-                                </div>
+                                </Link>
                                 <div className="w-9/12 sm:w-11/12 md:w-9/12">
-                                    <div className="text-sm font-medium inline-block">
+                                    <Link href={'/' + postDetail?.user.username}  className="text-sm font-medium inline-block">
                                         {postDetail.user.username}
-                                    </div>
-                                    <div className="text-xs truncate">
+                                    </Link>
+                                    {/* <div className="text-xs truncate">
                                         Dariu$h, Saeed Dehghan • Jadid Free$Tyle
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                             <div>
@@ -198,17 +199,17 @@ export function PostCaption({caption,user,updated_at}){
     return(
         <div className="flex justify-between py-3 px-2 md:px-0 ltr:md:pl-6 rtl:md:pr-6">
         <div className="flex gap-2">
-            <div className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
+            <Link href={'/' + user.username} className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
                 <Image className="rounded-full" src={user.profile_pic || '/images/profile-img-2.jpg'} width={32} height={32} alt=""></Image>
-            </div>
+            </Link>
             <div className="flex-col md:flex">
                 <div className="block">
-                    <div className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
+                    <Link href={'/' + user.username}  className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
                         {user.username}
-                    </div>
+                    </Link>
                     <div className="text-sm whitespace-break-spaces">
                         <span className="leading-3">
-                            {caption}
+                            {stringToLink(caption)}
                         </span>
                     </div>
                 </div>
@@ -236,7 +237,6 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
     useEffect(()=>{
         if(!repliedTo) return
         setValue('@' + repliedTo.username + ' ')
-        console.log('set')
         textareaRef.current?.focus()
     },[repliedTo])
     useClickOutside(emojiBoxRef, () => setEmojiBoxToggle(false));
@@ -292,7 +292,10 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
         if(response.status == 200){
             const jsonRes = await response.json()
             if(repliedTo){
-                dispatch(addReplyList({id:(repliedTo.parentId || repliedTo.id),newReply:jsonRes}))
+                const newReply = {...jsonRes,parentCommentId:repliedTo.parentId || repliedTo.id}
+                console.log(repliedTo)
+                console.log(newReply)
+                dispatch(addReplyList({id:(repliedTo.parentId || repliedTo.id),newReply:newReply}))
                 dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
             }
             else{
@@ -471,6 +474,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
         dispatch(changeCommentId(commentDetail.id))
     }
     async function fetchLike(){
+        
         const response = await fetchlikeComment(commentDetail.id)
         if(response.status != 200){
             dispatch(toggleLikeComment({id:commentDetail.id,action:'unlike'}))
@@ -483,6 +487,9 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
         }
     }
     function handleLikeComment(){
+        console.log('isReply')
+        console.log(isReply)
+        console.log('isReply')
         if(commentDetail.is_liked){
             if(isReply){
                 dispatch(toggleLikeReplyComment({replyId:commentDetail.id,commentId:commentDetail.parentCommentId,action:'unlike'}))
@@ -540,24 +547,22 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
             dispatch(changeRepliedTo({id:commentDetail.id,username:commentDetail.user.username}))
         }
     }
+    const parsedContent = stringToLink(commentDetail.comment);
     return(
         <>
             <div className={`flex justify-between py-3 px-2 md:px-0 ${isReply && '!pl-8'}`}>
                 <div className="flex flex-1 gap-2">
-                    <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
+                    <Link href={'/' + commentDetail?.user.username} onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
                         <Image className="rounded-full" src={commentDetail.user.profile_pic || '/images/profile-img.jpeg'} width={32} height={32} alt=""></Image>
-                    </div>
+                    </Link>
                     <div className="flex-col flex-1 md:flex">
                         <div className="block">
-                            <div onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
+                            <Link href={'/' + commentDetail?.user.username} onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
                                 {commentDetail.user.username}
-                            </div>
+                            </Link>
                             <div className="text-sm whitespace-break-spaces">
                                 <span className="leading-3">
-                                    {isReply &&
-                                    <Link className="text-bll" href={`/${commentDetail.replied_to}`}>@{commentDetail.replied_to} </Link>
-                                    }
-                                    {commentDetail.comment}
+                                    {stringToLink(commentDetail.comment)}
                                 </span>
                             </div>
                         </div>
@@ -591,7 +596,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
             {!underMd &&
                 <UserHoverPreview inComment={true} username={commentDetail.user.username} isHover={isHover} position={userPreviewHoverPosition}/>
             }
-            {commentDetail.reply_count && 
+            {commentDetail.reply_count &&
                 <div onClick={()=> (commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0) ? getReplies() : hideReplies()} className="pl-10 flex items-center gap-4 text-xs text-gray font-semibold cursor-pointer">
                     <span className="w-6 block border-b-[1px] border-[#737373]"></span>
                     {commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0
