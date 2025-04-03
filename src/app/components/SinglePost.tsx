@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconLoadingButton, IconMore, IconPlusCircle, IconSave } from "./Icons";
+import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconLoadingButton, IconMore, IconMute, IconPlusCircle, IconSave, IconUnMute } from "./Icons";
 import { useTranslation } from "next-i18next";
 import React, { Dispatch, RefObject, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { UserPreview } from "./UserPreview";
@@ -31,7 +31,10 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     const hoverPreviewRef = useRef<HTMLTextAreaElement | null>(null);
     const likeBoxRef = useRef<HTMLElement | null>(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
+    const [isVideoMuted,setIsVideoMuted] = useState(true)
+    const [isVideoPaused,setIsVideoPaused] = useState(true)
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
+    const videoRef = useRef(null)
     useClickOutside(likeBoxRef, () => !unfollowDetail ? emptyLikeList() : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
@@ -67,17 +70,38 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         setCommentToggle(!commentToggle)
         textareaRef.current?.focus()
     }
+    function toggleVideoPause(){
+        if(videoRef.current.paused){
+            videoRef.current.play()
+        }
+        else[
+            videoRef.current.pause()
+        ]
+    }
     return(
         <>
             <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
                 <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
+                {postDetail.media[0].media_type == 'video' ? 
+                <div className="relative cursor-pointer h-full overflow-hidden">
+                    <video onClick={toggleVideoPause} ref={videoRef} autoPlay muted={isVideoMuted} src={postDetail.media[0].file}></video>
+                    <span onClick={()=>setIsVideoMuted(!isVideoMuted)} className="absolute bottom-4 right-4 bg-[#262626] rounded-full flex justify-center items-center size-7 cursor-pointer">
+                        {isVideoMuted ?
+                            <IconMute className="size-3 text-white"/>
+                        :
+                            <IconUnMute className="size-3 text-white"/>
+                        }
+                    </span>
+                </div>
+                :
                     <Image
-                        src={postDetail.media[0].file}
-                        alt="Sample"
-                        width={1080}
-                        height={1080}
-                        className="object-cover w-full h-full static"
+                    src={postDetail.media[0].file}
+                    alt="Sample"
+                    width={1080}
+                    height={1080}
+                    className="object-cover w-full h-full static"
                     />
+                }
                 </div>
                 <div className="flex-1 flex flex-col h-full">
                     <div className="flex items-center absolute md:static top-0 right-0 w-full">
@@ -384,9 +408,10 @@ export function EmojiBox({isBottom0,emojiBoxRef,insertEmoji} : {isBottom0? : boo
 
 export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>void,textareaRef:RefObject<HTMLTextAreaElement | null>}){
     const commentList = useSelector((state: RootState) => state.popupPost.commentList);
+    const psotDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const { t } = useTranslation()
     const [currentUrl,setCurrentUrl] = useState('')
-    const commentUrlRef = useRef('http://localhost:8000/comments/101')
+    const commentUrlRef = useRef(`http://localhost:8000/comments/${psotDetail.id}`)
     const [hasMore,setHasMore] = useState(false)
     const likeBoxRef = useRef<HTMLElement>(null)
     const dispatch = useDispatch()
