@@ -7,7 +7,7 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount } from '@/store/slices/postSlice'
 import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
@@ -84,7 +84,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                 <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
                 {postDetail.media[0].media_type == 'video' ? 
                 <div className="relative cursor-pointer h-full overflow-hidden">
-                    <video onClick={toggleVideoPause} ref={videoRef} autoPlay muted={isVideoMuted} src={postDetail.media[0].file}></video>
+                    <video className="h-full w-full object-cover" onClick={toggleVideoPause} ref={videoRef} autoPlay muted={isVideoMuted} src={postDetail.media[0].file}></video>
                     <span onClick={()=>setIsVideoMuted(!isVideoMuted)} className="absolute bottom-4 right-4 bg-[#262626] rounded-full flex justify-center items-center size-7 cursor-pointer">
                         {isVideoMuted ?
                             <IconMute className="size-3 text-white"/>
@@ -124,26 +124,35 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                             </div>
                         </div>
                     </div>
-                    <div className="flex-1 overflow-auto">
-                            
-                        <PostCaption caption={postDetail.caption} user={postDetail.user} updated_at={postDetail.updated_at} />
-                        {underMd 
-                        ? 
-                        commentToggle && <CommentBox textareaRef={textareaRef} closeCommentBox={handleCommentToggle} />
-                        :
-                        <>
-                            <CommentBox textareaRef={textareaRef}/>
-                        </>
+                    <div className="flex-1 flex flex-col overflow-auto">
+                        {postDetail.caption && 
+                            <PostCaption caption={postDetail.caption} user={postDetail.user} updated_at={postDetail.updated_at} />
+                        }
+                        {postDetail.comment_count != 0 ?
+                            (underMd 
+                                ? 
+                                commentToggle && <CommentBox textareaRef={textareaRef} closeCommentBox={handleCommentToggle} />
+                                :
+                                <>
+                                <CommentBox textareaRef={textareaRef}/>
+                            </>
+                            )
+                            :
+                            <NoComment/>
                         }
                     </div>
                     <div className="px-2">
                         <PostAction handleCommentToggle={handleCommentToggle} />
-                        <div onClick={()=>handleLikeList()} className="mx-2 font-bold text-sm cursor-pointer">
-                            <span>{postDetail.like_count}</span> {t('likes')}
-                        </div>
-                        <div onClick={handleCommentToggle} className="block mx-2 md:hidden text-gray text-sm cursor-pointer">
-                            {t('view-all')} <span>23</span> {t('cs')}
-                        </div>
+                        {postDetail.like_count != 0 &&
+                            <div onClick={()=>handleLikeList()} className="mx-2 font-bold text-sm cursor-pointer">
+                                <span>{postDetail.like_count}</span> {t('likes')}
+                            </div>
+                        }
+                        {postDetail.comment_count != 0 &&
+                            <div onClick={handleCommentToggle} className="block mx-2 md:hidden text-gray text-sm cursor-pointer">
+                                {t('view-all')} <span>{postDetail.comment_count}</span> {t('cs')}
+                            </div>
+                        }
                         <div className="mx-2 text-xs cursor-pointer text-gray m-2">
                             {postDetail.updated_at.t_ago}{postDetail.updated_at.t}
                         </div>
@@ -315,14 +324,14 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
         const response = await fetchAddComment(requestData)
         if(response.status == 200){
             const jsonRes = await response.json()
+            dispatch(increaseCommentCount())
             if(repliedTo){
                 const newReply = {...jsonRes,parentCommentId:repliedTo.parentId || repliedTo.id}
-                console.log(repliedTo)
-                console.log(newReply)
                 dispatch(addReplyList({id:(repliedTo.parentId || repliedTo.id),newReply:newReply}))
                 dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
             }
             else{
+                if(postDetail.comment_count == 0) return
                 dispatch(addCommentList([jsonRes]))
             }
         }
@@ -405,7 +414,14 @@ export function EmojiBox({isBottom0,emojiBoxRef,insertEmoji} : {isBottom0? : boo
     )
 }
 
-
+export function NoComment(){
+    return(
+        <div className="flex-1 flex flex-col justify-center items-center gap-1">
+            <div className="text-2xl font-bold">No comments yet.</div>
+            <span className="text-sm">Start the conversation.</span>
+        </div>
+    )
+}
 export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>void,textareaRef:RefObject<HTMLTextAreaElement | null>}){
     const commentList = useSelector((state: RootState) => state.popupPost.commentList);
     const psotDetail = useSelector((state: RootState) => state.popupPost.postDetail);

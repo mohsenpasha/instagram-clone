@@ -187,6 +187,10 @@ const postSlice = createSlice({
         return item;
     });
 },
+increaseCommentCount: (state) => {
+  if (!state.postDetail) return;
+  state.postDetail.comment_count += 1
+},
   clearReplyList: (state, action) => {
     if (!state.commentList) return;
     state.commentList = state.commentList.map((item) => {
@@ -228,5 +232,5 @@ const postSlice = createSlice({
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount} = postSlice.actions;
 export default postSlice.reducer;
