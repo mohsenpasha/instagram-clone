@@ -2,16 +2,16 @@ export function getSearchHistory(){
     const t = JSON.parse(localStorage.getItem('searchHistory'))
     return t
 }
-type searchType = {
-    type:'tag' | 'page',
-    id : string,
-    subtitle : string
-}
-export function addSingleSearch(type:'tag' | 'page',id : string,subtitle:string):void {
+export function addSingleSearch(type:'tag' | 'user',id : string,subtitle:string,profile_pic?:string):void {
     const t = getSearchHistory() || []
-    const current : searchType = {type:type,id:id,subtitle:subtitle}
-    console.log([...t,current])
-    localStorage.setItem('searchHistory',JSON.stringify([...t,current]))
+    const current : searchType = {type:type,id:id,subtitle:subtitle,profile_pic:profile_pic}
+    const isInIt = t.filter((item)=>{
+        return item.type == 'user' && item.id == id
+    })
+    console.log(isInIt)
+    if(isInIt.length == 0){
+        localStorage.setItem('searchHistory',JSON.stringify([...t,current]))
+    }
 }
 export function emptySearchHistory(){
     localStorage.setItem('searchHistory',JSON.stringify([]))

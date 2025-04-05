@@ -8,9 +8,13 @@ import { useEffect, useState } from "react";
 import { isSea } from "node:sea";
 import { useAnimationEnd } from "@/hooks/useAnimationEnd";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { toggleSearch } from "@/store/slices/searchSlice";
 export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
+    const isSearchCloseAnimationStarted = useSelector((state: RootState) => state.searchInfo.isSearchCloseAnimationStarted)
     const [isSearchActive,setIsSearchActive] = useState(false)
-    const [isSearchCloseAnimationStarted,setIsSearchCloseAnimationStarted] = useState(false)
+    const dispatch = useDispatch()
     const [isMinimal,setIsMinimal] = useState(false)
     useEffect(()=>{
         if(isAlwaysMinimal){
@@ -21,12 +25,12 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
     const searchRef = useAnimationEnd(() => {
         if(isSearchCloseAnimationStarted){
             setIsSearchActive(false)
-            setIsSearchCloseAnimationStarted(false)
+            dispatch(toggleSearch(false))
         }
     });
     function SearchBarToggle(){
         if(isSearchActive){
-            setIsSearchCloseAnimationStarted(true)
+            dispatch(toggleSearch(true))
         }
         else{
             setIsSearchActive(true)

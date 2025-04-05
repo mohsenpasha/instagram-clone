@@ -775,7 +775,6 @@ export function UnfollowPopup({ref,inList=true}){
                         <Image className="w-full h-full object-cover rounded-full" src={userDetail?.profile_pic || '/images/profile-img.jpeg'} alt="" width={90} height={90}></Image>
                     </div>
                     <span>
-                        <IconLoading className="size-8 fill-[#555555]"/>
                         Unfollow @{userDetail?.username}?
                     </span>
                 </div>
