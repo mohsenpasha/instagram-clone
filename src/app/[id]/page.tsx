@@ -13,15 +13,19 @@ import { IconCamera, IconPrivatePage } from "@/components/Icons"
 import { FollowBtn } from "@/components/FollowBtn"
 import { fetchGetUserInfo } from "@/api/userInfo"
 import { useClickOutside } from "@/hooks/useClickOutside"
-import { changeListTitle, changeListUrl, clearUserList } from "@/store/slices/postSlice"
+import { addPostDetail, addPostList, changeListTitle, changeListUrl, changePostListUrl, clearCommentList, clearUserList } from "@/store/slices/postSlice"
 import { changeUnfollow } from "@/store/slices/userSlice"
 
 export default function Profile(){
     const router = useRouter();
-    const popupPost = useSelector((state: RootState) => state.popupPost.value);
+    const popupPost = useSelector((state: RootState) => state.popupPost.postDetail);
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
+    const postUrl = useSelector((state: RootState) => state.popupPost.url);
+    const postList = useSelector((state: RootState) => state.popupPost.postList);
+    const postListUrl = useSelector((state: RootState) => state.popupPost.postListUrl);
+    const hasFetchedPostFirstTime = useRef(false);
     const userListRef = useRef(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
     useClickOutside(userListRef, () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
@@ -30,7 +34,6 @@ export default function Profile(){
     const dispatch = useDispatch();
     const params = useParams()
     const postRef = useRef(`http://localhost:8000/${params.id}/posts`)
-    const [postList,setPostList] = useState([])
     const [isLoading, setIsLoading] = useState(false);
     const [isUnfollowInList,setIsUnfollowInList] = useState(false)
     useEffect(()=>{
@@ -46,7 +49,9 @@ export default function Profile(){
         }
     },[listTitle])
     async function fetchPosts(){
-        const response = await fetch(postRef.current, {
+        if(hasFetchedPostFirstTime.current && !postListUrl) return
+        if(!postRef.current) return
+        const response = await fetch(hasFetchedPostFirstTime.current ? postListUrl : postRef.current, {
             method: "GET",
             credentials: "include",
             headers: {
@@ -54,32 +59,40 @@ export default function Profile(){
             },
         });
         const jsonRes = await response.json()
-        postRef.current = jsonRes.next
-        setPostList((prevPosts) => [...prevPosts, ...jsonRes.results]);
+        dispatch(addPostList(jsonRes.results))
+        dispatch(changePostListUrl(jsonRes.next))
         setIsLoading(false);
     }
     
     useEffect(()=>{
-        if(!userInfo.is_private){
+        dispatch(changePostListUrl(`http://localhost:8000/${params.id}/posts`))
+        if(!userInfo.is_private && !hasFetchedPostFirstTime.current){
             fetchPosts()
+            hasFetchedPostFirstTime.current = true
             window.addEventListener("scroll", handleScroll);
-            return () => window.removeEventListener("scroll", handleScroll);
+            // return () => window.removeEventListener("scroll", handleScroll);
         }
     },[])
+    async function fetchPost(){
+            const response = await fetch(`http://localhost:8000/getpost/${postUrl?.replace('/p/','')}`, {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const jsonRes = await response.json()
+            dispatch(addPostDetail(jsonRes))
+            dispatch(clearCommentList())
+            dispatch(clearUserList())
+        }
     useEffect(()=>{
-        if(popupPost){
-            disableScroll()
-        }
-        else{
-            console.log('enable scroll')
-            enableScroll()
-        }
-    },[popupPost])
+        if(!postUrl) return
+        fetchPost()
+    },[postUrl])
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 && !isLoading) {
-        if(postRef.current){
-            setIsLoading(true)
-        }
+        setIsLoading(true)
       }
     };
 
@@ -103,7 +116,7 @@ export default function Profile(){
                 :
                 <>
                 <PostList postList={postList} isReel={false} />
-                {popupPost && 
+                {postUrl && 
                     <PostPopupSlider/>
                 }
                 </>

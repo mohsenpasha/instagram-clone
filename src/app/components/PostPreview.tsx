@@ -14,7 +14,7 @@ type postType = {
 export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=false}:postType){
     const dispatch = useDispatch();
     function clickHandle(event){
-        event.preventDefault()
+        event.preventDefault(``)
         dispatch(changeUrl(`/p/${postDetail.id}`))
     }
     return(
