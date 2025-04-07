@@ -4,22 +4,73 @@ import { useTranslation } from "next-i18next";
 import Link from "next/link";
 import { IconAdd, IconDirect, IconExplore, IconHeart, IconHome, IconInstagram, IconMenu, IconReels, IconSearch} from "./Icons";
 import SearchBar from "./SearchBar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isSea } from "node:sea";
 import { useAnimationEnd } from "@/hooks/useAnimationEnd";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { toggleSearch } from "@/store/slices/searchSlice";
+import { addNotification, toggleNotification } from "@/store/slices/notificationSlice";
+import NotificationBar from "./NotificationBar";
 export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
     const isSearchCloseAnimationStarted = useSelector((state: RootState) => state.searchInfo.isSearchCloseAnimationStarted)
+    const isNotificationCloseAnimationStarted = useSelector((state: RootState) => state.notificationInfo.isNotificationCloseAnimationStarted)
+    const notificationList = useSelector((state: RootState) => state.notificationInfo.notificationList)
     const [isSearchActive,setIsSearchActive] = useState(false)
+    const [isNotificationActive,setIsNotificationActive] = useState(false)
     const dispatch = useDispatch()
     const [isMinimal,setIsMinimal] = useState(false)
+    const [newNotificationCount,setNewNotificationCount] = useState(0)
+    const [notifications, setNotifications] = useState([]);
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    const socket = new WebSocket(`ws://localhost:8000/ws/notifications/`);
+    socketRef.current = socket;
+    socket.onopen = () => {
+      console.log("WebSocket connection established.");
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log(data.notifications)
+        if(data.notifications){
+            dispatch(addNotification(data.notifications))
+        }
+        else{
+            dispatch(addNotification(data.notification))
+        }
+
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed.");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  },[]);
+    useEffect(()=>{
+        if(notificationList.length == 0) return
+        let counter = 0
+        notificationList.map((item)=>{
+            if(!item.is_read){
+                counter += 1 
+            }
+        })
+        setNewNotificationCount(counter)
+    },[notificationList])
     useEffect(()=>{
         if(isAlwaysMinimal){
             setIsMinimal(true)
-            }
+        }
+        
     },[])
     const { t } = useTranslation();
     const searchRef = useAnimationEnd(() => {
@@ -28,18 +79,44 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
             dispatch(toggleSearch(false))
         }
     });
-    function SearchBarToggle(){
+    const NotificationRef = useAnimationEnd(() => {
+        if(isNotificationCloseAnimationStarted){
+            setIsNotificationActive(false)
+            dispatch(toggleNotification(false))
+        }
+    });
+    function SearchBarToggle(doMinimal=true){
+        console.log(doMinimal)
+        if(isNotificationActive){
+            notificationBarToggle(false)
+        }
+        if(!isAlwaysMinimal && doMinimal){
+            setIsMinimal(!isMinimal)
+        }
         if(isSearchActive){
             dispatch(toggleSearch(true))
         }
         else{
             setIsSearchActive(true)
         }
-        if(!isAlwaysMinimal){
+    }
+    function notificationBarToggle(doMinimal=true){
+        console.log(doMinimal)
+        if(isSearchActive){
+            SearchBarToggle(false)
+        }
+        if(!isAlwaysMinimal && doMinimal){
             setIsMinimal(!isMinimal)
+        }
+        if(isNotificationActive){
+            dispatch(toggleNotification(true))
+        }
+        else{
+            setIsNotificationActive(true)
         }
     }
     useClickOutside(searchRef, () => SearchBarToggle());
+    useClickOutside(NotificationRef, () => notificationBarToggle());
     return(
         <div className={`${isMinimal ? 'md:w-[74px] w-full' : 'w-full md:w-fit xl:w-2/12'} transition-all duration-300 fixed z-50 h-fit bottom-0 md:sticky md:top-0 bg-white px-[12px] py-[2px] md:py-[8px] md:pb-[20px] border-t-[1px] md:border-t-0 md:border-x-[1px] border-ss md:h-screen`}>
             <div className="flex flex-col justify-between h-full">
@@ -52,6 +129,9 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
             </div>
                 {isSearchActive &&
                     <SearchBar ref={searchRef} closeAnimationStat={isSearchCloseAnimationStarted}/>
+                }
+                {isNotificationActive && 
+                    <NotificationBar ref={NotificationRef} closeAnimationStat={isNotificationCloseAnimationStarted}/>
                 }
                 <ul className="flex w-full justify-around md:block">
                     {/* <button onClick={() => i18n.changeLanguage("fa")}>فارسی</button>
@@ -67,7 +147,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                         </Link>
                     </li>
                     <li className="hidden md:block">
-                        <div onClick={SearchBarToggle} title={t('search')} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
+                        <div onClick={()=>SearchBarToggle(!isNotificationActive)} title={t('search')} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
 ">
                             <IconSearch className={'shrink-0'}/>
                             {!isMinimal &&
@@ -112,13 +192,16 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                         </Link>
                     </li>
                     <li className="hidden md:block">
-                        <Link title={t('notification')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
+                        <div onClick={()=>notificationBarToggle(!isSearchActive)} title={t('notification')} className="relative flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
 ">
+                            {newNotificationCount != 0 && 
+                                <UnSeenCounter counter={newNotificationCount}/>
+                            }
                             <IconHeart className={'shrink-0'}/>
                             {!isMinimal &&
                                 <span className="hidden xl:inline-block">{t('notification')}</span>
                             }
-                        </Link>
+                        </div>
                     </li>
                     <li className="hidden md:block">
                         <Link title={t('create')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
@@ -149,5 +232,14 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
             </div>
 
         </div>
+    )
+}
+
+
+export function UnSeenCounter({counter}:{counter:number}){
+    return(
+        <span className="absolute bg-[#FF3040] size-5 rounded-full text-white flex items-center justify-center right-0 top-1 border-[1px] border-white text-[11px]">
+            {counter}
+        </span>
     )
 }
