@@ -32,9 +32,9 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     const likeBoxRef = useRef<HTMLElement | null>(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
     const [isVideoMuted,setIsVideoMuted] = useState(true)
-    const [isVideoPaused,setIsVideoPaused] = useState(true)
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
-    const videoRef = useRef(null)
+    const [sliderCurrentIndex,setSliderCurrentIndex] = useState(0)
+    const videoRefs = useRef([])
     useClickOutside(likeBoxRef, () => !unfollowDetail ? emptyLikeList() : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
@@ -70,38 +70,114 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         setCommentToggle(!commentToggle)
         textareaRef.current?.focus()
     }
-    function toggleVideoPause(){
-        if(videoRef.current.paused){
-            videoRef.current.play()
+    function toggleVideoPause(index?:number,action?:'play' | 'pause') {
+        const currentVideo = videoRefs.current[index];
+        videoRefs.current.forEach((video) => {
+            if (!video.paused && video != currentVideo) {
+              video.pause();
+            }
+          });
+          if(!index) return
+        if (currentVideo) {
+            if (action == 'play') {
+                setTimeout(()=>{
+                    currentVideo.play();
+                },300)
+            }
+            else if(action == 'pause') {
+                currentVideo.pause();
+            }
+            else{
+                if (currentVideo.paused) {
+                    setTimeout(()=>{
+                        currentVideo.play();
+                    },300)
+                }
+                else {
+                    currentVideo.pause();
+                }
+            }
         }
-        else[
-            videoRef.current.pause()
-        ]
     }
+    function handleSliderChange(dir:'next' | 'prev'){
+        console.log(sliderCurrentIndex + 1,postDetail.media.length)
+        if(dir == 'next'){
+            if(sliderCurrentIndex + 1 < postDetail.media.length){
+                setSliderCurrentIndex(sliderCurrentIndex + 1)
+            }
+        }
+        else{
+            if(sliderCurrentIndex - 1 >= 0){
+                setSliderCurrentIndex(sliderCurrentIndex - 1)
+            }
+        }
+    }
+    useEffect(()=>{
+        if(postDetail?.media[sliderCurrentIndex].media_type == 'video'){
+            toggleVideoPause(sliderCurrentIndex,'play')
+        }
+        else{
+            toggleVideoPause()
+        }
+    },[sliderCurrentIndex])
     return(
         <>
             <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
                 <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
-                {postDetail.media[0].media_type == 'video' ? 
-                <div className="relative cursor-pointer h-full overflow-hidden">
-                    <video className="h-full w-full object-cover" onClick={toggleVideoPause} ref={videoRef} autoPlay muted={isVideoMuted} src={postDetail.media[0].file}></video>
-                    <span onClick={()=>setIsVideoMuted(!isVideoMuted)} className="absolute bottom-4 right-4 bg-[#262626] rounded-full flex justify-center items-center size-7 cursor-pointer">
-                        {isVideoMuted ?
-                            <IconMute className="size-3 text-white"/>
-                        :
-                            <IconUnMute className="size-3 text-white"/>
+                    <div className="relative w-full h-full aspect-[4/5] overflow-hidden">
+                        <div className="flex h-full transition-transform" style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }}>
+                            {postDetail.media.map((item,index)=>{
+                                return(
+                                    <div key={index} className="relative w-full h-full flex-shrink-0">
+                                        {item.media_type == 'image' ? 
+                                            <Image
+                                                src={item.file}
+                                                alt="Sample"
+                                                width={1080}
+                                                height={1080}
+                                                className="object-cover w-full h-full static"
+                                                />
+                                        :
+                                        <div className="relative cursor-pointer h-full overflow-hidden">
+                                            <video className="h-full w-full object-cover" onClick={()=>toggleVideoPause(index)} loop ref={el => (videoRefs.current[index] = el)} autoPlay muted={isVideoMuted} src={item.file}></video>
+                                            <span onClick={()=>setIsVideoMuted(!isVideoMuted)} className="absolute bottom-4 right-4 bg-[#262626] rounded-full flex justify-center items-center size-7 cursor-pointer">
+                                                {isVideoMuted ?
+                                                    <IconMute className="size-3 text-white"/>
+                                                :
+                                                    <IconUnMute className="size-3 text-white"/>
+                                                }
+                                            </span>
+                                        </div>
+                                        }
+                                    </div>
+                                )
+                            })}
+                            <div className="w-full flex-shrink-0">
+                                <img src='/images/post-prev-1.jpg' className="w-full h-full object-cover" />
+                            </div>
+                            <div className="w-full flex-shrink-0">
+                                <img src='/images/food-1.png' className="w-full h-full object-cover" />
+                            </div>
+                            <div className="w-full flex-shrink-0">
+                                <img src='/images/post-1.jpg' className="w-full h-full object-cover" />
+                            </div>
+                        </div>
+                        {postDetail.media.length > 1 && 
+                            <>
+                                {sliderCurrentIndex < postDetail.media.length - 1 && 
+                                    <span onClick={()=>handleSliderChange('next')} className="absolute top-1/2 right-2 -translate-y-1/2 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
+                                }
+                                {sliderCurrentIndex != 0 && 
+                                    <span onClick={()=>handleSliderChange('prev')} className="absolute top-1/2 left-2 -translate-y-1/2 rotate-180 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
+                                }
+                                <div className="absolute flex gap-1 bottom-2 left-1/2 -translate-x-1/2">
+                                    {[...Array(postDetail.media.length)].map((_,index)=>{
+                                        return <span key={index} className={`size-2 rounded-full transition-opacity bg-white ${index != sliderCurrentIndex && 'opacity-45'}`}></span>
+                                    })}
+                                </div>
+                            </>
                         }
-                    </span>
-                </div>
-                :
-                    <Image
-                    src={postDetail.media[0].file}
-                    alt="Sample"
-                    width={1080}
-                    height={1080}
-                    className="object-cover w-full h-full static"
-                    />
-                }
+                    </div>
                 </div>
                 <div className="flex-1 flex flex-col h-full">
                     <div className="flex items-center absolute md:static top-0 right-0 w-full">
