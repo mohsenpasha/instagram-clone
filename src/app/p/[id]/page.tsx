@@ -57,7 +57,7 @@ export default function PostPage(){
                                 <Link className="mx-1 hover:text-zinc-400" href={`/${singlePostDetail.user.username}`}>{singlePostDetail.user.username}</Link>
                             </div>
                         }
-                            <PostList postList={newPostList} isReel={false}/>
+                            <PostList popupOpen={false} postList={newPostList} isReel={false}/>
                     </div>
                 </div>
             }
