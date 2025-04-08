@@ -9,30 +9,34 @@ import { changeUrl, remove, addPostDetail} from '@/store/slices/postSlice'
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { fetchSimpleGet } from "@/api/simpleGet";
 
 export default function PostPage(){
     const params = useParams()
     const [singlePostDetail,setSinglePostDetail] = useState(null)
     const [likeListToggle,setLikeListToggle] = useState(false)
+    const [newPostList,setNewPostList] = useState([])
     const dispatch = useDispatch();
     useEffect(()=>{
         fetchPost()
+        fetchNewPosts()
     },[])
     
     const { t } = useTranslation();
     async function fetchPost(){
-        const response = await fetch(`http://localhost:8000/getpost/${params.id}`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+        const response = await fetchSimpleGet(`http://localhost:8000/getpost/${params.id}`)
         const jsonRes = await response.json()
         dispatch(addPostDetail(jsonRes))
 
         setSinglePostDetail(jsonRes)
     }
+
+    async function fetchNewPosts(){
+        const response = await fetchSimpleGet(`http://localhost:8000/getnewfewpost/${params.id}`)
+        const jsonRes = await response.json()
+        setNewPostList(jsonRes)
+    }
+
     
 
     return(
@@ -44,15 +48,19 @@ export default function PostPage(){
                     }
                 </div>
             </div>
-            <div className="flex justify-center w-full md:w-11/12 lg:10/12">
-                <div className="w-full md:px-4 xl:px-0 lg:w-11/12 xl:w-9/12 md:border-t-[1px] pt-4 border-ss mb-[50px]">
-                    <div className="py-4">
-                        <span className="text-gray">{t('morepf')}</span>
-                        <Link className="mx-1 hover:text-zinc-400" href='afshin_bizar'>afshin_bizar</Link>
+            {newPostList && newPostList.length != 0 &&
+                <div className="flex justify-center w-full md:w-11/12 lg:10/12">
+                    <div className="w-full md:px-4 xl:px-0 lg:w-11/12 xl:w-9/12 md:border-t-[1px] pt-4 border-ss mb-[50px]">
+                        {singlePostDetail && 
+                            <div className="py-4">
+                                <span className="text-gray">{t('morepf')}</span>
+                                <Link className="mx-1 hover:text-zinc-400" href={`/${singlePostDetail.user.username}`}>{singlePostDetail.user.username}</Link>
+                            </div>
+                        }
+                            <PostList postList={newPostList} isReel={false}/>
                     </div>
-                    <PostList isReel={false}/>
                 </div>
-            </div>
+            }
         </div>
     )
 }
