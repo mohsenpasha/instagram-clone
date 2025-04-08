@@ -7,13 +7,14 @@ type ListType = {
     isReel: boolean,
     noIcon?:boolean,
     postList:[],
-    isHoverPreview?:boolean
+    isHoverPreview?:boolean,
+    popupOpen?:boolean
 }
-export default function PostList({isReel,noIcon,postList,isHoverPreview=false}:ListType){
+export default function PostList({isReel,noIcon,postList,isHoverPreview=false,popupOpen=true}:ListType){
     return(
         <div className="flex pb-12 md:pb-0 w-full gap-[4px] flex-wrap">
             {postList?.map((item,index)=>{
-                return <PostPreview key={index} postDetail={item} noIcon={noIcon} isReel={isReel} isHoverPreview={isHoverPreview}/>
+                return <PostPreview popupOpen={popupOpen} key={index} postDetail={item} noIcon={noIcon} isReel={isReel} isHoverPreview={isHoverPreview}/>
             })}
         </div>
     )

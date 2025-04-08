@@ -9,16 +9,19 @@ type postType = {
     isReel: boolean
     noIcon?:boolean
     postDetail:{id:string,preview_image:string,like_count:number,comment_count?:number,disable_comments?:boolean},
-    isHoverPreview?:boolean
+    isHoverPreview?:boolean,
+    popupOpen?:boolean
 }
-export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=false}:postType){
+export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=false,popupOpen=true}:postType){
     const dispatch = useDispatch();
     function clickHandle(event){
-        event.preventDefault(``)
-        dispatch(changeUrl(`/p/${postDetail.id}`))
+        if(popupOpen){
+            event.preventDefault(``)
+            dispatch(changeUrl(`/p/${postDetail.id}`))
+        }
     }
     return(
-        <Link onClick={(event)=>clickHandle(event)} href={`/p/${postDetail.id}`} className={"group overflow-hidden relative " + (isHoverPreview ? 'w-[calc(33.33%-3px)] aspect-square' : (isReel ? "w-[calc(25%-3px)] aspect-[2/3]" : "w-[calc(33.33%-3px)] aspect-[3/4]"))}>
+        <Link onClick={(event)=>clickHandle(event)} href={`/p/${postDetail.id}`} className={"group animate-Skeleton overflow-hidden relative " + (isHoverPreview ? 'w-[calc(33.33%-3px)] aspect-square' : (isReel ? "w-[calc(25%-3px)] aspect-[2/3]" : "w-[calc(33.33%-3px)] aspect-[3/4]"))}>
             {!noIcon && 
                 <IconReels white className="absolute right-2 top-2"/>
             }
