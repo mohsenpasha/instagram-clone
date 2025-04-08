@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconLoadingButton, IconMore, IconMute, IconPlusCircle, IconSave, IconUnMute } from "./Icons";
+import { IconArrow, IconClose, IconComment, IconDirect, IconEmoji, IconHeart, IconLoading, IconLoadingButton, IconMore, IconMute, IconPlusCircle, IconSave, IconUnMute, IconUser } from "./Icons";
 import { useTranslation } from "next-i18next";
 import React, { Dispatch, RefObject, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { UserPreview } from "./UserPreview";
@@ -34,7 +34,10 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     const [isVideoMuted,setIsVideoMuted] = useState(true)
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
     const [sliderCurrentIndex,setSliderCurrentIndex] = useState(0)
+    const [isTaggedVisible,setIsTaggedVisible] = useState(false)
     const videoRefs = useRef([])
+    const TaggedRef = useRef(null)
+    useClickOutside(TaggedRef, () => setIsTaggedVisible(false));
     useClickOutside(likeBoxRef, () => !unfollowDetail ? emptyLikeList() : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
@@ -100,7 +103,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         }
     }
     function handleSliderChange(dir:'next' | 'prev'){
-        console.log(sliderCurrentIndex + 1,postDetail.media.length)
+        setIsTaggedVisible(false)
         if(dir == 'next'){
             if(sliderCurrentIndex + 1 < postDetail.media.length){
                 setSliderCurrentIndex(sliderCurrentIndex + 1)
@@ -123,14 +126,17 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     return(
         <>
             <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
+                {postDetail.media[sliderCurrentIndex].media_type == 'video' && isTaggedVisible &&
+                    <TaggedPopup sliderCurrentIndex={sliderCurrentIndex} ref={TaggedRef} closePopup={()=>setIsTaggedVisible(false)}/>
+                }
                 <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
                     <div className="relative w-full h-full aspect-[4/5] overflow-hidden">
-                        <div className="flex h-full transition-transform" style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }}>
+                        <div className="flex h-full transition-transform group cursor-pointer" style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }}>
                             {postDetail.media.map((item,index)=>{
                                 return(
                                     <div key={index} className="relative w-full h-full flex-shrink-0">
                                         {item.media_type == 'image' ? 
-                                            <Image
+                                            <Image onClick={()=>setIsTaggedVisible(!isTaggedVisible)}
                                                 src={item.file}
                                                 alt="Sample"
                                                 width={1080}
@@ -148,6 +154,21 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                                                 }
                                             </span>
                                         </div>
+                                        }
+                                        {item.tagged_users.length != 0 &&
+                                        <>
+                                            {item.media_type != 'video' && item.tagged_users.map((tagged,index)=>{
+                                                return(
+                                                    <Link key={index} style={{top:tagged.y,left:tagged.x}} className={`${isTaggedVisible ? 'scale-1 opacity-1': 'scale-0 opacity-0'} transition-all origin-top duration-200 px-3 h-9 flex items-center absolute rounded-[4px] text-white bg-black bg-opacity-80`} href={'/' + tagged.user.username}>
+                                                        <span className="block absolute -top-[5px] left-1/2 -translate-x-1/2 border-b-[6px] border-l-transparent border-r-transparent border-l-[6px] border-r-[6px] border-b-black border-opacity-80 w-0 h-0"></span>
+                                                        <span className="font-semibold text-sm">{tagged.user.username}</span>
+                                                    </Link>
+                                                )
+                                            })}
+                                            <span onClick={()=>setIsTaggedVisible(!isTaggedVisible)} className={`group-hover:opacity-100 transition-opacity ${!isTaggedVisible && 'opacity-0'} absolute size-7 flex items-center justify-center bottom-4 left-4 rounded-full bg-black`}>
+                                                <IconUser className="text-white"/>
+                                            </span>
+                                        </>
                                         }
                                     </div>
                                 )
@@ -170,9 +191,9 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                                 {sliderCurrentIndex != 0 && 
                                     <span onClick={()=>handleSliderChange('prev')} className="absolute top-1/2 left-2 -translate-y-1/2 rotate-180 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
                                 }
-                                <div className="absolute flex gap-1 bottom-2 left-1/2 -translate-x-1/2">
+                                <div className="absolute flex gap-1 bottom-4 left-1/2 -translate-x-1/2">
                                     {[...Array(postDetail.media.length)].map((_,index)=>{
-                                        return <span key={index} className={`size-2 rounded-full transition-opacity bg-white ${index != sliderCurrentIndex && 'opacity-45'}`}></span>
+                                        return <span key={index} className={`size-[6px] rounded-full transition-opacity bg-white ${index != sliderCurrentIndex && 'opacity-45'}`}></span>
                                     })}
                                 </div>
                             </>
@@ -818,7 +839,7 @@ export function UserList({closePopup,listType='likeList',ref,targetId}:userListT
                     }
                     </span>
                 </div>
-                <div className="overflow-y-scroll flex-1">
+                <div className="overflow-y-auto flex-1">
                     {userListData?.map((item,index)=>{
                         return <UserPreview key={index} userData={item} mouseEnter={mouseEnter} mouseOut={mouseOut}/>
                     })}
@@ -863,6 +884,46 @@ export function UnfollowPopup({ref,inList=true}){
                     </div>
                 </div>
             </div>            
+        </div>
+    )
+}
+
+
+export function TaggedPopup({ref,closePopup,sliderCurrentIndex}){
+    const postDetail = useSelector((state: RootState)=> state.popupPost.postDetail)
+    console.log(sliderCurrentIndex)
+    console.log(postDetail.media[sliderCurrentIndex])
+    return(
+        <div className="fixed w-screen h-screen top-0 left-0 z-50 bg-black bg-opacity-65">
+            <div ref={ref} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] max-h-[400px] bg-white rounded-lg flex flex-col">
+                <div className="w-full border-b-[1px] border-ss ltr:justify-end relative py-3 flex items-center">
+                    <span onClick={closePopup} className="px-2 inline-block cursor-pointer">
+                        <IconClose className="size-[18px]"/>
+                    </span>
+                    <span className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 font-semibold">
+                        Tagged
+                    </span>
+                </div>
+                <div className="overflow-y-auto flex-1">
+                    {postDetail?.media[sliderCurrentIndex].tagged_users.map((item,index)=>{
+                        return(
+                            <div key={index} className="py-2 px-4">
+                                <div className={`flex ${'gap-2'} items-center`}>
+                                    <Link href={`/${item.user.username}`} className={`size-11 rounded-full overflow-hidden flex-shrink-0 relative`}>
+                                        <Image className="rounded-full" src={item.user.profile_pic || '/images/profile-img.jpeg'} alt="" width={44} height={44}></Image>
+                                    </Link>
+                                    <div className={`flex flex-1 flex-col text-sm leading-[18px] relative`}>
+                                        <Link className="font-semibold truncate inline-block w-fit" href={`/${item.user.username}`}>
+                                            {item.user.username}
+                                        </Link>
+                                        <span className="text-gray truncate">{item.user.name}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
         </div>
     )
 }
