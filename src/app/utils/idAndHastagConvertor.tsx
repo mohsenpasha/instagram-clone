@@ -4,7 +4,6 @@ import Link from "next/link";
 export function stringToLink(text:string) {
     const regex = /(@[[\p{L}\d_]+|#[\p{L}\d_]+)/gu;
     const parts = text.split(regex);
-    console.log('trying')
     return parts.map((part, index) => {
         if (part.startsWith("@")) {
             const username = part.slice(1);
