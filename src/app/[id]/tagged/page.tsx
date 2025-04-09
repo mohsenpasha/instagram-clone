@@ -12,7 +12,6 @@ export default function TaggedLayout(){
     const postUrl = useSelector((state: RootState) => state.popupPost.url);
     const currentUser = useSelector((state: RootState)=> state.currentUser.currentVisitingUser)
     const postListUrl = useSelector((state: RootState) => state.popupPost.postListUrl);
-    const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const [isLoading,setIsLoading] = useState(false)
     const hasFetchedPostFirstTime = useRef(false);
     const dispatch = useDispatch()
@@ -40,9 +39,8 @@ export default function TaggedLayout(){
     useEffect(()=>{
         dispatch(clearPostList())
         setIsLoading(true)
-        dispatch(changePostListUrl(`http://localhost:8000/${params.id}/posts`))
-        if(!userInfo.is_private && !hasFetchedPostFirstTime.current){
-            fetchPosts()
+        dispatch(changePostListUrl(`http://localhost:8000/tagged/${currentUser.username}`))
+        if(!currentUser.is_private && !hasFetchedPostFirstTime.current){
             hasFetchedPostFirstTime.current = true
             window.addEventListener("scroll", handleScroll);
             // return () => window.removeEventListener("scroll", handleScroll);
