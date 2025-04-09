@@ -29,7 +29,6 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     const dispatch = useDispatch()
     const userListRef = useRef(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
-    const popupSliderRef = useRef(null)
     useClickOutside(userListRef, () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     async function getUserData(){
@@ -54,23 +53,6 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     useEffect(()=>{
         getUserData()
     },[])
-    async function fetchPost(){
-        const response = await fetch(`http://localhost:8000/getpost/${postUrl?.replace('/p/','')}`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-        const jsonRes = await response.json()
-        dispatch(addPostDetail(jsonRes))
-        dispatch(clearCommentList())
-        dispatch(clearUserList())
-    }
-    useEffect(()=>{
-        if(!postUrl) return
-        fetchPost()
-    },[postUrl])
     return(
             <div className={`flex justify-between`}>
                 <SideBar/>
@@ -103,7 +85,7 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                     <div>loading</div>
                 }
                 {postUrl && 
-                    <PostPopupSlider ref={popupSliderRef}/>
+                    <PostPopupSlider/>
                 }
                 {unfollowDetail &&
                     <UnfollowPopup inList={isUnfollowInList} ref={unfollowPopupRef}/>

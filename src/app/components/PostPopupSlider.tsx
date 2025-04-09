@@ -4,10 +4,10 @@ import SinglePost from "./SinglePost";
 import { useTranslation } from "next-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addPostList, change, changePostListUrl, changeUrl, remove } from '@/store/slices/postSlice'
+import { addPostDetail, addPostList, change, changePostListUrl, changeUrl, clearCommentList, clearUserList, remove } from '@/store/slices/postSlice'
 import { RootState } from "@/store/store";
 
-export function PostPopupSlider({ref}){
+export function PostPopupSlider(){
     const { t } = useTranslation()
     const popupBoxRef = useRef(null)
     const popupArrowRef = useRef(null)
@@ -58,9 +58,25 @@ export function PostPopupSlider({ref}){
         currentPostIndex.current = postList.findIndex((item)=> item.id == postUrl.replace('/p/',''))
         checkFirstLastIndex()
     },[])
+    async function fetchPost(){
+        const response = await fetch(`http://localhost:8000/getpost/${postUrl?.replace('/p/','')}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        const jsonRes = await response.json()
+        dispatch(addPostDetail(jsonRes))
+        dispatch(clearCommentList())
+        dispatch(clearUserList())
+    }
+    useEffect(()=>{
+        if(!postUrl) return
+        fetchPost()
+    },[postUrl])
     function changeArrow(event,dir:'next' | 'prev'){
         event.preventDefault()
-        console.log(currentPostIndex.current)
         if(currentPostIndex.current == null) return
         let nextPostId;
         if(dir == 'next'){
