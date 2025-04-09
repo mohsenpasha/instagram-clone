@@ -55,9 +55,6 @@ export default function TaggedLayout(){
     return(
         <>
             <PostList postList={postList} isReel={false} />
-            {postUrl && 
-                <PostPopupSlider/>
-            }
         </>
     )
 }
