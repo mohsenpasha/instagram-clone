@@ -60,6 +60,9 @@ const postSlice = createSlice({
     addPostList: (state, action) => {
       state.postList = [...state.postList,...action.payload];
     },
+    clearPostList: (state) => {
+      state.postList = [];
+    },
     changeListUrl: (state, action) => {
       if(action.payload == state.listUrl) return
       state.listUrl = action.payload; 
@@ -255,5 +258,5 @@ increaseCommentCount: (state) => {
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList} = postSlice.actions;
 export default postSlice.reducer;
