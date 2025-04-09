@@ -7,7 +7,7 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, clearUserList, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount } from '@/store/slices/postSlice'
 import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
@@ -22,45 +22,21 @@ import { stringToLink } from "@/utils/idAndHastagConvertor";
 export default function SinglePost({isPopup}:{isPopup:boolean}){
     const dispatch = useDispatch()
     const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
-    const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
-    const commentId = useSelector((state: RootState) => state.popupPost.commentId);
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
-    const [likeBoxToggle,setLikeBoxToggle] = useState<boolean>(false)
     const underMd = useMediaQuery("(max-width: 768px)");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-    const hoverPreviewRef = useRef<HTMLTextAreaElement | null>(null);
-    const likeBoxRef = useRef<HTMLElement | null>(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
     const [isVideoMuted,setIsVideoMuted] = useState(true)
-    const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
     const [sliderCurrentIndex,setSliderCurrentIndex] = useState(0)
     const [isTaggedVisible,setIsTaggedVisible] = useState(false)
     const videoRefs = useRef([])
     const TaggedRef = useRef(null)
     useClickOutside(TaggedRef, () => setIsTaggedVisible(false));
-    useClickOutside(likeBoxRef, () => !unfollowDetail ? emptyLikeList() : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     const { t } = useTranslation();
     function handleLikeList(){
         dispatch(changeListTitle('Likes'))
     }
-    function emptyLikeList(){
-        dispatch(changeListTitle(null))
-        dispatch(changeListUrl(null))
-        dispatch(changeCommentId(null))
-        dispatch(clearUserList())
-    }
-    useEffect(()=>{
-        if(!listTitle){
-            enableScroll()
-            setLikeBoxToggle(false)
-            emptyLikeList()
-        }
-        else{
-            disableScroll()
-            setLikeBoxToggle(true)
-        }
-    },[listTitle])
     function handleCommentToggle(){
         if(underMd){
             if(commentToggle){
@@ -256,13 +232,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                         <CommentInput textareaRef={textareaRef} className="hidden md:flex" />
                     </div>
                 </div>
-                {likeBoxToggle && 
-                    <UserList listType={commentId ? 'commentlikeList' : 'likeList'} targetId={commentId ? commentId : postDetail.id} ref={likeBoxRef} closePopup={()=>emptyLikeList()} />
-                }
             </div>
-            {unfollowDetail &&
-                <UnfollowPopup ref={unfollowPopupRef}/>
-            }
         </>
         
     )
@@ -526,7 +496,6 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
     const [currentUrl,setCurrentUrl] = useState('')
     const commentUrlRef = useRef(`http://localhost:8000/comments/${psotDetail.id}`)
     const [hasMore,setHasMore] = useState(false)
-    const likeBoxRef = useRef<HTMLElement>(null)
     const dispatch = useDispatch()
     const [moreCommentLoading,setMoreCommentLoading] = useState(false)
     async function fetchComments(){
@@ -768,10 +737,12 @@ function getPosition(element : HTMLElement){
 type userListType = {
     closePopup:()=>void,
     ref:React.Ref<HTMLDivElement> | undefined,
+    hoverPreviewRef:React.Ref<HTMLDivElement> | undefined,
     targetId:string,
     listType:'likeList' | 'followerList' | 'followingList' | 'commentlikeList'
 }
-export function UserList({closePopup,listType='likeList',ref,targetId}:userListType){
+export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,targetId}:userListType){
+    console.log(listType)
     const currentUrl = useSelector((state: RootState) => state.popupPost.listUrl);
     const userListData = useSelector((state: RootState) => state.popupPost.userList);
     const underMd = useMediaQuery("(max-width: 768px)");
@@ -846,7 +817,7 @@ export function UserList({closePopup,listType='likeList',ref,targetId}:userListT
                 </div>
             </div>
             {!underMd &&
-                <UserHoverPreview ref={ref} username={hoveringUsername} isHover={isHover} position={userPreviewHoverPosition}/>
+                <UserHoverPreview ref={hoverPreviewRef} username={hoveringUsername || ''} isHover={isHover} position={userPreviewHoverPosition}/>
             }
         </div>
     )

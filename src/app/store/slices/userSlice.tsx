@@ -21,7 +21,9 @@ const userSlice = createSlice({
         state.unfollowDetail = action.payload;
       },
     changeCurrentVisitingUser: (state, action) => {
-      action.payload['isLoading'] = false
+      if(action.payload != null){
+        action.payload['isLoading'] = false
+      }
       state.currentVisitingUser = action.payload
     },
     toggleIsLoading: (state, action) => {

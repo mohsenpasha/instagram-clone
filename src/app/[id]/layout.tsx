@@ -12,7 +12,7 @@ import { changeCurrentVisitingUser, changeUnfollow } from "@/store/slices/userSl
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGetUserInfo } from "@/api/userInfo";
 import { RootState } from "@/store/store";
-import { addPostDetail, changeListTitle, changeListUrl, clearCommentList, clearUserList } from "@/store/slices/postSlice";
+import { addPostDetail, changeCommentId, changeListTitle, changeListUrl, clearCommentList, clearUserList, remove } from "@/store/slices/postSlice";
 import { PostPopupSlider } from "@/components/PostPopupSlider";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { UnfollowPopup, UserList } from "@/components/SinglePost";
@@ -20,38 +20,64 @@ import { UnfollowPopup, UserList } from "@/components/SinglePost";
 
 export default function ProfileLayout({children} : {children : React.ReactNode}){
     const params = useParams()
+    const pathname = usePathname()
     const { t } = useTranslation();
     const postUrl = useSelector((state: RootState) => state.popupPost.url);
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
-    const [userListToggle,setUserListToggle] = useState(false)
+    const commentId = useSelector((state: RootState) => state.popupPost.commentId);
+    const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const dispatch = useDispatch()
     const userListRef = useRef(null)
+    const userHoverPreviewRef = useRef(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
-    const pathname = usePathname()
-    useClickOutside(userListRef, () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
+    const [userListType,setUserListType] = useState<'likeList' | 'followerList' | 'followingList' | 'commentlikeList' | null>(null)
+    const [userListTarget,setUserListTarget] = useState<string | null>(null)
+    const [isUnfollowInList,setIsUnfollowInList] = useState(false)
+    useClickOutside([userListRef, userHoverPreviewRef], () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
+    function checkUserListTypeAndTarget(){
+        if(commentId){
+            setUserListType('commentlikeList')
+            setUserListTarget(commentId)
+        }
+        else if(listTitle == 'Followers'){
+            setUserListType('followerList')
+            setUserListTarget(userInfo.username)
+        }
+        else if(listTitle == 'Following'){
+            setUserListType('followingList')
+            setUserListTarget(userInfo.username)
+        }
+        else {
+            setUserListType('likeList')
+            setUserListTarget(postDetail.id)
+        }
+    }
     async function getUserData(){
         const response = await fetchGetUserInfo(params.id)
         const jsonRes = await response.json()
         dispatch(changeCurrentVisitingUser(jsonRes))
     }
-    const [isUnfollowInList,setIsUnfollowInList] = useState(false)
         useEffect(()=>{
             if(listTitle){
-                setUserListToggle(true)
                 setIsUnfollowInList(true)
+                checkUserListTypeAndTarget()
             }
             else{
+                setUserListType(null)
+                setUserListTarget(null)
                 setIsUnfollowInList(false)
                 dispatch(clearUserList())
                 dispatch(changeListUrl(null))
-                setUserListToggle(false)
+                dispatch(changeCommentId(null))
             }
         },[listTitle])
 
     useEffect(()=>{
+        dispatch(remove())
+        dispatch(changeCurrentVisitingUser(null))
         getUserData()
     },[])
     return(
@@ -88,11 +114,11 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                 {postUrl && 
                     <PostPopupSlider/>
                 }
+                {userListType && userListTarget &&
+                    <UserList listType={userListType} targetId={userListTarget} ref={userListRef} hoverPreviewRef={userHoverPreviewRef} closePopup={()=>dispatch(changeListTitle(null))} />
+                }
                 {unfollowDetail &&
                     <UnfollowPopup inList={isUnfollowInList} ref={unfollowPopupRef}/>
-                }
-                {userListToggle && 
-                    <UserList listType={listTitle == 'Followers' ? 'followerList' : 'followingList'} targetId={userInfo.username} ref={userListRef} closePopup={()=>dispatch(changeListTitle(null))} />
                 }
                 {/* <StoryList /> */}
             </div>
