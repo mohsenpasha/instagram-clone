@@ -1,7 +1,5 @@
 'use client'
-import { fetchSimpleGet } from "@/api/simpleGet";
 import PostList from "@/components/PostList";
-import { PostPopupSlider } from "@/components/PostPopupSlider";
 import { addPostList, changePostListUrl, clearPostList } from "@/store/slices/postSlice";
 import { RootState } from "@/store/store";
 import { useEffect, useRef, useState } from "react";

@@ -1,18 +1,14 @@
 'use client'
 
 import PostList from "@/components/PostList"
-import SinglePost, { UnfollowPopup, UserList } from "@/components/SinglePost"
 import { useEffect, useRef, useState } from "react"
 import { useParams } from 'next/navigation'
-import { PostPopupSlider } from "@/components/PostPopupSlider"
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useRouter } from "next/navigation";
 import { IconCamera, IconPrivatePage } from "@/components/Icons"
 import { FollowBtn } from "@/components/FollowBtn"
-import { useClickOutside } from "@/hooks/useClickOutside"
-import { addPostDetail, addPostList, changeListTitle, changeListUrl, changePostListUrl, clearCommentList, clearUserList } from "@/store/slices/postSlice"
-import { changeUnfollow } from "@/store/slices/userSlice"
+import { addPostList, changePostListUrl, clearPostList } from "@/store/slices/postSlice"
 
 export default function Profile(){
     const router = useRouter();
@@ -42,6 +38,7 @@ export default function Profile(){
     }
     
     useEffect(()=>{
+        dispatch(clearPostList())
         dispatch(changePostListUrl(`http://localhost:8000/${params.id}/posts`))
         if(!userInfo.is_private && !hasFetchedPostFirstTime.current){
             fetchPosts()
