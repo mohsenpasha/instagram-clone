@@ -12,7 +12,6 @@ export default function PostLayout({children}:{children:React.ReactNode}){
                         {children}
                     </div>
                 </div>
-
             </div>
     )
 }
