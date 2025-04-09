@@ -8,10 +8,8 @@ import { PostPopupSlider } from "@/components/PostPopupSlider"
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useRouter } from "next/navigation";
-import { disableScroll, enableScroll } from "@/utils/scroll"
 import { IconCamera, IconPrivatePage } from "@/components/Icons"
 import { FollowBtn } from "@/components/FollowBtn"
-import { fetchGetUserInfo } from "@/api/userInfo"
 import { useClickOutside } from "@/hooks/useClickOutside"
 import { addPostDetail, addPostList, changeListTitle, changeListUrl, changePostListUrl, clearCommentList, clearUserList } from "@/store/slices/postSlice"
 import { changeUnfollow } from "@/store/slices/userSlice"
@@ -20,34 +18,13 @@ export default function Profile(){
     const router = useRouter();
     const popupPost = useSelector((state: RootState) => state.popupPost.postDetail);
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
-    const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
-    const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
-    const postUrl = useSelector((state: RootState) => state.popupPost.url);
     const postList = useSelector((state: RootState) => state.popupPost.postList);
     const postListUrl = useSelector((state: RootState) => state.popupPost.postListUrl);
     const hasFetchedPostFirstTime = useRef(false);
-    const userListRef = useRef(null)
-    const unfollowPopupRef = useRef<HTMLElement | null>(null)
-    useClickOutside(userListRef, () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
-    useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
-    const [userListToggle,setUserListToggle] = useState(false)
     const dispatch = useDispatch();
     const params = useParams()
     const postRef = useRef(`http://localhost:8000/${params.id}/posts`)
     const [isLoading, setIsLoading] = useState(false);
-    const [isUnfollowInList,setIsUnfollowInList] = useState(false)
-    useEffect(()=>{
-        if(listTitle){
-            setUserListToggle(true)
-            setIsUnfollowInList(true)
-        }
-        else{
-            setIsUnfollowInList(false)
-            dispatch(clearUserList())
-            dispatch(changeListUrl(null))
-            setUserListToggle(false)
-        }
-    },[listTitle])
     async function fetchPosts(){
         if(hasFetchedPostFirstTime.current && !postListUrl) return
         if(!postRef.current) return
@@ -73,23 +50,7 @@ export default function Profile(){
             // return () => window.removeEventListener("scroll", handleScroll);
         }
     },[])
-    async function fetchPost(){
-            const response = await fetch(`http://localhost:8000/getpost/${postUrl?.replace('/p/','')}`, {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-            const jsonRes = await response.json()
-            dispatch(addPostDetail(jsonRes))
-            dispatch(clearCommentList())
-            dispatch(clearUserList())
-        }
-    useEffect(()=>{
-        if(!postUrl) return
-        fetchPost()
-    },[postUrl])
+    
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 && !isLoading) {
         setIsLoading(true)
@@ -116,19 +77,11 @@ export default function Profile(){
                 :
                 <>
                 <PostList postList={postList} isReel={false} />
-                {postUrl && 
-                    <PostPopupSlider/>
-                }
                 </>
             }
         </>
         }
-        {userListToggle && 
-            <UserList listType={listTitle == 'Followers' ? 'followerList' : 'followingList'} targetId={userInfo.username} ref={userListRef} closePopup={()=>dispatch(changeListTitle(null))} />
-        }
-        {unfollowDetail &&
-            <UnfollowPopup inList={isUnfollowInList} ref={unfollowPopupRef}/>
-        }
+
         </>
     )
 }
