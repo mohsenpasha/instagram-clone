@@ -21,13 +21,11 @@ type hoverType = {
 }
 
 export default function UserHoverPreview({position,isHover,username,ref,inComment=false}:hoverType){
-    console.log(username)
     const [userHoverInfo,setUserHoverInfo] = useState<null | {}>(null)
     const userList = useSelector((state: RootState) => state.popupPost.userList);
     const userDatailHover = userList?.filter((item)=>{
         return item.username == username
     })
-    console.log(userDatailHover)
     async function doFetch(){
         const respose = await fetchGetUserHoverInfo(username)
         const JsonRes = await respose.json()
