@@ -1,6 +1,6 @@
 'use client'
 import SideBar from "@/components/SideBar";
-import { useParams } from 'next/navigation'
+import { useParams, usePathname } from 'next/navigation'
 import React, { useEffect, useRef, useState } from "react";
 import ProfileHeader from "@/components/ProfileHeader";
 import Link from "next/link";
@@ -29,6 +29,7 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     const dispatch = useDispatch()
     const userListRef = useRef(null)
     const unfollowPopupRef = useRef<HTMLElement | null>(null)
+    const pathname = usePathname()
     useClickOutside(userListRef, () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     async function getUserData(){
@@ -63,15 +64,15 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                             {!userInfo.is_private &&
                                 <div className="flex w-full justify-center">
                                     <div className="w-full md:w-6/12 justify-around flex">
-                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center gap-[6px] items-center" href={`/${params.id}/#`}>
+                                        <Link className={`py-4 border-black mt-[-1px] ${pathname.endsWith(userInfo.username) ? 'border-t-[1px] text-black' : 'text-gray'} w-4/12 md:w-fit flex justify-center gap-[6px] items-center`} href={`/${params.id}/#`}>
                                             <IconPosts className="size-[12px]" />
                                             {t('post-t')}
                                         </Link>
-                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center gap-[6px] items-center" href={`/${params.id}/reels`}>
+                                        <Link className={`py-4 border-black mt-[-1px] ${pathname.endsWith('reels') ? 'border-t-[1px] text-black' : 'text-gray'} w-4/12 md:w-fit flex justify-center gap-[6px] items-center`} href={`/${params.id}/reels`}>
                                             <IconReels className="size-[12px]" />
                                             REELS
                                         </Link>
-                                        <Link className="py-4 border-black mt-[-1px] text-gray border-t-[1px] w-4/12 md:w-fit flex justify-center gap-[6px] items-center" href={`/${params.id}/tagged`}>
+                                        <Link className={`py-4 border-black mt-[-1px] ${pathname.endsWith('tagged') ? 'border-t-[1px] text-black' : 'text-gray'} w-4/12 md:w-fit flex justify-center gap-[6px] items-center`} href={`/${params.id}/tagged`}>
                                             <IconTagged className="size-[12px]" />
                                             {t('tagged')}
                                         </Link>
