@@ -23,7 +23,7 @@ type postPopupType = {
   listUrl:string | null,
   commentId:string | null,
   userList:[] | null,
-  commentList:[] | null,
+  commentList:[],
   replied_to:{id:string,username:string} | null,
   commentHoverIsLoading:boolean,
   postList:[],
@@ -38,7 +38,7 @@ const initialState : postPopupType = {
   listTitle:null,
   userList:null,
   commentId:null,
-  commentList:null,
+  commentList:[],
   replied_to:null,
   commentHoverIsLoading:false
 };
@@ -69,6 +69,22 @@ const postSlice = createSlice({
             item.is_liked = true
             item.like_count += 1
 
+          }
+          return item
+        })
+    },
+    saveActivePostList: (state) => {
+        state.postList = state.postList.map((item)=>{
+          if(item.activeStatus){
+            item.is_saved = true
+          }
+          return item
+        })
+    },
+    unsaveActivePostList: (state) => {
+        state.postList = state.postList.map((item)=>{
+          if(item.activeStatus){
+            item.is_saved = false
           }
           return item
         })
@@ -133,7 +149,6 @@ const postSlice = createSlice({
     },
     toggleLikeReplyComment: (state,action) => {
       if(!state.commentList) return
-
         state.commentList.map((item)=>{
           if(item.id != action.payload.commentId) return
             item.replyList.map((replyItem)=>{
@@ -257,6 +272,8 @@ increaseCommentCount: (state) => {
     });
 },
     addCommentList: (state, action) => {
+      console.log(state.commentList)
+      console.log(action.payload)
       if (state.commentList) {
         state.commentList = [
             ...state.commentList, 
@@ -303,5 +320,5 @@ increaseCommentCount: (state) => {
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle, addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList ,activatePostListStatus, likeActivePostList, unlikeActivePostList, followPostListUser} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle, addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList ,activatePostListStatus, likeActivePostList, unlikeActivePostList, followPostListUser, saveActivePostList,unsaveActivePostList} = postSlice.actions;
 export default postSlice.reducer;
