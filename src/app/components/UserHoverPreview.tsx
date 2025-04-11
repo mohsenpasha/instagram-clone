@@ -23,6 +23,7 @@ type hoverType = {
 export default function UserHoverPreview({position,isHover,username,ref,inComment=false}:hoverType){
     const [userHoverInfo,setUserHoverInfo] = useState<null | {}>(null)
     const userList = useSelector((state: RootState) => state.popupPost.userList);
+    const [isRightSide,setIsRightSide] = useState(true)
     const userDatailHover = userList?.filter((item)=>{
         return item.username == username
     })
@@ -59,10 +60,20 @@ export default function UserHoverPreview({position,isHover,username,ref,inCommen
     else{
         top = window.innerHeight - (position.bottom + 338) - position.height
     }
+    useEffect(()=>{
+        if(!isHover) return
+        if(window.innerWidth - position.left < 370){
+            setIsRightSide(false)
+        }
+        else{
+            setIsRightSide(true)
+        }
+    },[isHover])
     const { t } = useTranslation();
+
     if(underMd) return
     return(
-        <div ref={ref} style={{left:position.left | 0, top:top | 0}} className={`fixed text-sm py-4 top-0 flex flex-col justify-between bg-white z-[1000] w-[366px] h-[338px] shadow-[0_4px_12px_rgba(0,0,0,.15)] rounded-lg animate-fadeIn ${isHover ? 'flex' : 'hidden'} hover:flex`}>
+        <div ref={ref} style={{left:isRightSide ? position.left : position.left - 310 | 0, top:top | 0}} className={`fixed text-sm py-4 top-0 flex flex-col justify-between bg-white z-[1000] w-[366px] h-[338px] shadow-[0_4px_12px_rgba(0,0,0,.15)] rounded-lg animate-fadeIn ${isHover ? 'flex' : 'hidden'} hover:flex`}>
             {!userHoverInfo ? 
             <HoverUserPreviewLoading/>
             :
