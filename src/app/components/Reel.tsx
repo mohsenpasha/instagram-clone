@@ -1,38 +1,35 @@
 'use client'
 import Image from "next/image"
-import { IconComment, IconDirect, IconHeart, IconMore, IconMute, IconPlay, IconSave, IconUnMute } from "./Icons"
+import { IconClose, IconComment, IconDirect, IconHeart, IconMore, IconMute, IconPlay, IconSave, IconUnMute } from "./Icons"
 import Link from "next/link"
-import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState, VideoHTMLAttributes } from "react"
+import { Dispatch, Ref, RefObject, SetStateAction, useEffect, useRef, useState } from "react"
 import { useAnimationEnd } from "@/hooks/useAnimationEnd"
 import { UserPreview } from "./UserPreview"
 import useMediaQuery from "@/hooks/useMediaQuery"
 import { useDispatch, useSelector } from "react-redux"
 import { RootState } from "@/store/store"
-import { activatePostListStatus, changeCommentId, changeListTitle, changeListUrl, clearUserList, followPostListUser, followUserList, likeActivePostList, likePost, unlikeActivePostList } from "@/store/slices/postSlice"
+import { activatePostListStatus, addPostDetail, changeCommentId, changeListTitle, changeListUrl, clearCommentList, clearUserList, followPostListUser, followUserList, likeActivePostList, likePost, saveActivePostList, savePost, unlikeActivePostList, unsaveActivePostList, unsavePost } from "@/store/slices/postSlice"
 import { fetchLikePost, fetchUnlikePost } from "@/api/likesApi"
-import { CommentBox, UnfollowPopup, UserList } from "./SinglePost"
+import { CommentBox, CommentInput, UserList } from "./SinglePost"
 import { useClickOutside } from "@/hooks/useClickOutside"
-import { changeCurrentVisitingUser, changeUnfollow } from "@/store/slices/userSlice"
+import { changeCurrentVisitingUser } from "@/store/slices/userSlice"
+import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi"
 
 export function ReelScroll(){
     const postList = useSelector((state: RootState) => state.popupPost.postList);
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
     const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
+    const commentId = useSelector((state: RootState) => state.popupPost.commentId);
     const activeReelRef = useRef(null)
     const activeReelIndex = useRef(-1)
     const [sliderTop,setSliderTop] = useState(0)
-    
     const [isVideoMuted,setIsVideoMuted] = useState(true)
     const isScrollAllowed = useRef(true)
     const isUnderXs = useMediaQuery("(max-width: 400px)");
     const isUnderMd = useMediaQuery("(max-width: 768px)");
     const userListRef = useRef(null)
-    const unfollowPopupRef = useRef<HTMLElement | null>(null)
     const userHoverPreviewRef = useRef(null)
-    
-    useClickOutside([userListRef, userHoverPreviewRef], () => !unfollowDetail ? dispatch(changeListTitle
-        (null)) : {});
-    useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
+    useClickOutside([userListRef, userHoverPreviewRef], () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
     
     const dispatch = useDispatch()
     useEffect(()=>{
@@ -42,6 +39,8 @@ export function ReelScroll(){
         }
     },[])
     function wheelHandler(event){
+        console.log(event.target.closest('.comment-box'))
+        if(event.target.closest('.comment-box') != null) return
         if(event.deltaY > 0){
             changeActiveReel()
         }
@@ -58,6 +57,7 @@ export function ReelScroll(){
         }
     }
     function changeActiveReel(dir: 'prev' | 'next' = 'next') {
+        dispatch(clearCommentList())
         if (isScrollAllowed.current) {
             if(dir == 'next'){
                 if(activeReelIndex.current < postList.length - 1){
@@ -80,7 +80,6 @@ export function ReelScroll(){
         const reelTop = activeReelRef.current.getBoundingClientRect().top
         let finialTop = 0;
         if(isUnderXs){
-            // const currentIndex = reelList.findIndex(item => item == true)
             finialTop = reelHeight * activeReelIndex.current * -1
         }
         else{
@@ -109,7 +108,7 @@ export function ReelScroll(){
         },[listTitle])
     return(
         <>
-            <div onWheel={(event)=>wheelHandler(event)} onClick={reelScroll} className="flex flex-col w-full items-center relative overflow-hidden h-[100vh]">
+            <div onWheel={(event)=>wheelHandler(event)} className="flex flex-col w-full items-center relative overflow-hidden h-[100vh]">
                 <div style={{top:sliderTop}} className="absolute flex transition-all duration-300 flex-col xs:gap-4 xs:pt-[5vh]">
                     {postList.map((item,index)=>{
                         return <SingleReel isVideoMuted={isVideoMuted} setIsVideoMuted={setIsVideoMuted} postData={item} key={index} ref={item.activeStatus ? activeReelRef : null}/>
@@ -117,21 +116,27 @@ export function ReelScroll(){
                 </div>
             </div>
             {listTitle && 
-                <UserList listType={'likeList'} targetId={postList[activeReelIndex.current].id} ref={userListRef} hoverPreviewRef={userHoverPreviewRef} closePopup={()=>dispatch(changeListTitle(null))} />
+                <UserList listType={commentId ? 'commentlikeList' : 'likeList'} targetId={commentId ? commentId : postList[activeReelIndex.current].id} ref={userListRef} hoverPreviewRef={userHoverPreviewRef} closePopup={()=>dispatch(changeListTitle(null))} />
             }
-            {/* {unfollowDetail &&
-                <UnfollowPopup isReel={true} ref={unfollowPopupRef}/>
-            } */}
         </>
     )
 }
+type positionType = {left:number,top:number,bottom:number,height:number}
 export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData:{},ref:RefObject<null> | null,isVideoMuted:boolean,setIsVideoMuted:Dispatch<SetStateAction<boolean>>}){
     const videoRef = useRef(null)
+    const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<positionType>({left:0,top:0,bottom:0,height:0})
     const currentVsitingUser = useSelector((state: RootState)=> state.currentUser.currentVisitingUser)
+    const commentList = useSelector((state: RootState)=> state.popupPost.commentList)
+    const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
+    const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const [isVideoPaused,setIsVideoPaused] = useState(false)
     const [isPlayIconAnimationStarted,setIsPlayIconAnimationStarted] = useState(false)
     const [isCaptionOpen,setIsCaptionOpen] = useState(false)
+    const commentPopupRef = useRef(null)
+    const [toggleCommentPopup,setToggleCommentPopup] = useState(false)
+    useClickOutside(commentPopupRef,()=> listTitle ? {} : setToggleCommentPopup(false))
     const isUnderXs = useMediaQuery("(max-width: 400px)");
+    const commentToggler = useRef(null)
     const dispatch = useDispatch()
     const videoIconRef = useAnimationEnd(() => {
         setIsPlayIconAnimationStarted(false)
@@ -150,7 +155,6 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                     console.log(respose)
                     unlikePostHandler(fetchLess=true)
                     dispatch(unlikeActivePostList())
-
                 }
             }
         }
@@ -163,6 +167,7 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
     function videoPlayToggle(){
         if(videoRef.current){
             if(videoRef.current.paused){
+                if(!postData.activeStatus) return
                 videoRef.current.play()
                 setIsVideoPaused(false)
                 setIsPlayIconAnimationStarted(true)
@@ -174,15 +179,54 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
         }
     }
     useEffect(()=>{
+        window.addEventListener('resize',()=>{
+            const position= getPosition(commentToggler.current as HTMLElement)
+            setUserPreviewHoverPosition(position)
+        })
+    },[])
+    useEffect(()=>{
         if(postData.activeStatus && !isVideoPaused){
             videoRef.current.play()
             console.log(postData.user)
             dispatch(changeCurrentVisitingUser({...postData.user}))
+            dispatch(addPostDetail({...postData}))
         }
         if(!postData.activeStatus){
             videoRef.current.pause()
         }
     },[postData])
+    function getPosition(element : HTMLElement){
+        const rect = element.getBoundingClientRect();
+        const elmClientHeight = element.clientHeight
+        const distanceFromTop = rect.top;
+        const distanceFromLeft = rect.left;
+        const distanceFromBottom = window.innerHeight - rect.bottom;
+        return {left:distanceFromLeft,top:distanceFromTop,height:elmClientHeight,bottom:distanceFromBottom}
+    }
+    useEffect(()=>{
+        if(!toggleCommentPopup){
+            dispatch(clearCommentList())
+        }
+    },[toggleCommentPopup])
+    useEffect(()=>{
+        console.log(commentList)
+        if(!commentList){
+            setToggleCommentPopup(false)
+        }
+    },[commentList])
+    function openCommentBox(){
+        setToggleCommentPopup(true)
+        const position= getPosition(commentToggler.current as HTMLElement)
+        setUserPreviewHoverPosition(position)
+    }
+    async function savePostHandler(){
+            dispatch(saveActivePostList())
+            const response = await fetchSavePost(postDetail.id)
+        }
+        async function unsavePostHandler(){
+            dispatch(unsaveActivePostList())
+            const response = await fetchUnsavePost(postDetail.id)
+        }
     return(
         <div ref={ref} className="flex gap-3 xs:static relative">
             <div className="xs:h-[90vh] xs:w-[calc(90vh*9/16)] h-[calc(100vh-48px)] w-[100vw] bg-black relative xs:rounded-md overflow-hidden">
@@ -218,16 +262,23 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                     </span>
                     <span onClick={()=>dispatch(changeListTitle('Likes'))} className="text-xs">{postData.like_count}</span>
                 </div>
-                <div className="p-2 flex items-center flex-col gap-1">
-                    <IconComment className="flex-shrink-0"/>
-                    <span className="text-xs">{postData.comment_count}</span>
-                </div>
+                {postDetail && 
+                    <div ref={commentToggler} onClick={openCommentBox} className="p-2 flex items-center flex-col gap-1">
+                        <IconComment className="flex-shrink-0"/>
+                        <span className="text-xs">{postDetail.comment_count}</span>
+                    </div>
+                }
                 <div className="p-2 flex items-center flex-col gap-1">
                     <IconDirect className="flex-shrink-0"/>
                 </div>
-                <div className="p-2 flex items-center flex-col gap-1">
-                    <IconSave className="flex-shrink-0"/>
-                </div>
+                    <div onClick={()=> postData.is_saved ? unsavePostHandler() : savePostHandler()} className="p-2 flex items-center flex-col gap-1 cursor-pointer">
+                        {postData.is_saved
+                        ?
+                            <IconSave active className="flex-shrink-0"/>
+                        :
+                            <IconSave className="flex-shrink-0"/>
+                        }
+                    </div>
                 <div className="p-2 flex items-center flex-col gap-1">
                     <IconMore className="flex-shrink-0"/>
                 </div>
@@ -236,6 +287,9 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                     <Image src={postData.user.profile_pic || '/images/profile-img-2.jpeg'} width={24} height={24} alt={""}></Image>
                 </Link>
             </div>
+            {toggleCommentPopup && 
+                <CommentPopup position={userPreviewHoverPosition} closePopup={()=>setToggleCommentPopup(false)} ref={commentPopupRef} />
+            }
         </div>
     )
 }
@@ -255,13 +309,38 @@ export function ReelCaption({caption,isCaptionOpen,setIsCaptionOpen}:{caption:st
         )
 }
 
-export function commentPopup(){
+export function CommentPopup({ref,closePopup,position}:{ref:Ref<HTMLDivElement> | undefined, closePopup:()=> void,position:positionType}){
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-    
+    const postDetail = useSelector((state: RootState)=> state.popupPost.postDetail)
+    const [isRightSide,setIsRightSide] = useState(true)
+    useEffect(()=>{
+        if(window.innerWidth - position.left < 380){
+            setIsRightSide(false)
+        }
+        else{
+            setIsRightSide(true)
+        }
+    },[position])
+    if(!postDetail) return
     return(
-        <div>
-            <CommentBox />
-            test
+        <div ref={ref} style={{left:isRightSide ? position.left + 36 : position.left - 320, bottom:position.bottom}} className="fixed z-40 flex flex-col rounded-md w-80 h-96 bg-white comment-box shadow-[0_4px_12px_rgba(0,0,0,.15)]">
+            <div className="flex p-6 items-center rtl:justify-end relative">
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">
+                    Comments
+                </span>
+                <span onClick={closePopup} className="">
+                    <IconClose className="size-4"/>
+                </span>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+                <CommentBox closeCommentBox={closePopup} textareaRef={textareaRef} />
+            </div>
+            <div className="pr-2">
+                <CommentInput textareaRef={textareaRef} />
+            </div>
+            <span className="absolute border-t-[6px] border-t-white border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent bottom-8 right-0 -mr-2 -rotate-90">
+
+            </span>
         </div>
     )
 }
