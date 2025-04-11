@@ -398,7 +398,7 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
                 dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
             }
             else{
-                if(postDetail.comment_count == 0) return
+                // if(postDetail.comment_count == 0) return
                 dispatch(addCommentList([jsonRes]))
             }
         }
@@ -581,7 +581,6 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
         dispatch(changeCommentId(commentDetail.id))
     }
     async function fetchLike(){
-        
         const response = await fetchlikeComment(commentDetail.id)
         if(response.status != 200){
             dispatch(toggleLikeComment({id:commentDetail.id,action:'unlike'}))
