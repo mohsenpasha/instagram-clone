@@ -24,10 +24,10 @@ type postPopupType = {
   commentId:string | null,
   userList:[] | null,
   commentList:[] | null,
-   replied_to:{id:string,username:string} | null,
-   commentHoverIsLoading:boolean,
-   postList:[],
-   postListUrl: string | null
+  replied_to:{id:string,username:string} | null,
+  commentHoverIsLoading:boolean,
+  postList:[],
+  postListUrl: string | null
 }
 const initialState : postPopupType = {
   url: null,
@@ -58,7 +58,40 @@ const postSlice = createSlice({
       state.postListUrl = action.payload; 
     },
     addPostList: (state, action) => {
-      state.postList = [...state.postList,...action.payload];
+      action.payload.map((item)=>{
+        item.activeStatus = false
+        state.postList = [...state.postList,item];
+      })
+    },
+    likeActivePostList: (state) => {
+        state.postList = state.postList.map((item)=>{
+          if(item.activeStatus){
+            item.is_liked = true
+            item.like_count += 1
+
+          }
+          return item
+        })
+    },
+    unlikeActivePostList: (state) => {
+      state.postList = state.postList.map((item)=>{
+        if(item.activeStatus){
+          item.is_liked = false
+          item.like_count -= 1
+        }
+        return item
+      })
+  },
+    activatePostListStatus: (state, action) => {
+      state.postList = state.postList.map((item)=>{
+        if(action.payload == item.id){
+          item.activeStatus = true
+        }
+        else{
+          item.activeStatus = false
+        }
+        return item
+      })
     },
     clearPostList: (state) => {
       state.postList = [];
@@ -248,6 +281,18 @@ increaseCommentCount: (state) => {
         }
       })
     },
+    followPostListUser: (state, action) => {
+      state.postList.map((item)=>{
+        if(item.user.username == action.payload.username){
+          if(action.payload.action == 'follow'){
+            item.user.is_following = true
+          }
+          else{
+            item.user.is_following = false
+          }
+        }
+      })
+    },
     listToggleIsLoading: (state, action) => {
       state.userList.map((item)=>{
         if(item.username == action.payload.username){
@@ -258,5 +303,5 @@ increaseCommentCount: (state) => {
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle,addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle, addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList ,activatePostListStatus, likeActivePostList, unlikeActivePostList, followPostListUser} = postSlice.actions;
 export default postSlice.reducer;
