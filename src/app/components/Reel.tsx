@@ -6,15 +6,35 @@ import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState, Video
 import { useAnimationEnd } from "@/hooks/useAnimationEnd"
 import { UserPreview } from "./UserPreview"
 import useMediaQuery from "@/hooks/useMediaQuery"
+import { useDispatch, useSelector } from "react-redux"
+import { RootState } from "@/store/store"
+import { activatePostListStatus, changeCommentId, changeListTitle, changeListUrl, clearUserList, followPostListUser, followUserList, likeActivePostList, likePost, unlikeActivePostList } from "@/store/slices/postSlice"
+import { fetchLikePost, fetchUnlikePost } from "@/api/likesApi"
+import { CommentBox, UnfollowPopup, UserList } from "./SinglePost"
+import { useClickOutside } from "@/hooks/useClickOutside"
+import { changeCurrentVisitingUser, changeUnfollow } from "@/store/slices/userSlice"
 
 export function ReelScroll(){
+    const postList = useSelector((state: RootState) => state.popupPost.postList);
+    const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
+    const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const activeReelRef = useRef(null)
+    const activeReelIndex = useRef(-1)
     const [sliderTop,setSliderTop] = useState(0)
-    const [reelList,setReelList] = useState([true,false,false,false])
+    
     const [isVideoMuted,setIsVideoMuted] = useState(true)
     const isScrollAllowed = useRef(true)
     const isUnderXs = useMediaQuery("(max-width: 400px)");
     const isUnderMd = useMediaQuery("(max-width: 768px)");
+    const userListRef = useRef(null)
+    const unfollowPopupRef = useRef<HTMLElement | null>(null)
+    const userHoverPreviewRef = useRef(null)
+    
+    useClickOutside([userListRef, userHoverPreviewRef], () => !unfollowDetail ? dispatch(changeListTitle
+        (null)) : {});
+    useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
+    
+    const dispatch = useDispatch()
     useEffect(()=>{
         window.addEventListener('keydown',(event)=>{keyboardHandler(event)})
         return ()=>{
@@ -39,29 +59,16 @@ export function ReelScroll(){
     }
     function changeActiveReel(dir: 'prev' | 'next' = 'next') {
         if (isScrollAllowed.current) {
-            setReelList(prevReelList => {
-                const currentIndex = prevReelList.findIndex(item => item === true);
-                if (dir === 'prev' && currentIndex === 0) {
-                    return prevReelList;
-                } 
-                else if (dir === 'next' && currentIndex === prevReelList.length - 1) {
-                    return prevReelList;
-                } 
-                else {
-                    return prevReelList.map((status, index) => {
-                        if (dir === 'prev' && index === currentIndex - 1) {
-                            return true;
-                        } 
-                        else if (dir === 'next' && index === currentIndex + 1) {
-                            return true;
-                        } 
-                        else {
-                            return false;
-                        }
-                    });
+            if(dir == 'next'){
+                if(activeReelIndex.current < postList.length - 1){
+                    activeReelIndex.current = activeReelIndex.current + 1
                 }
-            });
-    
+            }
+            else if(activeReelIndex.current > 0){
+                activeReelIndex.current = activeReelIndex.current - 1
+            }
+            dispatch(activatePostListStatus(postList[activeReelIndex.current].id))
+            console.log(activeReelIndex.current)
             isScrollAllowed.current = false;
             setTimeout(() => {
                 isScrollAllowed.current = true;
@@ -73,8 +80,8 @@ export function ReelScroll(){
         const reelTop = activeReelRef.current.getBoundingClientRect().top
         let finialTop = 0;
         if(isUnderXs){
-            const currentIndex = reelList.findIndex(item => item == true)
-            finialTop = reelHeight * currentIndex * -1
+            // const currentIndex = reelList.findIndex(item => item == true)
+            finialTop = reelHeight * activeReelIndex.current * -1
         }
         else{
             finialTop = sliderTop -(reelTop - ((window.innerHeight - reelHeight) / 2))
@@ -85,31 +92,68 @@ export function ReelScroll(){
         setSliderTop(finialTop)
     }
     useEffect(()=>{
+        if(postList.length == 0) return
+        activeReelIndex.current = postList.findIndex((item)=> item.activeStatus == true)
+        if(activeReelIndex.current == -1){
+            dispatch(activatePostListStatus(postList[0].id))
+            return
+        }
         reelScroll()
-    },[isUnderXs,isUnderMd])
-    useEffect(()=>{
-        reelScroll()
-    },[reelList])
-
+    },[isUnderXs,isUnderMd,postList])
+        useEffect(()=>{
+            if(!listTitle){
+                dispatch(clearUserList())
+                dispatch(changeListUrl(null))
+                dispatch(changeCommentId(null))
+            }
+        },[listTitle])
     return(
-        <div onWheel={(event)=>wheelHandler(event)} onClick={reelScroll} className="flex flex-col w-full items-center relative overflow-hidden h-[100vh]">
-            <div style={{top:sliderTop}} className="absolute flex transition-all duration-300 flex-col xs:gap-4 xs:pt-[5vh]">
-                {reelList.map((status,index)=>{
-                    return <SingleReel isVideoMuted={isVideoMuted} setIsVideoMuted={setIsVideoMuted} active={status} key={index} ref={status ? activeReelRef : null}/>
-                })}
+        <>
+            <div onWheel={(event)=>wheelHandler(event)} onClick={reelScroll} className="flex flex-col w-full items-center relative overflow-hidden h-[100vh]">
+                <div style={{top:sliderTop}} className="absolute flex transition-all duration-300 flex-col xs:gap-4 xs:pt-[5vh]">
+                    {postList.map((item,index)=>{
+                        return <SingleReel isVideoMuted={isVideoMuted} setIsVideoMuted={setIsVideoMuted} postData={item} key={index} ref={item.activeStatus ? activeReelRef : null}/>
+                    })}
+                </div>
             </div>
-        </div>
-    ) 
+            {listTitle && 
+                <UserList listType={'likeList'} targetId={postList[activeReelIndex.current].id} ref={userListRef} hoverPreviewRef={userHoverPreviewRef} closePopup={()=>dispatch(changeListTitle(null))} />
+            }
+            {/* {unfollowDetail &&
+                <UnfollowPopup isReel={true} ref={unfollowPopupRef}/>
+            } */}
+        </>
+    )
 }
-export function SingleReel({active,ref,isVideoMuted,setIsVideoMuted}:{active:boolean,ref:RefObject<null> | null,isVideoMuted:boolean,setIsVideoMuted:Dispatch<SetStateAction<boolean>>}){
+export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData:{},ref:RefObject<null> | null,isVideoMuted:boolean,setIsVideoMuted:Dispatch<SetStateAction<boolean>>}){
     const videoRef = useRef(null)
+    const currentVsitingUser = useSelector((state: RootState)=> state.currentUser.currentVisitingUser)
     const [isVideoPaused,setIsVideoPaused] = useState(false)
     const [isPlayIconAnimationStarted,setIsPlayIconAnimationStarted] = useState(false)
     const [isCaptionOpen,setIsCaptionOpen] = useState(false)
     const isUnderXs = useMediaQuery("(max-width: 400px)");
+    const dispatch = useDispatch()
     const videoIconRef = useAnimationEnd(() => {
         setIsPlayIconAnimationStarted(false)
         });
+    function unlikePostHandler(fetchLess=false){
+            if(!fetchLess){
+                fetchUnlikePost(postData.id)
+            }
+            dispatch(unlikeActivePostList())
+        }
+    async function likePostHandler(fetchLess=false){
+            dispatch(likeActivePostList())
+            if(!fetchLess){
+                const respose = await fetchLikePost(postData.id)
+                if(respose.status != 200){
+                    console.log(respose)
+                    unlikePostHandler(fetchLess=true)
+                    dispatch(unlikeActivePostList())
+
+                }
+            }
+        }
     function toggleSound(){
         if(videoRef.current){
             setIsVideoMuted(!videoRef.current.muted)
@@ -126,18 +170,19 @@ export function SingleReel({active,ref,isVideoMuted,setIsVideoMuted}:{active:boo
             else{
                 setIsVideoPaused(true)
                 videoRef.current.pause()
-                // setIsPlayIconAnimationStarted(true)
             }
         }
     }
     useEffect(()=>{
-        if(active && !isVideoPaused){
+        if(postData.activeStatus && !isVideoPaused){
             videoRef.current.play()
+            console.log(postData.user)
+            dispatch(changeCurrentVisitingUser({...postData.user}))
         }
-        if(!active){
+        if(!postData.activeStatus){
             videoRef.current.pause()
         }
-    })
+    },[postData])
     return(
         <div ref={ref} className="flex gap-3 xs:static relative">
             <div className="xs:h-[90vh] xs:w-[calc(90vh*9/16)] h-[calc(100vh-48px)] w-[100vw] bg-black relative xs:rounded-md overflow-hidden">
@@ -155,19 +200,27 @@ export function SingleReel({active,ref,isVideoMuted,setIsVideoMuted}:{active:boo
                     <IconMute className="size-4"/>
                 </div>
                 <div onClick={()=>isCaptionOpen ? setIsCaptionOpen(false) : undefined} className={`absolute bottom-0 left-0 w-full xs:h-auto flex flex-col justify-end py-4 z-20 text-white pr-8 xs:pr-0 ${isCaptionOpen ? 'from-[#00000000] to-[#000000AA] bg-gradient-to-b h-full' : ''}`}>
-                    <UserPreview isReel={true}/>
-                    <ReelCaption isCaptionOpen={isCaptionOpen} setIsCaptionOpen={setIsCaptionOpen}/>
+                    {currentVsitingUser && 
+                        <UserPreview userData={currentVsitingUser} isReel={true}/>
+                    }
+                    <ReelCaption caption={postData.caption} isCaptionOpen={isCaptionOpen} setIsCaptionOpen={setIsCaptionOpen}/>
                 </div>
-                <video ref={videoRef} className="h-full w-full object-cover" muted={isVideoMuted} loop autoPlay={active} src="/reels/reel-2.mp4"></video>
+                <video ref={videoRef} className="h-full w-full object-cover" muted={isVideoMuted} loop autoPlay={postData.activeStatus} src={postData.media[0].file}></video>
             </div>
             <div className="xs:static text-white xs:text-black absolute bottom-0 right-0 w-12 flex flex-col justify-end gap-2 items-center z-30">
                 <div className="p-2 flex items-center flex-col gap-1">
-                    <IconHeart className="flex-shrink-0"/>
-                    <span className="text-xs">2M</span>
+                    <span className="cursor-pointer" onClick={()=>postData.is_liked ? unlikePostHandler() : likePostHandler()}>
+                    {postData.is_liked ?
+                        <IconHeart active className="flex-shrink-0 text-[#ff3041]"/>
+                    :
+                        <IconHeart className="flex-shrink-0"/>
+                    }
+                    </span>
+                    <span onClick={()=>dispatch(changeListTitle('Likes'))} className="text-xs">{postData.like_count}</span>
                 </div>
                 <div className="p-2 flex items-center flex-col gap-1">
                     <IconComment className="flex-shrink-0"/>
-                    <span className="text-xs">2M</span>
+                    <span className="text-xs">{postData.comment_count}</span>
                 </div>
                 <div className="p-2 flex items-center flex-col gap-1">
                     <IconDirect className="flex-shrink-0"/>
@@ -180,25 +233,35 @@ export function SingleReel({active,ref,isVideoMuted,setIsVideoMuted}:{active:boo
                 </div>
 
                 <Link href='#' className="flex my-2 items-center flex-col gap-1 rounded-[4px] border-[1px] border-black size-6 overflow-hidden hover:opacity-40">
-                    <Image src='/images/profile-img-2.jpeg' width={24} height={24} alt={""}></Image>
+                    <Image src={postData.user.profile_pic || '/images/profile-img-2.jpeg'} width={24} height={24} alt={""}></Image>
                 </Link>
             </div>
         </div>
     )
 }
-export function ReelCaption({isCaptionOpen,setIsCaptionOpen}:{isCaptionOpen:boolean,setIsCaptionOpen:Dispatch<SetStateAction<boolean>>}){
+export function ReelCaption({caption,isCaptionOpen,setIsCaptionOpen}:{caption:string,isCaptionOpen:boolean,setIsCaptionOpen:Dispatch<SetStateAction<boolean>>}){
     function toggleFullCaption(){
         setIsCaptionOpen(!isCaptionOpen)
     }
         return(
             <div onClick={toggleFullCaption} className={`${isCaptionOpen ? 'max-h-44 overflow-y-auto' : 'max-h-[18px] overflow-hidden'} px-4 text-sm flex gap-1 transition-all cursor-pointer`}>
                 <div className={`${isCaptionOpen ? 'w-full' : 'w-11/12 overflow-hidden'}`}>
-                    <span className={!isCaptionOpen ? 'w-80 inline-block' : undefined}>
-                        test test test test test test test test test test test test test test test test test test test test test</span>
+                    <span className={!isCaptionOpen ? 'w-80 inline-block' : undefined}>{caption}</span>
                 </div>
                 {!isCaptionOpen && 
                     <span className="flex-shrink-0 opacity-70 cursor-pointer">… more</span>
                 }
             </div>
         )
+}
+
+export function commentPopup(){
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    
+    return(
+        <div>
+            <CommentBox />
+            test
+        </div>
+    )
 }
