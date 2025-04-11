@@ -7,7 +7,7 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount, followPostListUser } from '@/store/slices/postSlice'
 import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
@@ -737,12 +737,11 @@ function getPosition(element : HTMLElement){
 type userListType = {
     closePopup:()=>void,
     ref:React.Ref<HTMLDivElement> | undefined,
-    hoverPreviewRef:React.Ref<HTMLDivElement> | undefined,
+    hoverPreviewRef:React.Ref<HTMLElement> | undefined,
     targetId:string,
     listType:'likeList' | 'followerList' | 'followingList' | 'commentlikeList'
 }
 export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,targetId}:userListType){
-    console.log(listType)
     const currentUrl = useSelector((state: RootState) => state.popupPost.listUrl);
     const userListData = useSelector((state: RootState) => state.popupPost.userList);
     const underMd = useMediaQuery("(max-width: 768px)");
@@ -823,11 +822,15 @@ export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,tar
     )
 }
 
-export function UnfollowPopup({ref,inList=true}){
+export function UnfollowPopup({ref,inList=true,isReel=false}:{ref:React.Ref<HTMLElement> | undefined,inList?:boolean,isReel?:boolean}){
     const dispatch = useDispatch()
     const userDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
+    const currentVisitingUser = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     function unfollowHandler(){
-        if(inList){
+        if(isReel){
+            dispatch(followPostListUser({username:currentVisitingUser.username,action:'unfollow'}))
+        }
+        else if(inList){
             dispatch(listToggleIsLoading({username:userDetail?.username,result:true}))
         }
         else{
