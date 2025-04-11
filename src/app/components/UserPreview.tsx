@@ -21,11 +21,11 @@ export function UserPreview({mouseEnter,mouseOut,userData,isReel=false}:userPrev
         <>
             <div className="py-2 px-4">
                 <div className={`flex ${isReel ? 'gap-2' : 'gap-3'} items-center`}>
-                    <div onMouseEnter={(event)=>mouseEnter && mouseEnter(event,userData.username)} onMouseOut={(event)=>mouseOut && mouseOut(event)} className={`${isReel ? 'size-8' : 'size-11'} rounded-full overflow-hidden flex-shrink-0 relative`}>
+                    <Link href={'/' + userData.username} onMouseEnter={(event)=>mouseEnter && mouseEnter(event,userData.username)} onMouseOut={(event)=>mouseOut && mouseOut(event)} className={`${isReel ? 'size-8' : 'size-11'} rounded-full overflow-hidden flex-shrink-0 relative`}>
                         <Image className="rounded-full" src={userData.profile_pic || '/images/profile-img.jpeg'} alt="" width={isReel ? 32 : 44} height={isReel ? 32 : 44}></Image>
-                    </div>
+                    </Link>
                     <div className={`flex ${!isReel && "flex-1"} flex-col text-sm leading-[18px] relative`}>
-                        <Link onMouseEnter={(event)=>mouseEnter && mouseEnter(event,userData.username)} onMouseOut={(event)=>mouseOut && mouseOut(event)} className="font-semibold truncate inline-block w-fit" href="#">
+                        <Link onMouseEnter={(event)=>mouseEnter && mouseEnter(event,userData.username)} onMouseOut={(event)=>mouseOut && mouseOut(event)} className="font-semibold truncate inline-block w-fit" href={'/' + userData.username}>
                             {userData.username}
                         </Link>
                         {!isReel && 
@@ -37,7 +37,7 @@ export function UserPreview({mouseEnter,mouseOut,userData,isReel=false}:userPrev
                     }
                     {currentUsername != userData.username && 
                         <div className="cursor-pointer flex-shrink-0 over text-sm">
-                            <FollowBtn userData={userData} bgTrasparent={isReel} haveIcon={false}/>
+                            <FollowBtn directUnfollow={isReel} userData={userData} inList={!isReel} isReel={isReel} haveIcon={false}/>
                         </div>
                     }
                 </div>
