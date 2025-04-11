@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { IconFollow, IconLoading, IconLoadingButton } from "./Icons"
 import { useTranslation } from "next-i18next";
 import { fetchFollowUser, fetchUnfollowUser } from "@/api/followApi";
-import { followUserList } from "@/store/slices/postSlice";
+import { followPostListUser, followUserList } from "@/store/slices/postSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { changeUnfollow, toggleIsFollowing } from "@/store/slices/userSlice";
 import { RootState } from "@/store/store";
@@ -10,7 +10,7 @@ import { RootState } from "@/store/store";
 type FollowBtnType = {
     className:string,
     haveIcon?:boolean,
-    bgTrasparent?:boolean,
+    isReel?:boolean,
     userData:{
         username:string,
         is_following:boolean,
@@ -23,17 +23,22 @@ type FollowBtnType = {
     inComment:boolean
 }
 
-export function FollowBtn({className, haveIcon,bgTrasparent=false,fullSize=false,userData,directUnfollow=false,inList=true,inComment=false}:FollowBtnType){
+export function FollowBtn({className, haveIcon,isReel=false,fullSize=false,userData,directUnfollow=false,inList=true,inComment=false}:FollowBtnType){
     const inCommentIsLoading = useSelector((state: RootState) => state.popupPost.commentHoverIsLoading);
+    const currentVisitingUser = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const dispatch = useDispatch()
     let IconAvailable = true;
     if(haveIcon == false){
         IconAvailable = haveIcon
     }
     async function followHandler(){
+        console.log('test')
         const response = await fetchFollowUser(userData.username,dispatch,inList,inComment)
         if(inComment) return
-        if(inList){
+        if(isReel){
+            dispatch(followPostListUser({username:currentVisitingUser.username,action:'follow'}))
+        }
+        else if(inList){
             dispatch(followUserList({username:userData.username,action:'follow'}))
         }
         else{
@@ -43,7 +48,10 @@ export function FollowBtn({className, haveIcon,bgTrasparent=false,fullSize=false
     async function unFollowHandler(){
         const response = await fetchUnfollowUser(userData.username,dispatch,inList,inComment)
         if(inComment) return
-        if(inList){
+        if(isReel){
+            dispatch(followPostListUser({username:currentVisitingUser.username,action:'unfollow'}))
+        }
+        else if(inList){
             dispatch(followUserList({username:userData.username,action:'unfollow'}))
         }
         else{
@@ -61,7 +69,7 @@ export function FollowBtn({className, haveIcon,bgTrasparent=false,fullSize=false
     const { t } = useTranslation();
     return(
         <>
-        <button disabled={(inComment && inCommentIsLoading) || userData.isLoading} onClick={()=> userData.is_following ? (directUnfollow ? unFollowHandler() : openUnfollowPopup()) : followHandler()} className={`${fullSize && 'w-full'} ${bgTrasparent ? 'bg-transparent border-[1px] border-ss border-opacity-50' : userData.is_following ? 'bg-gray hover:bg-grayer' : 'bg-bl hover:bg-bler text-white'} ${bgTrasparent ? 'px-2 py-[6px]' : 'py-[7px] px-4'} rounded-lg flex justify-center items-center gap-2 cursor-pointer font-semibold relative ${className}`}>
+        <button disabled={(inComment && inCommentIsLoading) || userData.isLoading} onClick={()=> userData.is_following ? (directUnfollow ? unFollowHandler() : openUnfollowPopup()) : followHandler()} className={`${fullSize && 'w-full'} ${isReel ? 'bg-transparent border-[1px] border-ss border-opacity-50' : userData.is_following ? 'bg-gray hover:bg-grayer' : 'bg-bl hover:bg-bler text-white'} ${isReel ? 'px-2 py-[6px]' : 'py-[7px] px-4'} rounded-lg flex justify-center items-center gap-2 cursor-pointer font-semibold relative ${className}`}>
             {IconAvailable && !userData.is_following &&
                 <IconFollow className={`${(inComment && inCommentIsLoading) || userData.isLoading ? 'opacity-0' : 'opacity-1'} size-[20px]`}/>
             }
