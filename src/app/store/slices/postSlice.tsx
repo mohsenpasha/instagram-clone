@@ -23,7 +23,7 @@ type postPopupType = {
   listUrl:string | null,
   commentId:string | null,
   userList:[] | null,
-  commentList:[],
+  commentList:null,
   replied_to:{id:string,username:string} | null,
   commentHoverIsLoading:boolean,
   postList:[],
@@ -111,6 +111,14 @@ const postSlice = createSlice({
     },
     clearPostList: (state) => {
       state.postList = [];
+    },
+    increasePostListCommentCount: (state) => {
+      state.postList = state.postList.map((item)=>{
+        if(item.activeStatus){
+          item.comment_count += 1
+        }
+        return item
+      })
     },
     changeListUrl: (state, action) => {
       if(action.payload == state.listUrl) return
@@ -320,5 +328,5 @@ increaseCommentCount: (state) => {
   },
 });
 
-export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle, addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList ,activatePostListStatus, likeActivePostList, unlikeActivePostList, followPostListUser, saveActivePostList,unsaveActivePostList} = postSlice.actions;
+export const { remove, changeUrl, addPostDetail ,likePost, unlikePost, savePost, unsavePost, changeListUrl, changeListTitle, addUserList, followUserList, listToggleIsLoading, clearUserList, addCommentList, changeCommentId, toggleLikeComment, toggleLikeReplyComment, addReplyList, clearReplyList, changeRepliedTo, increaseReplyCount, toggleCommentHoverLoading, increaseCommentCount, clearCommentList, addPostList, changePostListUrl, clearPostList ,activatePostListStatus, likeActivePostList, unlikeActivePostList, followPostListUser, saveActivePostList,unsaveActivePostList, increasePostListCommentCount} = postSlice.actions;
 export default postSlice.reducer;
