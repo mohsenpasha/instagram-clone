@@ -7,7 +7,7 @@ import UserHoverPreview from "./UserHoverPreview";
 import { disableScroll, enableScroll } from "@/utils/scroll";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useSelector,useDispatch } from "react-redux";
-import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount, followPostListUser } from '@/store/slices/postSlice'
+import { likePost, savePost, unlikePost, unsavePost, addUserList, listToggleIsLoading, changeListUrl, addCommentList, changeListTitle, changeCommentId, toggleLikeComment, addReplyList, toggleLikeReplyComment, clearReplyList, changeRepliedTo, increaseReplyCount, increaseCommentCount, followPostListUser, increasePostListCommentCount } from '@/store/slices/postSlice'
 import { fetchlikeComment, fetchLikePost, fetchUnlikeComment, fetchUnlikePost } from "@/api/likesApi";
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { RootState } from "@/store/store";
@@ -326,7 +326,7 @@ export function PostCaption({caption,user,updated_at}){
     </div>
     )
 }
-export function CommentInput({className,textareaRef} : {className?:string,textareaRef:RefObject<HTMLTextAreaElement | null>}){
+export function CommentInput({className,textareaRef,inReel=false} : {className?:string,textareaRef:RefObject<HTMLTextAreaElement | null>,inReel?:boolean}){
     const [value, setValue] = useState<string>("");
     const [emojiBottom,setEmojiBottom] = useState<boolean>(false)
     const [emojiBoxToggle,setEmojiBoxToggle] = useState<boolean>(false)
@@ -391,7 +391,13 @@ export function CommentInput({className,textareaRef} : {className?:string,textar
         const response = await fetchAddComment(requestData)
         if(response.status == 200){
             const jsonRes = await response.json()
-            dispatch(increaseCommentCount())
+            console.log(inReel)
+            if(inReel){
+                dispatch(increasePostListCommentCount())
+            }
+            else{
+                dispatch(increaseCommentCount())
+            }
             if(repliedTo){
                 const newReply = {...jsonRes,parentCommentId:repliedTo.parentId || repliedTo.id}
                 dispatch(addReplyList({id:(repliedTo.parentId || repliedTo.id),newReply:newReply}))

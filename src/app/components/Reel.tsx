@@ -209,8 +209,8 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
         }
     },[toggleCommentPopup])
     useEffect(()=>{
-        console.log(commentList)
-        if(!commentList){
+        if(!commentList) return
+        if(commentList.length == 0){
             setToggleCommentPopup(false)
         }
     },[commentList])
@@ -265,7 +265,7 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                 {postDetail && 
                     <div ref={commentToggler} onClick={openCommentBox} className="p-2 flex items-center flex-col gap-1">
                         <IconComment className="flex-shrink-0"/>
-                        <span className="text-xs">{postDetail.comment_count}</span>
+                        <span className="text-xs">{postData.comment_count}</span>
                     </div>
                 }
                 <div className="p-2 flex items-center flex-col gap-1">
@@ -336,11 +336,9 @@ export function CommentPopup({ref,closePopup,position}:{ref:Ref<HTMLDivElement> 
                 <CommentBox closeCommentBox={closePopup} textareaRef={textareaRef} />
             </div>
             <div className="pr-2">
-                <CommentInput textareaRef={textareaRef} />
+                <CommentInput inReel={true} textareaRef={textareaRef} />
             </div>
-            <span className="absolute border-t-[6px] border-t-white border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent bottom-8 right-0 -mr-2 -rotate-90">
-
-            </span>
+            <span className={`absolute border-t-[6px] border-t-white border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent bottom-8 ${isRightSide ? 'left-0 -ml-2 rotate-90' : 'right-0 -mr-2 -rotate-90'}`}></span>
         </div>
     )
 }
