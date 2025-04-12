@@ -39,7 +39,6 @@ export function ReelScroll(){
         }
     },[])
     function wheelHandler(event){
-        console.log(event.target.closest('.comment-box'))
         if(event.target.closest('.comment-box') != null) return
         if(event.deltaY > 0){
             changeActiveReel()
@@ -68,7 +67,6 @@ export function ReelScroll(){
                 activeReelIndex.current = activeReelIndex.current - 1
             }
             dispatch(activatePostListStatus(postList[activeReelIndex.current].id))
-            console.log(activeReelIndex.current)
             isScrollAllowed.current = false;
             setTimeout(() => {
                 isScrollAllowed.current = true;
@@ -152,7 +150,6 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
             if(!fetchLess){
                 const respose = await fetchLikePost(postData.id)
                 if(respose.status != 200){
-                    console.log(respose)
                     unlikePostHandler(fetchLess=true)
                     dispatch(unlikeActivePostList())
                 }
@@ -187,7 +184,6 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
     useEffect(()=>{
         if(postData.activeStatus && !isVideoPaused){
             videoRef.current.play()
-            console.log(postData.user)
             dispatch(changeCurrentVisitingUser({...postData.user}))
             dispatch(addPostDetail({...postData}))
         }
@@ -252,8 +248,8 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                 <video ref={videoRef} className="h-full w-full object-cover" muted={isVideoMuted} loop autoPlay={postData.activeStatus} src={postData.media[0].file}></video>
             </div>
             <div className="xs:static text-white xs:text-black absolute bottom-0 right-0 w-12 flex flex-col justify-end gap-2 items-center z-30">
-                <div className="p-2 flex items-center flex-col gap-1">
-                    <span className="cursor-pointer" onClick={()=>postData.is_liked ? unlikePostHandler() : likePostHandler()}>
+                <div className="p-2 flex items-center flex-col gap-1 cursor-pointer">
+                    <span onClick={()=>postData.is_liked ? unlikePostHandler() : likePostHandler()}>
                     {postData.is_liked ?
                         <IconHeart active className="flex-shrink-0 text-[#ff3041]"/>
                     :
@@ -263,14 +259,14 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                     <span onClick={()=>dispatch(changeListTitle('Likes'))} className="text-xs">{postData.like_count}</span>
                 </div>
                 {postDetail && 
-                    <div ref={commentToggler} onClick={openCommentBox} className="p-2 flex items-center flex-col gap-1">
+                    <div ref={commentToggler} onClick={openCommentBox} className="p-2 cursor-pointer flex items-center flex-col gap-1">
                         <IconComment className="flex-shrink-0"/>
                         <span className="text-xs">{postData.comment_count}</span>
                     </div>
                 }
-                <div className="p-2 flex items-center flex-col gap-1">
+                {/* <div className="p-2 flex items-center flex-col gap-1">
                     <IconDirect className="flex-shrink-0"/>
-                </div>
+                </div> */}
                     <div onClick={()=> postData.is_saved ? unsavePostHandler() : savePostHandler()} className="p-2 flex items-center flex-col gap-1 cursor-pointer">
                         {postData.is_saved
                         ?
