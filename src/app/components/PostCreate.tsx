@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from "react"
 import { IconArrow, IconMediaGallery, IconPlus, IconPlusCircle, IconUploadFirstView } from "./Icons"
 import { useDispatch, useSelector } from "react-redux"
-import { addPostMedia, changeActiveIndex, deleteActiveIndex } from "@/store/slices/postUploadSlice"
+import { addPostMedia, changeActiveIndex, deleteActiveIndex, swapPostMedia } from "@/store/slices/postUploadSlice"
 import { RootState } from "@/store/store"
 import Image from "next/image"
+import { Rethink_Sans } from "next/font/google"
 
 export default function CreatePostPopup(){
     const mediaFiles = useSelector((state: RootState) => state.createData.postMedia);
@@ -14,58 +15,66 @@ export default function CreatePostPopup(){
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 1,
             previewUrl: '/images/post-1.jpg',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 2,
             previewUrl: '/images/post-prev-1.jpg',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 3,
             previewUrl: '/images/food-1.png',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 4,
             previewUrl: '/images/post-1.jpg',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 5,
             previewUrl: '/images/post-prev-1.jpg',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 6,
             previewUrl: '/images/food-1.png',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 7,
             previewUrl: '/images/post-1.jpg',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 8,
             previewUrl: '/images/post-prev-1.jpg',
           }));
           dispatch(addPostMedia({
             name: 'test',
             size: 'test',
             type: 'test',
+            order: 9,
             previewUrl: '/images/food-1.png',
           }));
     },[])
-    console.log(mediaFiles)
     if(!mediaFiles) return
     return(
         <div className="fixed w-[100vw] h-[100vh] top-0 left-0 bg-black bg-opacity-60 z-50 flex justify-center items-center">
@@ -79,15 +88,15 @@ export default function CreatePostPopup(){
 }
 export function PostUploadFirstView(){
     const dispatch = useDispatch()
-    const fileInputRef = useRef(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [isDragging, setIsDragging] = useState(false);
 
 
   const handleDrop = (event) => {
+    if(!fileInputRef.current) return
     event.preventDefault();
     setIsDragging(false);
 
-    const file = event.dataTransfer.files[0];
     fileInputRef.current.files = event.dataTransfer.files;
     handleFileChange()
   };
@@ -101,9 +110,8 @@ export function PostUploadFirstView(){
     setIsDragging(false);
   };
     function handleFileChange(){
-        console.log(fileInputRef.current.files)
+        if(!fileInputRef.current?.files) return
         for(let index = 0;index < fileInputRef.current.files.length;index++){
-            console.log(fileInputRef.current.files[index])
             dispatch(addPostMedia({
                 name: fileInputRef.current.files[index].name,
                 size: fileInputRef.current.files[index].size,
@@ -134,13 +142,10 @@ export function CropSection(){
     const mediaFiles = useSelector((state: RootState) => state.createData.postMedia);
     const dispatch = useDispatch()
     function  handleSliderChange(dir:'next' | 'prev'){
-        console.log(sliderCurrentIndex)
-        console.log(dir)
+        if(!mediaFiles) return
         if(sliderCurrentIndex == null) return
         if(dir == 'next'){
-            console.log('first if')
             if(sliderCurrentIndex < mediaFiles.length - 1){
-                console.log('inner if')
                 dispatch(changeActiveIndex(sliderCurrentIndex + 1))
             }
         }
@@ -151,6 +156,7 @@ export function CropSection(){
     useEffect(()=>{
         dispatch(changeActiveIndex(0))
     },[])
+    if(!mediaFiles || sliderCurrentIndex == null) return
     return(
         <div className="flex flex-col w-[490px] h-[520px] rounded-lg bg-[#F5F5F5] overflow-hidden">
             <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
@@ -200,14 +206,16 @@ export function CropSection(){
 export function CropAction(){
     const sliderCurrentIndex = useSelector((state: RootState) => state.createData.activeIndex);
     const [thumnailSliderT,setThumnailSliderT] = useState(0)
-    const thumnailSliderRed = useRef(null)
+    const thumnailSliderRef = useRef<HTMLElement>(null)
     const [rightArrowStatus,setRightArrowStatus] = useState(true)
     const postMedia = useSelector((state: RootState) => state.createData.postMedia);
+    const [dragginElmIndex,setDragginElmIndex] = useState<number | null>(null)
     const dispatch = useDispatch()
     function handleChangeActiveIndex(index:number){
         dispatch(changeActiveIndex(index))
     }
     function deleteMediaPost(){
+        if(sliderCurrentIndex == null) return
         dispatch(deleteActiveIndex())
         if(sliderCurrentIndex != 0){
             setTimeout(()=>{
@@ -216,15 +224,15 @@ export function CropAction(){
         }
     }
     function handleThumnailSlider(dir:'next' | 'prev'){
-        const rect = thumnailSliderRed.current.getBoundingClientRect()
-        const elm_scrollWidth = thumnailSliderRed.current.scrollWidth
+        if(!thumnailSliderRef.current) return
+        const rect = thumnailSliderRef.current.getBoundingClientRect()
+        const elm_scrollWidth = thumnailSliderRef.current.scrollWidth
         const remainingScrollWidth = elm_scrollWidth - thumnailSliderT - rect.width
         if(dir == 'next'){
             if(rect.width < remainingScrollWidth){
                 setThumnailSliderT(thumnailSliderT + rect.width)
             }
             else{
-                console.log(thumnailSliderT + remainingScrollWidth)
                 setThumnailSliderT(thumnailSliderT + remainingScrollWidth)
             }
         }
@@ -238,10 +246,10 @@ export function CropAction(){
         }
     }
     useEffect(()=>{
-        const rect = thumnailSliderRed.current.getBoundingClientRect()
-        const elm_scrollWidth = thumnailSliderRed.current.scrollWidth
+        if(!thumnailSliderRef.current) return
+        const rect = thumnailSliderRef.current.getBoundingClientRect()
+        const elm_scrollWidth = thumnailSliderRef.current.scrollWidth
         const remainingScrollWidth = elm_scrollWidth - thumnailSliderT - rect.width
-        console.log(remainingScrollWidth)
         if(remainingScrollWidth != 0){
             setRightArrowStatus(true)
         }
@@ -249,24 +257,87 @@ export function CropAction(){
             setRightArrowStatus(false)
         }
     },[thumnailSliderT])
+    const [startDragPosition,setStartDragPosition] = useState(0)
+    const [zindexIndex,setZindexIndex] = useState<number | null>(null)
+    function dragStartHandler(event: React.DragEvent, dragginIndex: number) {
+        setStartDragPosition(event.clientX);
+        setDragginElmIndex(dragginIndex);
+        setZindexIndex(dragginIndex)
+        const img = new window.Image();
+        img.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="; // یه SVG خالی
+        event.dataTransfer.setDragImage(img, 0, 0);
+    }
+    function dragHandler(event: React.DragEvent) {
+        if (event.clientX === 0 || dragginElmIndex === null) return;
+    
+        const draggingX = event.clientX - startDragPosition;
+        setDraggingXPositoin(draggingX);
+    
+        const thumnailItems = thumnailSliderRef.current?.children;
+        if (!thumnailItems) return;
+    
+        Array.from(thumnailItems).forEach((child, index) => {
+            if (index === dragginElmIndex) return;
+        
+            const rect = (child as HTMLElement).getBoundingClientRect();
+            const middleX = rect.left + rect.width / 2;
+        
+            const currentX = event.clientX;
+            const isMovingRight = currentX > startDragPosition;
+        
+            const shouldSwap =
+                (isMovingRight && currentX > middleX && index > dragginElmIndex!) ||
+                (!isMovingRight && currentX < middleX && index < dragginElmIndex!);
+        
+            if (shouldSwap) {
+                dispatch(swapPostMedia({ from: dragginElmIndex!, to: index }));
+                setDragginElmIndex(index);
+                setZindexIndex(index);
+                setStartDragPosition(currentX);
+                console.log(sliderCurrentIndex,dragginElmIndex,index)
+                if(sliderCurrentIndex == dragginElmIndex){
+                    dispatch(changeActiveIndex(index))
+                }
+                else{
+                    dispatch(changeActiveIndex(index))
+                }
+            }
+        });
+    }
+    const [draggingXPositoin,setDraggingXPositoin] = useState(0)
+
+    function dragEndHandler(){
+        setDragginElmIndex(null)
+    }
+    useEffect(()=>{
+        if(dragginElmIndex == null){
+            setDraggingXPositoin(0)
+            setTimeout(()=>{
+                setZindexIndex(null)
+            },150)
+        }
+    },[dragginElmIndex])
+    if(!postMedia) return
     return(
         <div className="absolute bottom-0 flex flex-col justify-between w-full items-end p-4">
             <div className="bg-[#1a1a1acc] flex rounded-lg w-fit max-w-full justify-end mb-4 p-3">
                 <div className=" w-full relative overflow-hidden">
-                    <div ref={thumnailSliderRed} style={{ transform: `translateX(-${thumnailSliderT}px)` }} className="flex transition-transform duration-300 justify-start gap-2 w-full">
+                    <div ref={thumnailSliderRef} style={{ transform: `translateX(-${thumnailSliderT}px)` }} className="flex transition-transform duration-300 justify-start gap-2 w-full">
                         {postMedia.map((item,index)=>{
                             return (
                                 <div onClick={()=>handleChangeActiveIndex(index)} key={index} className="size-[94px] relative cursor-pointer flex-shrink-0">
-                                <Image className="h-full w-full object-cover" src={item.previewUrl} width={94} height={94} alt=""></Image>
-                                {sliderCurrentIndex == index ?
-                                    <span onClick={deleteMediaPost} className="size-[20px] flex justify-center items-center absolute top-1 right-1 bg-[#1a1a1acc] rounded-full">
-                                        <IconPlus className="text-white size-3 rotate-45" />
-                                    </span>
-                                    :
-                                    <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-40"></div>
-                                    
-                                }
-                            </div>
+                                    <div style={{ transform: dragginElmIndex == index ? `translateX(${draggingXPositoin}px) scale(1.05)` : 'translateX(0) scale(1)' }} className={`size-[94px] relative cursor-pointer flex-shrink-0 select-none ${zindexIndex == index && 'z-10 scale-50'} ${dragginElmIndex != index && 'transition-transform'}`} draggable onDragStart={(event)=>dragStartHandler(event,index)} onDrag={(event)=>dragHandler(event)} onDragEnd={()=>dragEndHandler()}>
+                                        <Image draggable={false} className={`h-full w-full transition-transform object-cover ${dragginElmIndex == index && ''}`} src={item.previewUrl} width={94} height={94} alt=""></Image>
+                                        {sliderCurrentIndex == index ?
+                                            <span onClick={deleteMediaPost} className="size-[20px] flex justify-center items-center absolute top-1 right-1 bg-[#1a1a1acc] rounded-full">
+                                                <IconPlus className="text-white size-3 rotate-45" />
+                                            </span>
+                                            :
+                                            <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-40"></div>
+                                            
+                                        }
+                                    </div>
+                                </div>
                             )
                         })}
                     </div>
@@ -297,7 +368,7 @@ export function CropAction(){
 }
 
 export function MovableImageContainer({ src }) {
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -317,6 +388,7 @@ export function MovableImageContainer({ src }) {
   const handleMouseUp = () => setDragging(false);
 
   const limitPosition = (x, y) => {
+    if(!containerRef.current) return
     const container = containerRef.current;
     const img = container.querySelector("img");
     if (!container || !img) return { x, y };
