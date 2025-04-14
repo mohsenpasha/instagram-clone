@@ -2,17 +2,20 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { stat } from "fs";
 
 type PostUpload = {
-  postMedia:[
-    {
-      name: string,
-      size: string,
-      type: string,
-      previewUrl: string,
-      order:number
-    }
-  ] | null,
-  activeIndex:number | null
-}
+  postMedia: {
+    name: string;
+    size: string;
+    type: string;
+    previewUrl: string;
+    order: number;
+    transform?: {
+      position: { x: number, y: number };
+      scale: number;
+    };
+    croppedDataURL?: string;
+  }[] | null;
+  activeIndex: number | null;
+};
 const initialState : PostUpload = {
   postMedia:null,
   activeIndex:null
@@ -51,8 +54,20 @@ const createPostSlice = createSlice({
       state.postMedia[from] = state.postMedia[to];
       state.postMedia[to] = temp;
     },
+    updateImageTransform: (state, action) => {
+      const { index, transform } = action.payload;
+      if (state.postMedia && state.postMedia[index]) {
+        state.postMedia[index].transform = transform;
+      }
+    },
+    saveCroppedImage: (state, action) => {
+      const { index, croppedDataURL } = action.payload;
+      if (state.postMedia && state.postMedia[index]) {
+        state.postMedia[index].croppedDataURL = croppedDataURL;
+      }
+    },
   },
 });
 
-export const { addPostMedia, changeActiveIndex, deleteActiveIndex, swapPostMedia} = createPostSlice.actions;
+export const { addPostMedia, changeActiveIndex, deleteActiveIndex, swapPostMedia, updateImageTransform, saveCroppedImage} = createPostSlice.actions;
 export default createPostSlice.reducer;
