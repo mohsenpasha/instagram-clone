@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react"
 import { IconArrow, IconMediaGallery, IconPlus, IconPlusCircle, IconUploadFirstView } from "./Icons"
 import { useDispatch, useSelector } from "react-redux"
-import { addPostMedia, changeActiveIndex, deleteActiveIndex, swapPostMedia } from "@/store/slices/postUploadSlice"
+import { addPostMedia, changeActiveIndex, deleteActiveIndex, saveCroppedImage, swapPostMedia, updateImageTransform } from "@/store/slices/postUploadSlice"
 import { RootState } from "@/store/store"
 import Image from "next/image"
 import { Rethink_Sans } from "next/font/google"
@@ -140,6 +140,7 @@ export function PostUploadFirstView(){
 export function CropSection(){
     const sliderCurrentIndex = useSelector((state: RootState) => state.createData.activeIndex);
     const mediaFiles = useSelector((state: RootState) => state.createData.postMedia);
+    const activeIndex = useSelector((state: RootState) => state.createData.activeIndex);
     const dispatch = useDispatch()
     function  handleSliderChange(dir:'next' | 'prev'){
         if(!mediaFiles) return
@@ -163,10 +164,10 @@ export function CropSection(){
                 Crop
             </div>
             <div className="relative flex w-full h-full">
-
                 <div style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }} className="flex relative items-center flex-1">
-                    {mediaFiles.map((file, index) => (
-                        <MovableImageContainer key={index} src={file.previewUrl} />
+                    {mediaFiles.length != activeIndex && mediaFiles.map((file, index) => (
+                        
+                        <MovableImageContainer key={index} currentIndex={index} src={file.previewUrl} />
                     ))}
                 </div>
                 {mediaFiles.length > 1 && (
@@ -210,18 +211,28 @@ export function CropAction(){
     const [rightArrowStatus,setRightArrowStatus] = useState(true)
     const postMedia = useSelector((state: RootState) => state.createData.postMedia);
     const [dragginElmIndex,setDragginElmIndex] = useState<number | null>(null)
+    const fileInputRef = useRef<HTMLElement | null>(null)
     const dispatch = useDispatch()
     function handleChangeActiveIndex(index:number){
         dispatch(changeActiveIndex(index))
     }
     function deleteMediaPost(){
         if(sliderCurrentIndex == null) return
-        dispatch(deleteActiveIndex())
-        if(sliderCurrentIndex != 0){
-            setTimeout(()=>{
-                handleChangeActiveIndex(sliderCurrentIndex - 1)
-            },10)
-        }
+        // if(sliderCurrentIndex == postMedia.length - 1){
+        //     handleChangeActiveIndex(sliderCurrentIndex - 1)
+        //     setTimeout(()=>{
+        //         dispatch(deleteActiveIndex())
+        //     },10)
+
+        // }
+        // else{
+            dispatch(deleteActiveIndex())
+            if(sliderCurrentIndex != 0){
+                setTimeout(()=>{
+                    handleChangeActiveIndex(sliderCurrentIndex - 1)
+                },10)
+            }
+        // }
     }
     function handleThumnailSlider(dir:'next' | 'prev'){
         if(!thumnailSliderRef.current) return
@@ -294,7 +305,6 @@ export function CropAction(){
                 setDragginElmIndex(index);
                 setZindexIndex(index);
                 setStartDragPosition(currentX);
-                console.log(sliderCurrentIndex,dragginElmIndex,index)
                 if(sliderCurrentIndex == dragginElmIndex){
                     dispatch(changeActiveIndex(index))
                 }
@@ -317,6 +327,17 @@ export function CropAction(){
             },150)
         }
     },[dragginElmIndex])
+    function handleFileChange(){
+        if(!fileInputRef.current?.files) return
+        for(let index = 0;index < fileInputRef.current.files.length;index++){
+            dispatch(addPostMedia({
+                name: fileInputRef.current.files[index].name,
+                size: fileInputRef.current.files[index].size,
+                type: fileInputRef.current.files[index].type,
+                previewUrl: URL.createObjectURL(fileInputRef.current.files[index]),
+              }));
+        }
+    }
     if(!postMedia) return
     return(
         <div className="absolute bottom-0 flex flex-col justify-between w-full items-end p-4">
@@ -327,9 +348,9 @@ export function CropAction(){
                             return (
                                 <div onClick={()=>handleChangeActiveIndex(index)} key={index} className="size-[94px] relative cursor-pointer flex-shrink-0">
                                     <div style={{ transform: dragginElmIndex == index ? `translateX(${draggingXPositoin}px) scale(1.05)` : 'translateX(0) scale(1)' }} className={`size-[94px] relative cursor-pointer flex-shrink-0 select-none ${zindexIndex == index && 'z-10 scale-50'} ${dragginElmIndex != index && 'transition-transform'}`} draggable onDragStart={(event)=>dragStartHandler(event,index)} onDrag={(event)=>dragHandler(event)} onDragEnd={()=>dragEndHandler()}>
-                                        <Image draggable={false} className={`h-full w-full transition-transform object-cover ${dragginElmIndex == index && ''}`} src={item.previewUrl} width={94} height={94} alt=""></Image>
+                                        <Image draggable={false} className={`h-full w-full transition-transform object-cover ${dragginElmIndex == index && ''}`} src={item.croppedDataURL} width={94} height={94} alt=""></Image>
                                         {sliderCurrentIndex == index ?
-                                            <span onClick={deleteMediaPost} className="size-[20px] flex justify-center items-center absolute top-1 right-1 bg-[#1a1a1acc] rounded-full">
+                                            <span onClick={deleteMediaPost} className="size-[20px] cursor-pointer flex justify-center items-center absolute top-1 right-1 bg-[#1a1a1acc] rounded-full">
                                                 <IconPlus className="text-white size-3 rotate-45" />
                                             </span>
                                             :
@@ -349,14 +370,12 @@ export function CropAction(){
                     }
                     
                 </div>
-                <div className="size-12 border flex-shrink-0 ml-2 border-[#dbdbdb] rounded-full flex justify-center items-center">
-                    <IconPlus className="text-gray"/>
-                </div>
+                <label className="size-12 border active:bg-[#efefef] cursor-pointer flex-shrink-0 ml-2 border-[#dbdbdb] rounded-full flex justify-center items-center" htmlFor="inputFile">
+                        <IconPlus className="text-gray"/>
+                </label>
+                    <input ref={fileInputRef} onChange={()=>handleFileChange()} id="inputFile" className="hidden" type="file" multiple />
             </div>
-            <div className="flex w-full justify-between">
-                <div>
-                    test
-                </div>
+            <div className="flex w-full justify-end">
                 <div>
                     <span className="size-8 rounded-full bg-[#1a1a1acc] flex justify-center items-center cursor-pointer">
                         <IconMediaGallery className="text-white"/>
@@ -367,61 +386,171 @@ export function CropAction(){
     )
 }
 
-export function MovableImageContainer({ src }) {
-  const containerRef = useRef<HTMLElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+export function MovableImageContainer({ src, currentIndex }: { src: string,currentIndex:number }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null);
+    const dispatch = useDispatch();
+  
+    const postMedia = useSelector((state: RootState) => state.createData.postMedia);
+    const activeIndex = useSelector((state: RootState) => state.createData.activeIndex);
+    const activeImage = activeIndex !== null && postMedia ? postMedia[activeIndex] : null;
+    const [dragging, setDragging] = useState(false);
+    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  
+    if (!activeImage) return null;
+  
+    const position = activeImage.transform?.position || { x: 0, y: 0 };
+    const scale = activeImage.transform?.scale || 1;
+  
+    const limitPosition = (x: number, y: number) => {
+        if (!containerRef.current || !imgRef.current) return { x, y };
+      
+        const container = containerRef.current;
+        const img = imgRef.current;
+      
+        const containerW = container.offsetWidth;
+        const containerH = container.offsetHeight;
+        // const imgW = img.naturalWidth * scale;
+        // const imgH = img.naturalHeight * scale;
+        const imgW = img.clientWidth * scale;
+        const imgH = img.clientHeight * scale;
+        // محاسبه محدودیت‌ها
+        // const minX = containerW - imgW; // راست‌ترین موقعیت ممکن
+        // const minX = containerW; // راست‌ترین موقعیت ممکن
+        const minX = containerW - imgW; // راست‌ترین موقعیت ممکن
+        const minY = containerH - imgH; // پایین‌ترین موقعیت ممکن
+        const maxX = 0; // چپ‌ترین موقعیت ممکن
+        const maxY = 0; // بالاترین موقعیت ممکن
 
-  const handleMouseDown = (e) => {
-    setDragging(true);
-    setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  const handleMouseMove = (e) => {
-    if (!dragging) return;
-    const newX = e.clientX - startPos.x;
-    const newY = e.clientY - startPos.y;
-    setPosition(limitPosition(newX, newY));
-  };
-
-  const handleMouseUp = () => setDragging(false);
-
-  const limitPosition = (x, y) => {
-    if(!containerRef.current) return
-    const container = containerRef.current;
-    const img = container.querySelector("img");
-    if (!container || !img) return { x, y };
-
-    const maxX = 0;
-    const maxY = 0;
-    const minX = container.offsetWidth - img.offsetWidth;
-    const minY = container.offsetHeight - img.offsetHeight;
-
-    return {
-      x: Math.min(maxX, Math.max(minX, x)),
-      y: Math.min(maxY, Math.max(minY, y)),
+        return {
+          x: Math.min(maxX, Math.max(minX, x)),
+          y: Math.min(maxY, Math.max(minY, y)),
+        };
+      };
+      const updateReduxWithTransform = (
+        newPos: { x: number; y: number },
+        newScale: number,
+        index?: number
+      ) => {
+        const targetIndex = index ?? activeIndex;
+        if (targetIndex == null) return;
+      
+        dispatch(updateImageTransform({
+          index: targetIndex,
+          transform: { position: newPos, scale: newScale }
+        }));
+      
+        if (!containerRef.current || !imgRef.current) return;
+      
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+      
+        const container = containerRef.current;
+        const img = imgRef.current;
+      
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+      
+        const realImgWidth = img.naturalWidth;
+        const realImgHeight = img.naturalHeight;
+      
+        const scaleRatio = realImgWidth / (img.offsetWidth * newScale);
+      
+        ctx.drawImage(
+          img,
+          -newPos.x * scaleRatio,
+          -newPos.y * scaleRatio,
+          canvas.width * scaleRatio,
+          canvas.height * scaleRatio,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+      
+        const dataURL = canvas.toDataURL("image/jpeg", 0.9);
+        dispatch(saveCroppedImage({ index: targetIndex, croppedDataURL: dataURL }));
+      };
+  
+    const handleMouseDown = (e: React.MouseEvent) => {
+      setDragging(true);
+      setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
     };
-  };
+  
+    const handleMouseMove = (e: React.MouseEvent) => {
+      if (!dragging) return;
+  
+      const newX = e.clientX - startPos.x;
+      const newY = e.clientY - startPos.y;
+      const limited = limitPosition(newX, newY);
+      updateReduxWithTransform(limited, scale);
+    };
+    const handleMouseUp = () => setDragging(false);
+  
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+        
+        const scaleDelta = e.deltaY < 0 ? 0.05 : -0.05;
+        const newScale = Math.max(minScale, Math.min(3, scale + scaleDelta));
+        const limited = limitPosition(position.x, position.y);
+        
+        updateReduxWithTransform(limited, newScale);
+        };
+    const [minScale, setMinScale] = useState(1);
+  
+    useEffect(() => {
+        const img = imgRef.current;
+        const container = containerRef.current;
+        if (!img || !container) return;
 
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-full overflow-hidden relative flex flex-shrink-0"
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      <img
-        src={src}
-        alt="Movable"
-        draggable={false}
-        className="absolute cursor-grab select-none min-w-full"
-        onMouseDown={handleMouseDown}
-        style={{
-          transform: `translate(${position.x}px, ${position.y}px)`,
-        }}
-      />
-    </div>
-  );
-}
+        const handleLoad = () => {
+            const imgW = img.naturalWidth;
+            const imgH = img.naturalHeight;
+            const containerW = container.offsetWidth;
+            const containerH = container.offsetHeight;
+          
+            const scaleX = containerW / imgW;
+            const scaleY = containerH / imgH;
+          
+            const initialScale = Math.max(scaleX, scaleY, 1);
+            setMinScale(initialScale); // ذخیره حداقل مقیاس
+          
+            const limited = limitPosition(0, 0);
+            updateReduxWithTransform(limited, initialScale, currentIndex);
+          };
+      
+        if (img.complete) {
+          handleLoad();
+        } else {
+          img.addEventListener("load", handleLoad);
+          return () => {
+            img.removeEventListener("load", handleLoad);
+          };
+        }
+      }, []);
+    return (
+        
+      <div
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseUp}
+        onMouseUp={handleMouseUp}
+        onWheel={handleWheel}
+        className="w-full h-full overflow-hidden relative flex flex-shrink-0"
+      >
+        <img
+          ref={imgRef}
+          src={src}
+          alt="Movable"
+          draggable={false}
+          className="absolute cursor-grab select-none"
+          onMouseDown={handleMouseDown}
+          style={{
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+        />
+      </div>
+    );
+  }
