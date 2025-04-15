@@ -105,7 +105,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                 {postDetail.media[sliderCurrentIndex].media_type == 'video' && isTaggedVisible &&
                     <TaggedPopup sliderCurrentIndex={sliderCurrentIndex} ref={TaggedRef} closePopup={()=>setIsTaggedVisible(false)}/>
                 }
-                <div className="relative mt-[70px] md:mt-0 w-full md:w-1/2">
+                <div className="relative mt-[70px] md:mt-0 w-full md:w-fit">
                     <div className="relative w-full h-full aspect-[4/5] overflow-hidden">
                         <div className="flex h-full transition-transform group cursor-pointer" style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }}>
                             {postDetail.media.map((item,index)=>{
@@ -135,7 +135,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                                         <>
                                             {item.media_type != 'video' && item.tagged_users.map((tagged,index)=>{
                                                 return(
-                                                    <Link key={index} style={{top:tagged.y,left:tagged.x}} className={`${isTaggedVisible ? 'scale-1 opacity-1': 'scale-0 opacity-0'} transition-all origin-top duration-200 px-3 h-9 flex items-center absolute rounded-[4px] text-white bg-black bg-opacity-80`} href={'/' + tagged.user.username}>
+                                                    <Link key={index} style={{top:tagged.y + 10,left:tagged.x}} className={`${isTaggedVisible ? 'scale-1 opacity-1': 'scale-0 opacity-0'} transition-all translate-x-1/2 origin-top duration-200 px-3 h-9 flex items-center absolute rounded-[4px] text-white bg-black bg-opacity-80`} href={'/' + tagged.user.username}>
                                                         <span className="block absolute -top-[5px] left-1/2 -translate-x-1/2 border-b-[6px] border-l-transparent border-r-transparent border-l-[6px] border-r-[6px] border-b-black border-opacity-80 w-0 h-0"></span>
                                                         <span className="font-semibold text-sm">{tagged.user.username}</span>
                                                     </Link>
@@ -176,7 +176,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                         }
                     </div>
                 </div>
-                <div className="flex-1 flex flex-col h-full">
+                <div className="flex-1 flex flex-col h-full min-w-[320px]">
                     <div className="flex items-center absolute md:static top-0 right-0 w-full">
                         <div className="flex h-[70px] md:h-auto items-center gap-2 px-[16px] py-[14px] w-full border-b-[1px] md:border-b-0 border-ss justify-between">
                             <div className="flex gap-2 w-11/12 sm:w-10/12 truncate items-center">
