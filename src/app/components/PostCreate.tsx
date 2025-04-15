@@ -1,100 +1,62 @@
 'use client'
 import { MouseEventHandler, useEffect, useRef, useState } from "react"
-import { IconArrow, IconClose, IconLoading, IconMapPin, IconMediaGallery, IconPlus, IconPlusCircle, IconUploadFirstView } from "./Icons"
+import { IconArrow, IconArrowBack, IconClose, IconLoading, IconMapPin, IconMediaGallery, IconPlus, IconPlusCircle, IconUploadFirstView } from "./Icons"
 import { useDispatch, useSelector } from "react-redux"
-import { addMediaUserTag, addPostMedia, changeActiveIndex, changeAddingTagCoordinates, changeAddingTaggedUser, changeMediaAlt, changeMediaUserTagCoordinates, deleteActiveIndex, moveMediaUserTagCoordinates, removeMediaUserTag, saveCroppedImage, swapPostMedia, updateImageTransform } from "@/store/slices/postUploadSlice"
+import { addMediaUserTag, addPostMedia, changeActiveIndex, changeAddingTagCoordinates, changeAddingTaggedUser, changeIsFinalPart, changeMediaAlt, changeMediaUserTagCoordinates, changeUploadingCompleted, changeUploadingPost, clearPostMedia, deleteActiveIndex, moveMediaUserTagCoordinates, removeMediaUserTag, saveCroppedImage, swapPostMedia, updateImageTransform } from "@/store/slices/postUploadSlice"
 import { RootState } from "@/store/store"
 import Image from "next/image"
-import { Rethink_Sans } from "next/font/google"
-import { isSetIterator } from "util/types"
 import { SingleSearchResult } from "./SearchBar"
 import { fetchSearchUserAndTag } from "@/api/searchApi"
 import { useClickOutside } from "@/hooks/useClickOutside"
+import { extractTags } from "@/utils/idAndHastagConvertor"
+import { fetchAddPost } from "@/api/addPostApi"
 
-export default function CreatePostPopup(){
+export default function CreatePostPopup({closeHandler}:{closeHandler:()=>void}){
     const mediaFiles = useSelector((state: RootState) => state.createData.postMedia);
+    const isFinalPart = useSelector((state: RootState) => state.createData.isFinalPart);
+    const uploadingPost = useSelector((state: RootState) => state.createData.uploadingPost);
+    const uploadingCompleted = useSelector((state: RootState) => state.createData.uploadingCompleted);
+    const [toggleCancel,setToggleCancel] = useState(false)
     const dispatch = useDispatch()
-    useEffect(()=>{
-        dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 1,
-            previewUrl: '/images/post-1.jpg',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 2,
-            previewUrl: '/images/post-prev-1.jpg',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 3,
-            previewUrl: '/images/food-1.png',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 4,
-            previewUrl: '/images/post-1.jpg',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 5,
-            previewUrl: '/images/post-prev-1.jpg',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 6,
-            previewUrl: '/images/food-1.png',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 7,
-            previewUrl: '/images/post-1.jpg',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 8,
-            previewUrl: '/images/post-prev-1.jpg',
-          }));
-          dispatch(addPostMedia({
-            name: 'test',
-            size: 'test',
-            type: 'test',
-            order: 9,
-            previewUrl: '/images/food-1.png',
-          }));
-          setTimeout(() => {
-            setIsCropSection(false)
-          }, 300);
-    },[])
-    const [isCropSection,setIsCropSection] = useState(true)
+    function closeEmptyCreatePost(){
+        closeHandler()
+        setToggleCancel(false)
+        dispatch(clearPostMedia())
+    }
     if(!mediaFiles) return
     return(
-        <div className="fixed w-[100vw] h-[100vh] top-0 left-0 bg-black bg-opacity-60 z-50 flex justify-center items-center">
-            {/* {!mediaFiles ?
-                <PostUploadFirstView />
-            : */}
-            {isCropSection ? 
-                <CropSection/>
+        <div className="fixed w-[100vw] h-[100vh] top-0 left-0 z-50 flex justify-center items-center">
+            <div onClick={()=>uploadingCompleted ? closeEmptyCreatePost() : setToggleCancel(true)} className="absolute w-full h-full top-0 left-0 -z-10 bg-black bg-opacity-60"></div>
+            {uploadingCompleted ?
+                <PostUploadDone/>
+                :uploadingPost ? 
+                <UploadPostPopup/>
                 :
-                <FinalPart/>
-            }
-            {/* } */}
+                isFinalPart ?
+                    <FinalPart/>
+                    :
+                    !mediaFiles || mediaFiles.length == 0 ?
+                        <PostUploadFirstView />
+                        :
+                        <CropSection/>
+                }
+                {toggleCancel &&
+                    <ClosePoppup closeHandler={closeEmptyCreatePost} cancelHandler={()=>setToggleCancel(false)}/>
+                }
+        </div>
+    )
+}
+export function ClosePoppup({closeHandler,cancelHandler}:{closeHandler:()=>void,cancelHandler:()=>void}){
+    return(
+        <div className="fixed top-0 left-0 w-[100vw] h-[100vh] bg-black bg-opacity-60 z-50">
+            <div className="bg-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] rounded-lg overflow-hidden flex flex-col items-center justify-center">
+                <div className="m-8 mb-4 w-full text-center">
+                    <div className="text-xl">Discard post?</div>
+                    <div className="text-sm text-gray">If you leave, your edits won't be saved.</div>
+                </div>
+                <button onClick={closeHandler} className="text-[#Ed4965] border-t-[1px] border-ss w-full h-12 flex items-center justify-center font-semibold">Discard</button>
+                <button onClick={cancelHandler} className="border-t-[1px] border-ss w-full h-12 flex items-center justify-center">Cancel</button>
+            </div>
         </div>
     )
 }
@@ -140,7 +102,7 @@ export function PostUploadFirstView(){
             <div className="flex flex-col items-center justify-center flex-1 gap-3">
                 <IconUploadFirstView/>
                 <span className="text-xl">Drag photos and videos here</span>
-                {isDragging && <span>dragginggggijgrj</span>}
+                {isDragging && <span>Drop Here</span>}
                 <label  className="bg-bl hover:bg-[#1877f2] text-white px-4 rounded-md text-sm font-semibold h-8 flex items-center cursor-pointer" htmlFor="fileInput">
                     Select From Computer
                 </label>
@@ -168,11 +130,17 @@ export function CropSection(){
     useEffect(()=>{
         dispatch(changeActiveIndex(0))
     },[])
+    function moveToFinalPart(){
+        dispatch(changeIsFinalPart(true))
+    }
     if(!mediaFiles || sliderCurrentIndex == null) return
     return(
-        <div className="flex flex-col w-[490px] h-[520px] rounded-lg bg-[#F5F5F5] overflow-hidden">
-            <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
-                Crop
+        <div className="flex flex-col w-[400px] h-[570px] rounded-lg bg-[#F5F5F5] overflow-hidden">
+            <div className="relative flex items-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss justify-end">
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    Crop
+                </span>
+                <span className="text-bl cursor-pointer px-4 hover:text-bll" onClick={moveToFinalPart}>next</span>
             </div>
             <div className="relative flex w-full h-full">
                 <div style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }} className="flex relative items-center flex-1">
@@ -217,12 +185,17 @@ export function CropSection(){
 export function CropAction(){
     const sliderCurrentIndex = useSelector((state: RootState) => state.createData.activeIndex);
     const [draggingXPositoin,setDraggingXPositoin] = useState(0)
+    const [toggleMediaSlider,setToggleMediaSlider] = useState(false)
     const [thumnailSliderT,setThumnailSliderT] = useState(0)
     const thumnailSliderRef = useRef<HTMLElement>(null)
     const [rightArrowStatus,setRightArrowStatus] = useState(true)
     const postMedia = useSelector((state: RootState) => state.createData.postMedia);
     const [dragginElmIndex,setDragginElmIndex] = useState<number | null>(null)
     const fileInputRef = useRef<HTMLElement | null>(null)
+    const [startDragPosition,setStartDragPosition] = useState(0)
+    const [zindexIndex,setZindexIndex] = useState<number | null>(null)
+    const mediaSliderRef = useRef(null)
+    useClickOutside(mediaSliderRef,()=> setToggleMediaSlider(false))
     const dispatch = useDispatch()
     function handleChangeActiveIndex(index:number){
         dispatch(changeActiveIndex(index))
@@ -270,8 +243,6 @@ export function CropAction(){
             setRightArrowStatus(false)
         }
     },[thumnailSliderT])
-    const [startDragPosition,setStartDragPosition] = useState(0)
-    const [zindexIndex,setZindexIndex] = useState<number | null>(null)
     function dragStartHandler(event: React.DragEvent, dragginIndex: number) {
         setStartDragPosition(event.clientX);
         setDragginElmIndex(dragginIndex);
@@ -342,46 +313,49 @@ export function CropAction(){
     if(!postMedia) return
     return(
         <div className="absolute bottom-0 flex flex-col justify-between w-full items-end p-4">
-            <div className="bg-[#1a1a1acc] flex rounded-lg w-fit max-w-full justify-end mb-4 p-3">
-                <div className=" w-full relative overflow-hidden">
-                    <div ref={thumnailSliderRef} style={{ transform: `translateX(-${thumnailSliderT}px)` }} className="flex transition-transform duration-300 justify-start gap-2 w-full">
-                        {postMedia.map((item,index)=>{
-                            return (
-                                <div onClick={()=>handleChangeActiveIndex(index)} key={index} className="size-[94px] relative cursor-pointer flex-shrink-0">
-                                    <div style={{ transform: dragginElmIndex == index ? `translateX(${draggingXPositoin}px) scale(1.05)` : 'translateX(0) scale(1)' }} className={`size-[94px] relative cursor-pointer flex-shrink-0 select-none ${zindexIndex == index && 'z-10 scale-50'} ${dragginElmIndex != index && 'transition-transform'}`} draggable onDragStart={(event)=>dragStartHandler(event,index)} onDrag={(event)=>dragHandler(event)} onDragEnd={()=>dragEndHandler()}>
-                                        {item.croppedDataURL && 
-                                            <Image draggable={false} className={`h-full w-full transition-transform object-cover ${dragginElmIndex == index && ''}`} src={item.croppedDataURL} width={94} height={94} alt=""></Image>
-                                        }
-                                        {sliderCurrentIndex == index ?
-                                            <span onClick={deleteMediaPost} className="size-[20px] cursor-pointer flex justify-center items-center absolute top-1 right-1 bg-[#1a1a1acc] rounded-full">
-                                                <IconPlus className="text-white size-3 rotate-45" />
-                                            </span>
-                                            :
-                                            <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-40"></div>
-                                            
-                                        }
+            {toggleMediaSlider && 
+                <div ref={mediaSliderRef} className="bg-[#1a1a1acc] flex rounded-lg w-fit max-w-full justify-end mb-4 p-3">
+                    <div className=" w-full relative overflow-hidden">
+                        <div ref={thumnailSliderRef} style={{ transform: `translateX(-${thumnailSliderT}px)` }} className="flex transition-transform duration-300 justify-start gap-2 w-full">
+                            {postMedia.map((item,index)=>{
+                                return (
+                                    <div onClick={()=>handleChangeActiveIndex(index)} key={index} className="size-[94px] relative cursor-pointer flex-shrink-0">
+                                        <div style={{ transform: dragginElmIndex == index ? `translateX(${draggingXPositoin}px) scale(1.05)` : 'translateX(0) scale(1)' }} className={`size-[94px] relative cursor-pointer flex-shrink-0 select-none ${zindexIndex == index && 'z-10 scale-50'} ${dragginElmIndex != index && 'transition-transform'}`} draggable onDragStart={(event)=>dragStartHandler(event,index)} onDrag={(event)=>dragHandler(event)} onDragEnd={()=>dragEndHandler()}>
+                                            {item.croppedDataURL && 
+                                                <Image draggable={false} className={`h-full w-full transition-transform object-cover ${dragginElmIndex == index && ''}`} src={item.croppedDataURL} width={94} height={94} alt=""></Image>
+                                            }
+                                            {sliderCurrentIndex == index ?
+                                                <span onClick={deleteMediaPost} className="size-[20px] cursor-pointer flex justify-center items-center absolute top-1 right-1 bg-[#1a1a1acc] rounded-full">
+                                                    <IconPlus className="text-white size-3 rotate-45" />
+                                                </span>
+                                                :
+                                                <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-40"></div>
+                                                
+                                            }
+                                        </div>
                                     </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                        </div>
+                        {rightArrowStatus && 
+                            <span onClick={()=>{handleThumnailSlider('next')}} className="absolute top-1/2 right-2 -translate-y-1/2 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
+                        }
+                        {thumnailSliderT != 0 && 
+                            <span onClick={()=>{handleThumnailSlider('prev')}} className="absolute top-1/2 left-2 -translate-y-1/2 rotate-180 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
+                        }
+                        
                     </div>
-                    {rightArrowStatus && 
-                        <span onClick={()=>{handleThumnailSlider('next')}} className="absolute top-1/2 right-2 -translate-y-1/2 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
-                    }
-                    {thumnailSliderT != 0 && 
-                        <span onClick={()=>{handleThumnailSlider('prev')}} className="absolute top-1/2 left-2 -translate-y-1/2 rotate-180 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer"></span>
-                    }
-                    
+                    <label className="size-12 border active:bg-[#efefef] cursor-pointer flex-shrink-0 ml-2 border-[#dbdbdb] rounded-full flex justify-center items-center" htmlFor="inputFile">
+                            <IconPlus className="text-gray"/>
+                    </label>
+                        <input ref={fileInputRef} onChange={()=>handleFileChange()} id="inputFile" className="hidden" type="file" multiple />
                 </div>
-                <label className="size-12 border active:bg-[#efefef] cursor-pointer flex-shrink-0 ml-2 border-[#dbdbdb] rounded-full flex justify-center items-center" htmlFor="inputFile">
-                        <IconPlus className="text-gray"/>
-                </label>
-                    <input ref={fileInputRef} onChange={()=>handleFileChange()} id="inputFile" className="hidden" type="file" multiple />
-            </div>
+            }
+
             <div className="flex w-full justify-end">
                 <div>
-                    <span className="size-8 rounded-full bg-[#1a1a1acc] flex justify-center items-center cursor-pointer">
-                        <IconMediaGallery className="text-white"/>
+                    <span onClick={()=>setToggleMediaSlider(true)} className={`size-8 rounded-full ${toggleMediaSlider ? 'bg-white' : 'bg-[#1a1a1acc]'} flex justify-center items-center cursor-pointer`}>
+                        <IconMediaGallery className={toggleMediaSlider ? "text-black" :"text-white"}/>
                     </span>
                 </div>
             </div>
@@ -389,89 +363,88 @@ export function CropAction(){
     )
 }
 
-export function MovableImageContainer({ src, currentIndex,FinalPart=false }: { src: string,currentIndex:number,FinalPart?:boolean }) {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const imgRef = useRef<HTMLImageElement>(null);
+export function MovableImageContainer({ src, currentIndex, FinalPart = false }) {
+    const containerRef = useRef(null);
+    const imgRef = useRef(null);
     const dispatch = useDispatch();
-    const postMedia = useSelector((state: RootState) => state.createData.postMedia);
-    const activeIndex = useSelector((state: RootState) => state.createData.activeIndex);
+    const postMedia = useSelector((state) => state.createData.postMedia);
+    const activeIndex = useSelector((state) => state.createData.activeIndex);
     const [minScale, setMinScale] = useState(1);
     const activeImage = activeIndex !== null && postMedia ? postMedia[activeIndex] : null;
     const [dragging, setDragging] = useState(false);
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-    const [dragStartPosition,setDragStartPosition] = useState({x:0,y:0})
-    const [tagDragging,setTagDragging] = useState(false)
-    let finalSrc;
+    const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 });
+    const [tagDragging, setTagDragging] = useState(false);
     if (!activeImage) return null;
   
     const position = activeImage.transform?.position || { x: 0, y: 0 };
     const scale = activeImage.transform?.scale || 1;
   
-    const limitPosition = (x: number, y: number) => {
-        if (!containerRef.current || !imgRef.current) return { x, y };
-      
-        const container = containerRef.current;
-        const img = imgRef.current;
-      
-        const containerW = container.offsetWidth;
-        const containerH = container.offsetHeight;
-        const imgW = img.clientWidth * scale;
-        const imgH = img.clientHeight * scale;
-        const minX = containerW - imgW;
-        const minY = containerH - imgH;
-        const maxX = 0;
-        const maxY = 0;
-
-        return {
-          x: Math.min(maxX, Math.max(minX, x)),
-          y: Math.min(maxY, Math.max(minY, y)),
-        };
+    const limitPosition = (x, y) => {
+      if (!containerRef.current || !imgRef.current) return { x, y };
+  
+      const container = containerRef.current;
+      const img = imgRef.current;
+  
+      const containerW = container.offsetWidth;
+      const containerH = container.offsetHeight;
+      const imgW = img.clientWidth * scale;
+      const imgH = img.clientHeight * scale;
+      const minX = containerW - imgW;
+      const minY = containerH - imgH;
+      const maxX = 0;
+      const maxY = 0;
+  
+      return {
+        x: Math.min(maxX, Math.max(minX, x)),
+        y: Math.min(maxY, Math.max(minY, y)),
       };
-      const updateReduxWithTransform = (
-        newPos: { x: number; y: number },
-        newScale: number,
-        index?: number
-      ) => {
-        const targetIndex = index ?? activeIndex;
-        if (targetIndex == null) return;
-      
-        dispatch(updateImageTransform({
-          index: targetIndex,
-          transform: { position: newPos, scale: newScale }
-        }));
-      
-        if (!containerRef.current || !imgRef.current) return;
-      
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-      
-        const container = containerRef.current;
-        const img = imgRef.current;
-      
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
-      
-        const realImgWidth = img.naturalWidth;
-        const realImgHeight = img.naturalHeight;
-      
-        const scaleRatio = realImgWidth / (img.offsetWidth * newScale);
-      
-        ctx.drawImage(
-          img,
-          -newPos.x * scaleRatio,
-          -newPos.y * scaleRatio,
-          canvas.width * scaleRatio,
-          canvas.height * scaleRatio,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-      
-        const dataURL = canvas.toDataURL("image/jpeg", 0.9);
-        dispatch(saveCroppedImage({ index: targetIndex, croppedDataURL: dataURL }));
-      };
+    };
+  
+    const updateReduxWithTransform = (newPos, newScale, index) => {
+      const targetIndex = index ?? activeIndex;
+      if (targetIndex == null) return;
+  
+      dispatch(updateImageTransform({
+        index: targetIndex,
+        transform: { position: newPos, scale: newScale },
+      }));
+  
+      if (!containerRef.current || !imgRef.current) return;
+  
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+  
+      const container = containerRef.current;
+      const img = imgRef.current;
+  
+      const upscaleFactor = 2;
+      canvas.width = container.offsetWidth * upscaleFactor;
+      canvas.height = container.offsetHeight * upscaleFactor;
+  
+      const realImgWidth = img.naturalWidth;
+      const realImgHeight = img.naturalHeight;
+  
+      const scaleRatio = realImgWidth / (img.offsetWidth * newScale);
+  
+      ctx.scale(upscaleFactor, upscaleFactor);
+      ctx.drawImage(
+        img,
+        -newPos.x * scaleRatio,
+        -newPos.y * scaleRatio,
+        canvas.width * scaleRatio / upscaleFactor,
+        canvas.height * scaleRatio / upscaleFactor,
+        0,
+        0,
+        canvas.width / upscaleFactor,
+        canvas.height / upscaleFactor
+      );
+  
+      const dataURL = canvas.toDataURL("image/jpeg", 1);
+      dispatch(saveCroppedImage({ index: targetIndex, croppedDataURL: dataURL }));
+    };
+  
   
     const handleMouseDown = (e: React.MouseEvent) => {
       setDragging(true);
@@ -541,13 +514,11 @@ export function MovableImageContainer({ src, currentIndex,FinalPart=false }: { s
         dispatch(changeAddingTagCoordinates({x,y}))
       }
       function removeTag(username:string){
-        console.log('removingTag----------------------------------------------------------------------------------------------------------------------------------------------------------------')
         dispatch(removeMediaUserTag(username))
       }
       function tagDragStart(event:React.MouseEvent<HTMLDivElement>){
         setTagDragging(true)
         setDragStartPosition({x:event.clientX,y:event.clientY})
-        console.log(event.clientX,event.clientY)
       }
     function tagDragHandler(event,username){
         if(!tagDragging) return
@@ -567,7 +538,7 @@ export function MovableImageContainer({ src, currentIndex,FinalPart=false }: { s
         onMouseLeave={handleMouseUp}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
-        className="w-full h-full relative flex flex-shrink-0"
+        className="w-full h-full relative flex flex-shrink-0 overflow-hidden select-none"
       >
             <img
             ref={imgRef}
@@ -662,6 +633,8 @@ export function FinalPart(){
     const sliderCurrentIndex = useSelector((state: RootState)=> state.createData.activeIndex)
     const addingTaggedUser = useSelector((state: RootState)=> state.createData.addingTaggedUser)
     const addingTagCoordinates = useSelector((state: RootState)=> state.createData.addingTagCoordinates)
+    const uploadingPost = useSelector((state: RootState)=> state.createData.uploadingPost)
+    const uploadingCompleted = useSelector((state: RootState)=> state.createData.uploadingCompleted)
     const dispatch = useDispatch()
     const [caption,setCaption] = useState('')
     const [location,setLocation] = useState('')
@@ -687,20 +660,46 @@ export function FinalPart(){
     }
     const imgContainerRef = useRef(null)
     useClickOutside(imgContainerRef,(event)=> event.target.closest('.img-container') || event.target.closest('.addTagPopup') ? {} : dispatch(changeAddingTaggedUser(false)))
-
+    async function fetch_add_post(cleanedData){
+        dispatch(changeUploadingPost(true))
+        const response = await fetchAddPost(cleanedData)
+        const jsonRes = await response.json()
+        dispatch(changeUploadingPost(false))
+        dispatch(changeUploadingCompleted(true))
+    }
+    function sharePostHandler(){
+        const keysToRemove = ["previewUrl", "transform",'name','size','type','order'];
+        const hashtags = extractTags(caption)
+        const cleanedPostMedia = mediaFiles.map(item => {
+        const cleaned = Object.fromEntries(
+            Object.entries(item).filter(([key]) => !keysToRemove.includes(key))
+        );
+        return cleaned;
+        });
+        const cleanedData = {caption:caption,post_media:cleanedPostMedia,location:location,hashtags:hashtags,comment_disabled:isCommentOff,view_hide:isViewOff}
+        fetch_add_post(cleanedData)
+    }
     if(sliderCurrentIndex == null || !mediaFiles) return
     return(
-        <div className="flex flex-col h-[520px] rounded-lg bg-[#F5F5F5]">
-            <div className="flex items-center justify-center w-full bg-white rounded-t-lg border-b-[1px] py-2 text-base font-semibold border-ss">
-                Create new post
+        <div className={`${uploadingPost || uploadingCompleted && 'hidden'}flex flex-col h-[570px] rounded-lg bg-[#F5F5F5]`}>
+            <div className="relative flex items-center justify-between w-full bg-white rounded-t-lg border-b-[1px] py-2 text-base font-semibold border-ss">
+                <span onClick={()=>dispatch(changeIsFinalPart(false))} className="cursor-pointer px-4">
+                    <IconArrowBack/>
+                </span>
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    Create new post
+                </span>
+                <span onClick={()=>sharePostHandler()} className="text-bl hover:text-bll cursor-pointer px-4">
+                    share
+                </span>
             </div>
-            <div className="flex w-full h-[480px]">
-                <div className="relative flex w-[490px] h-full">
-                    <div className="relative flex w-[490px] h-full overflow-hidden">
+            <div className="flex w-full h-[530px]">
+                <div className="relative flex w-[400px] h-full">
+                    <div className="relative flex w-[400px] h-full overflow-hidden">
                         <div style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }} className="flex relative items-center flex-1">
                             {mediaFiles.length != sliderCurrentIndex && mediaFiles.map((file, index) => (
                                 <div ref={imgContainerRef} className="w-full h-full relative rounded-bl-lg overflow-hidden flex flex-shrink-0 img-container" key={index}>
-                                    <MovableImageContainer currentIndex={index} src={file.previewUrl} FinalPart={true} />
+                                    <MovableImageContainer currentIndex={index} src={file.croppedDataURL} FinalPart={true} />
                                 </div>
                             ))}
                         </div>
@@ -819,6 +818,31 @@ export function FinalPart(){
                 </div>
             </div>
 
+        </div>
+    )
+}
+export function UploadPostPopup(){
+    return(
+        <div className="flex flex-col w-[490px] h-[520px] rounded-lg bg-white overflow-hidden">
+            <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
+                Sharing
+            </div>
+            <div className="flex flex-col items-center justify-center flex-1 gap-3">
+                <Image alt="" src={'/images/uploadPost.gif'} width={96} height={96}></Image>
+            </div>
+        </div>
+    )
+}
+export function PostUploadDone(){
+    return(
+        <div className="flex flex-col w-[490px] h-[520px] rounded-lg bg-white overflow-hidden">
+            <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
+                Post shared
+            </div>
+            <div className="flex flex-col items-center justify-center flex-1 gap-3">
+                <Image alt="" src={'/images/uploadPostComplete.gif'} width={96} height={96}></Image>
+                <div className="text-xl">Your post has been shared.</div>
+            </div>
         </div>
     )
 }
