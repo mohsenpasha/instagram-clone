@@ -131,9 +131,13 @@ export function RecentSearch(){
      )
 }
 
-export function SingleSearchResult({type,id,subtitle,profilePic,localHistory}:{type:'user' | 'tag',id:string,subtitle:string | number,profilePic?:string,localHistory?:boolean}){
+export function SingleSearchResult({type,id,subtitle,profilePic,localHistory,isAddTag=false}:{type:'user' | 'tag',id:string,subtitle:string | number,profilePic?:string,localHistory?:boolean,isAddTag?:boolean}){
     const dispatch = useDispatch()
     function handleSearchClick(e: React.MouseEvent) {
+        if(isAddTag){
+            e.preventDefault()
+            return
+        }
         if ((e.target as HTMLElement).closest('.prevent-link')) return;
         console.log('test')
         dispatch(toggleSearch(true))
