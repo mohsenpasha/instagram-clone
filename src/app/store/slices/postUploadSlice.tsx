@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { stat } from "fs";
 
 type PostUpload = {
   postMedia: {
@@ -24,18 +23,25 @@ type PostUpload = {
     };
     croppedDataURL?: string;
   }[] | null;
+  isFinalPart:boolean
   activeIndex: number | null;
-  addingTaggedUser?:false,
+  addingTaggedUser?:boolean,
   addingTagCoordinates :{
     x:number,
     y:number
-  }
+  },
+  uploadingCompleted:boolean,
+  uploadingPost:boolean
 };
 const initialState : PostUpload = {
-  postMedia:null,
+  postMedia:[],
   activeIndex:null,
   addingTaggedUser:false,
   addingTagCoordinates:{x:0,y:0},
+  isFinalPart:false,
+  uploadingPost:false,
+  uploadingCompleted:false,
+
 };
 
 const createPostSlice = createSlice({
@@ -49,6 +55,10 @@ const createPostSlice = createSlice({
       else{
         state.postMedia = [action.payload]
       }
+    },
+    clearPostMedia: (state) => {
+      state.postMedia = []
+      state.activeIndex = null
     },
     changeActiveIndex: (state, action) => {
       state.activeIndex = action.payload
@@ -136,10 +146,19 @@ const createPostSlice = createSlice({
     changeAddingTagCoordinates: (state, action) => {
       state.addingTagCoordinates = action.payload
     },
+    changeIsFinalPart: (state, action) => {
+      state.isFinalPart = action.payload
+    },
+    changeUploadingPost: (state, action) => {
+      state.uploadingPost = action.payload
+    },
+    changeUploadingCompleted: (state, action) => {
+      state.uploadingCompleted = action.payload
+    },
     
-    
+
   },
 });
 
-export const { addPostMedia, changeActiveIndex, deleteActiveIndex, swapPostMedia, updateImageTransform, saveCroppedImage, changeMediaAlt, addMediaUserTag, changeAddingTaggedUser, changeAddingTagCoordinates, removeMediaUserTag, moveMediaUserTagCoordinates} = createPostSlice.actions;
+export const { addPostMedia, changeActiveIndex, deleteActiveIndex, swapPostMedia, updateImageTransform, saveCroppedImage, changeMediaAlt, addMediaUserTag, changeAddingTaggedUser, changeAddingTagCoordinates, removeMediaUserTag, moveMediaUserTagCoordinates, clearPostMedia, changeIsFinalPart, changeUploadingPost, changeUploadingCompleted} = createPostSlice.actions;
 export default createPostSlice.reducer;
