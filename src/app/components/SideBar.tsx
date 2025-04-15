@@ -23,7 +23,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
     const dispatch = useDispatch()
     const [isMinimal,setIsMinimal] = useState(false)
     const [newNotificationCount,setNewNotificationCount] = useState(0)
-    const [notifications, setNotifications] = useState([]);
+    const [toggleCreatePost,setToggleCreatePost] = useState(false)
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -140,8 +140,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                         <button onClick={() => i18n.changeLanguage("en")}>English</button> */}
 
                         <li>
-                            <Link title={t('home')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <Link title={t('home')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconHome className={'shrink-0'}/>
                                 {!isMinimal &&
                                 <span className="hidden xl:inline-block">{t('home')}</span>
@@ -149,8 +148,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </Link>
                         </li>
                         <li className="hidden md:block">
-                            <div onClick={()=>SearchBarToggle(!isNotificationActive)} title={t('search')} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <div onClick={()=>SearchBarToggle(!isNotificationActive)} title={t('search')} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconSearch className={'shrink-0'}/>
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('search')}</span>
@@ -158,8 +156,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </div>
                         </li>
                         <li>
-                            <Link title={t('explore')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <Link title={t('explore')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconExplore className={'shrink-0'} />
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('explore')}</span>
@@ -167,8 +164,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </Link>
                         </li>
                         <li>
-                            <Link title={t('reels')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <Link title={t('reels')} href="/reels/" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconReels className={'shrink-0'} />
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('reels')}</span>
@@ -176,17 +172,15 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </Link>
                         </li>
                         <li className="block md:hidden">
-                            <Link title={t('create')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <div title={t('create')} onClick={()=>setToggleCreatePost(true)} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all cursor-pointer">
                                 <IconAdd className={'shrink-0'}/>
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('create')}</span>
                                 }
-                            </Link>
+                            </div>
                         </li>
                         <li>
-                            <Link title={t('direct')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <Link title={t('direct')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconDirect className={'shrink-0'} />
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('direct')}</span>
@@ -194,8 +188,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </Link>
                         </li>
                         <li className="hidden md:block">
-                            <div onClick={()=>notificationBarToggle(!isSearchActive)} title={t('notification')} className="relative flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <div onClick={()=>notificationBarToggle(!isSearchActive)} title={t('notification')} className="relative flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 {newNotificationCount != 0 && 
                                     <UnSeenCounter counter={newNotificationCount}/>
                                 }
@@ -206,17 +199,15 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </div>
                         </li>
                         <li className="hidden md:block">
-                            <Link title={t('create')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <div title={t('create')} onClick={()=>setToggleCreatePost(true)} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all cursor-pointer">
                                 <IconAdd className={'shrink-0'} />
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('create')}</span>
                                 }
-                            </Link>
+                            </div>
                         </li>
                         <li>
-                            <Link title={t('profile')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all
-    ">
+                            <Link title={t('profile')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconAdd className={'shrink-0'} />
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('profile')}</span>
@@ -224,8 +215,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </Link>
                         </li>
                     </ul>
-                    <div title={t('menu')} className="hidden md:flex gap-4 p-0 md:p-[12px] my-[10px] mt-16 rounded-lg hover:bg-zinc-100 transition-all
-    cursor-pointer">
+                    <div title={t('menu')} className="hidden md:flex gap-4 p-0 md:p-[12px] my-[10px] mt-16 rounded-lg hover:bg-zinc-100 transition-all cursor-pointer">
                         <IconMenu className={'shrink-0'} />
                         {!isMinimal &&
                             <span className="hidden xl:inline-block">{t('menu')}</span>
@@ -233,7 +223,9 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                     </div>
                 </div>
             </div>
-            <CreatePostPopup />
+            {toggleCreatePost &&
+                <CreatePostPopup closeHandler={()=>setToggleCreatePost(false)} />
+            }
         </>
     )
 }
