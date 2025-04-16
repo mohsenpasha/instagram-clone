@@ -16,27 +16,27 @@ export function StoryList() {
     const isUnderMd = useMediaQuery("(max-width: 768px)");
     function fixHolderPosition() {
         if (timerStatus.current) {
-            const storyWidth = activeStory.current?.getBoundingClientRect().width || 0;
+            const storyCurrentWidth = activeStory.current?.getBoundingClientRect().width || 0;
+            // const storyWidth = 
+            const storyWidth = activeStory.current.clientWidth
+            // const storyWidth = 369;
             const storyLeft = activeStory.current?.getBoundingClientRect().left || 0;
+            // console.log(storyLeft)
             const centerPosition = (window.innerWidth / 2) - (storyWidth / 2);
-            const final_place = prevLeftPosition.current + (centerPosition - storyLeft);
+            console.log(storyLeftPosition)
+            let final_place = storyLeftPosition + (centerPosition - storyLeft)
+            if(storyLeft > centerPosition){
+                final_place += (storyWidth - storyCurrentWidth)
+            }
+            console.log(centerPosition,storyLeft)
+            // console.log(storyLeft,final_place)
+            prevLeftPosition.current = final_place;
+            setStoryLeftPosition(final_place);
+    
             timerStatus.current = false;
             setTimeout(() => {
                 timerStatus.current = true;
             }, 50);
-            
-            if(prevLeftPosition.current < final_place){
-             prevLeftPosition.current = final_place - 112;
-            setStoryLeftPosition(final_place - 112);
-             console.log('first')
-            }
-            else{
-             prevLeftPosition.current = final_place + 112;
-            setStoryLeftPosition(final_place + 112);
-
-            }
-
-            setStoryLeftPosition(final_place);
         }
     }
     useEffect(()=>{
@@ -56,7 +56,7 @@ export function StoryList() {
     return (
         <div className="fixed top-0 left-0 w-full h-full bg-st z-50 flex items-center">
             <IconClose className="text-white" />
-            <div style={{transformStyle:'preserve-3d', left: isUnderMd ? '50%' : storyLeftPosition }} ref={storySlider} className="absolute top-1/2 -translate-x-1/2 md:-translate-x-0 -translate-y-1/2 h-[100vh] w-[calc(100vh*9/16)] md:w-[1000vw] md:h-auto flex transition-all duration-300">
+            <div style={{transformStyle:'preserve-3d', left: isUnderMd ? '50%' : storyLeftPosition }} ref={storySlider} className={`absolute top-1/2 ${isUnderMd ? '-translate-x-1/2' : ''} -translate-y-1/2 h-[100vh] w-[calc(100vh*9/16)] md:w-[1000vw] md:h-auto flex transition-all duration-300`}>
                 {storyList.map((active, index) => (
                     <StoryHolder changeHandler={changeActiveStoryList} key={index} ref={active ? activeStory : allStory} index={index} status={index == activeIndex ? 'active' : index < activeIndex ? 'before' : 'after'} />
                 ))}
@@ -200,7 +200,6 @@ export default function StoryHolder({status,ref,changeHandler,index}:{status:'ac
                                 </div>
                                 
                             </div>
-                        // }
                     </div>
                 </div>
             <Story />
@@ -239,7 +238,8 @@ export default function StoryHolder({status,ref,changeHandler,index}:{status:'ac
 export function Story(){
     return(
         <div className="absolute top-0 left-0 z-0 rounded-lg w-full h-full overflow-hidden">
-            <Image src='/images/story-1.webp' alt="" width={1080} height={1920}></Image>
+            {/* <Image src='/images/story-1.webp' alt="" width={1080} height={1920}></Image> */}
+            <video src="/reels/reel-1.mp4" autoPlay></video>
         </div>
     )
 }
