@@ -10,6 +10,8 @@ import { changeListTitle } from '@/store/slices/postSlice';
 
 export default function ProfileHeader(){
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
+    const highlights = useSelector((state: RootState) => state.story.userHighlights);
+    
     const { t } = useTranslation();
     const params = useParams()
     const dispatch = useDispatch()
@@ -54,12 +56,13 @@ export default function ProfileHeader(){
                 </div>
 
             </div>
-            {!userInfo.is_private && 
+            {!userInfo.is_private
                 <div className='p-4 flex my-4 w-full'>
-                    <HighLight/>
-                    <HighLight/>
-                    <HighLight/>
-                    <HighLight/>
+                    {highlights?.map((item,index)=>{
+                        return (
+                        <HighLight name={item.name} thumbnail={item.thumbnail} currentIndex={index} key={index}/>
+                    )
+                    })}
                 </div>
             }
             <div className="flex md:hidden items-center py-3 justify-around border-t-[1px] border-ss gap-4 mt-4 w-full">
