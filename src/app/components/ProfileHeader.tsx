@@ -56,7 +56,7 @@ export default function ProfileHeader(){
                 </div>
 
             </div>
-            {!userInfo.is_private
+            {!userInfo.is_private &&
                 <div className='p-4 flex my-4 w-full'>
                     {highlights?.map((item,index)=>{
                         return (
