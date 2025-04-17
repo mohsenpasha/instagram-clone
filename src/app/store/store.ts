@@ -4,6 +4,7 @@ import userReducer from "./slices/userSlice";
 import searchReducer from "./slices/searchSlice";
 import notificationReducer from "./slices/notificationSlice";
 import createPostReducer from "./slices/postUploadSlice";
+import storyReducer from "./slices/storySlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,7 +12,8 @@ export const store = configureStore({
     currentUser:userReducer,
     searchInfo:searchReducer,
     notificationInfo:notificationReducer,
-    createData:createPostReducer
+    createData:createPostReducer,
+    story:storyReducer,
   },
 });
 
