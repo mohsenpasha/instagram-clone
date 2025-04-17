@@ -7,11 +7,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { FollowBtn } from './FollowBtn';
 import { changeListTitle } from '@/store/slices/postSlice';
+import { changeStoryToggle, changeStoryType } from '@/store/slices/storySlice';
 
 export default function ProfileHeader(){
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const highlights = useSelector((state: RootState) => state.story.userHighlights);
-    
+    const userStories = useSelector((state: RootState) => state.story.userStories);
+    function toggleStories(){
+        dispatch(changeStoryToggle(true))
+        dispatch(changeStoryType('userStory'))
+    }
     const { t } = useTranslation();
     const params = useParams()
     const dispatch = useDispatch()
@@ -28,9 +33,17 @@ export default function ProfileHeader(){
         <div className='md:py-6 border-b-[1px] border-d'>
             <div className='flex px-4 md:px-0 pt-10 gap-4'>
                 <div className="w-fit md:w-4/12 items-center flex justify-center">
-                    <div className='rounded-full overflow-hidden size-[77px] md:size-[150px]'>
-                        <Image src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
+                    {userStories && userStories.length != 0 ?
+                        <div onClick={()=>toggleStories()} className='rounded-full size-[86px] md:size-[162px] p-[2px] [background:conic-gradient(from_180deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75)] flex items-center justify-center cursor-pointer'>
+                            <div className='size-[80px] md:size-[156px] rounded-full flex items-center justify-center bg-white'>
+                                <Image className='size-[77px] md:size-[150px] rounded-full border-[1px] border-ss' src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
+                            </div>
+                        </div>
+                    :
+                    <div className='size-[77px] md:size-[150px] rounded-full flex items-center justify-center'>
+                        <Image className='size-[77px] md:size-[150px] rounded-full border-[1px] border-ss' src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
                     </div>
+                    }
                 </div>
                 <div className='w-8/12 grid'>
                     <div className="flex items-center gap-2">
