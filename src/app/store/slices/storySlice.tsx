@@ -40,7 +40,29 @@ const storySlice = createSlice({
       state.storyListType = action.payload
     },
     changeUserStories: (state, action) => {
-      state.userStories = action.payload
+      state.userStories = action.payload.map((item)=>{
+        item.activeStatus = false
+        return item
+      })
+    },
+    seenUserStories: (state, action) => {
+      if(!state.userStories) return
+      state.userStories = state.userStories.map((item,index)=>{
+        if(index > action.payload){
+          item.activeStatus = false
+        }
+        else{
+          item.activeStatus = true
+        }
+        return item
+      })
+    },
+    resetUserStories: (state) => {
+      if(!state.userStories) return
+      state.userStories = state.userStories.map((item,index)=>{
+          item.activeStatus = false
+        return item
+      })
     },
     clearUserStories: (state) => {
       state.userStories = null
@@ -109,5 +131,5 @@ const storySlice = createSlice({
   },
 });
 
-export const { changeStoryToggle, changeStoryType, changeUserStories, clearUserStories, changeUserHighlights, clearUserHighlights, activateHighlight, seenHighlightStory, changeIsStoryMuted, resetHighlightStory} = storySlice.actions;
+export const { changeStoryToggle, changeStoryType, changeUserStories, clearUserStories, changeUserHighlights, clearUserHighlights, activateHighlight, seenHighlightStory, changeIsStoryMuted, resetHighlightStory, seenUserStories, resetUserStories} = storySlice.actions;
 export default storySlice.reducer;
