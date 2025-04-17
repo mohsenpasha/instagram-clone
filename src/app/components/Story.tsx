@@ -5,16 +5,17 @@ import { RefObject, useEffect, useRef, useState } from "react";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { activateHighlight, changeIsStoryMuted, changeStoryToggle, resetHighlightStory, seenHighlightStory } from "@/store/slices/storySlice";
+import { activateHighlight, changeIsStoryMuted, changeStoryToggle, resetHighlightStory, resetUserStories, seenHighlightStory, seenUserStories } from "@/store/slices/storySlice";
 
 export function StoryList() {
     const storySlider = useRef(null);
     const activeStory = useRef(null);
     const allStory = useRef(null);
     const [storyLeftPosition, setStoryLeftPosition] = useState(0);
-    // const [storyList, setStoryList] = useState([true, false, false, false, false, false, false, false, false]);
     const storyListType = useSelector((state: RootState)=> state.story.storyListType)
+    const [mainStoryList,setMainStoryList] = useState([])
     const userHighlights = useSelector((state: RootState)=> state.story.userHighlights)
+    const userStories = useSelector((state: RootState)=> state.story.userStories)
     const activeIndex = userHighlights?.findIndex(item => item.activeStatus == true)
     const [closetoggle,setCloseToggle] = useState(false)
     const timerStatus = useRef(true);
@@ -51,6 +52,28 @@ export function StoryList() {
             fixHolderPosition()
         }
     },[userHighlights])
+    useEffect(()=>{
+        if(!userStories) return
+        if(!activeStory.current){
+            setTimeout(() => {
+                fixHolderPosition()
+            }, 100);
+        }
+        else{
+            fixHolderPosition()
+        }
+    },[userStories])
+    // we are ganna need this for home stories
+    // useEffect(()=>{
+    //     if(!storyListType || !userHighlights) return
+    //     console.log(storyListType)
+    //     if(storyListType == 'highlighs'){
+    //         setMainStoryList(userHighlights)
+    //     }
+    //     else if(storyListType == 'userStory'){
+    //         setMainStoryList(userStories)
+    //     }
+    // },[userHighlights,storyListType])
     function changeActiveStoryList(id:number) {
         dispatch(activateHighlight(id))
     }
@@ -66,16 +89,23 @@ export function StoryList() {
                 <IconClose className="text-white" />
             </span>
             <div style={{transformStyle:'preserve-3d', left: isUnderMd ? '50%' : storyLeftPosition }} ref={storySlider} className={`absolute top-1/2 ${isUnderMd ? '-translate-x-1/2' : ''} -translate-y-1/2 h-[100vh] w-[calc(100vh*9/16)] md:w-[1000vw] md:h-auto flex transition-all duration-300`}>
-                {activeIndex != null && userHighlights?.map((item, index) => (
-                    <StoryHolder closeStatus={closetoggle} changeHandler={changeActiveStoryList} key={index} ref={item.activeStatus ? activeStory : allStory} listIndex={index} status={index == activeIndex ? 'active' : index < activeIndex ? 'before' : 'after'} />
-                ))}
+                {storyListType == 'highlighs' ?
+                    (
+                        activeIndex != null && userHighlights?.map((item, index) => (
+                            <StoryHolder closeStatus={closetoggle} changeHandler={changeActiveStoryList} key={index} ref={item.activeStatus ? activeStory : allStory} listIndex={index} status={index == activeIndex ? 'active' : index < activeIndex ? 'before' : 'after'} />
+                        ))
+                    )
+                :
+                    <StoryHolder closeStatus={closetoggle} changeHandler={changeActiveStoryList} ref={activeStory} listIndex={0} status={'active'} />
+                }
             </div>
         </div>
     );
 }
 export default function StoryHolder({status,ref,changeHandler,listIndex,closeStatus}:{status:'active' | 'before' | 'after',ref:RefObject<null>,changeHandler:(id:number)=>void,listIndex:number,closeStatus:boolean}){
-    const userHighlights = useSelector((state: RootState)=> state.story.userHighlights)
     const storyListType = useSelector((state: RootState)=> state.story.storyListType)
+    const userHighlights = useSelector((state: RootState)=> state.story.userHighlights)
+    const userStories = useSelector((state: RootState)=> state.story.userStories)
     const isStoryMuted = useSelector((state: RootState)=> state.story.isStoryMuted)
     const totalTime = useRef(5000)
     const timerRef = useRef<number | null>(null);
@@ -92,23 +122,34 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     function closeHandler(){
         clearInterval(timerRef.current!)
         dispatch(resetHighlightStory())
+        dispatch(resetUserStories())
         dispatch(changeStoryToggle(false))
     }
     function nextStory(){
-        if(currentIndexRef.current == storyListRef.current.length - 1 && listIndex == userHighlights?.length - 1){
+        if(storyListType == 'userStory' && currentIndexRef.current == storyListRef.current.length - 1){
             closeHandler()
             return
-
+        }
+        if(storyListType == 'highlighs' && currentIndexRef.current == storyListRef.current.length - 1 && listIndex == userHighlights?.length - 1){
+            closeHandler()
+            return
         }
         if(videoRef.current){
             videoRef.current.pause()
         }
-        console.log()
+        console.log(currentIndexRef.current,storyListRef.current.length - 1)
         if(currentIndexRef.current == storyListRef.current.length - 1){
-            changeHandler(listIndex + 1)
+            if(storyListType == 'highlighs'){
+                changeHandler(listIndex + 1)
+            }
         }
         else{
-            dispatch(seenHighlightStory([listIndex,currentIndex]))
+            if(storyListType == 'highlighs'){
+                dispatch(seenHighlightStory([listIndex,currentIndexRef.current]))
+            }
+            else{
+                dispatch(seenUserStories(currentIndexRef.current))
+            }
         }
     }
     function prevStory(){
@@ -124,7 +165,12 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
             changeHandler(listIndex - 1)
         }
         else{
-            dispatch(seenHighlightStory([listIndex,currentIndex - 2]))
+            if(storyListType == 'highlighs'){
+                dispatch(seenHighlightStory([listIndex,currentIndex - 2]))
+            }
+            else{
+                dispatch(seenUserStories(currentIndex - 2))
+            }
             resetTimer()
             startTimer()
             setIsStoryPaused(false)
@@ -156,11 +202,20 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     }, [storyList])
     useEffect(()=>{
         if(!userHighlights) return
+        if(storyListType != 'highlighs') return
         setStoryList(userHighlights[listIndex].stories)
             resetTimer()
             startTimer()
             setIsStoryPaused(false)
     },[userHighlights])
+    useEffect(()=>{
+        if(!userStories) return
+        if(storyListType != 'userStory') return
+        setStoryList(userStories)
+            resetTimer()
+            startTimer()
+            setIsStoryPaused(false)
+    },[userStories])
     useEffect(() => {
         const video = videoRef.current;
         
@@ -183,6 +238,8 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     }, [status]);
     useEffect(()=>{
         if(storyList.length == 0) return
+        console.log('setting current story')
+        console.log(storyList)
         setCurrentindex(storyList.findIndex(item => item.activeStatus === false))
     },[storyList])
     useEffect(()=>{
@@ -217,7 +274,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                 }
             }, 100);
     }
-    if(storyList.length == 0 || currentIndex == null) return
+    if(storyList.length == 0 || currentIndex == null || currentIndex == -1) return
     return(
         <div style={{transform: isUnderMd ? `${status == 'active' ? ' translate(0) rotateY(0)' : status == 'before' ? 'translate(-50%) rotateY(-90deg)' : 'translate(50%) rotateY(90deg)'}` : undefined}} onClick={()=>status == 'active' ? {} : changeHandler(listIndex)} ref={ref} className={`bg-slate-500 md:relative absolute md:h-[90vh] w-full h-full md:w-[calc(90vh*9/16)] rounded-lg transition-all duration-300 select-none ${status != 'active' ? 'md:scale-[.4] rotate-z-90 md:-mx-20 cursor-pointer' : 'md:mx-8'}`}>
             {status != 'active' &&
