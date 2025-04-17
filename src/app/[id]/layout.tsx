@@ -16,6 +16,8 @@ import { addPostDetail, changeCommentId, changeListTitle, changeListUrl, clearCo
 import { PostPopupSlider } from "@/components/PostPopupSlider";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { UnfollowPopup, UserList } from "@/components/SinglePost";
+import { fetchSimpleGet } from "@/api/simpleGet";
+import { changeUserHighlights, changeUserStories } from "@/store/slices/storySlice";
 
 
 export default function ProfileLayout({children} : {children : React.ReactNode}){
@@ -28,6 +30,7 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
     const commentId = useSelector((state: RootState) => state.popupPost.commentId);
     const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
+    const storyToggle = useSelector((state: RootState) => state.story.storyToggle);
     const dispatch = useDispatch()
     const userListRef = useRef(null)
     const userHoverPreviewRef = useRef(null)
@@ -60,6 +63,16 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
         const jsonRes = await response.json()
         dispatch(changeCurrentVisitingUser(jsonRes))
     }
+    async function getUserStories(){
+        const response = await fetchSimpleGet('http://localhost:8000/stories/' + params.id)
+        const jsonRes = await response.json()
+        dispatch(changeUserStories(jsonRes))
+    }
+    async function getUserHighlight(){
+        const response = await fetchSimpleGet('http://localhost:8000/highlights/' + params.id)
+        const jsonRes = await response.json()
+        dispatch(changeUserHighlights(jsonRes))
+    }
         useEffect(()=>{
             if(listTitle){
                 setIsUnfollowInList(true)
@@ -79,6 +92,8 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
         dispatch(remove())
         dispatch(changeCurrentVisitingUser(null))
         getUserData()
+        getUserHighlight()
+        getUserStories()
     },[])
     return(
             <div className={`flex justify-between`}>
@@ -120,7 +135,9 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                 {unfollowDetail &&
                     <UnfollowPopup inList={isUnfollowInList} ref={unfollowPopupRef}/>
                 }
-                {/* <StoryList /> */}
+                {storyToggle && 
+                    <StoryList />
+                }
             </div>
     )
 }
