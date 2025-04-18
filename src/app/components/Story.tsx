@@ -107,6 +107,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     const userHighlights = useSelector((state: RootState)=> state.story.userHighlights)
     const userStories = useSelector((state: RootState)=> state.story.userStories)
     const isStoryMuted = useSelector((state: RootState)=> state.story.isStoryMuted)
+    const currentVisitingUser = useSelector((state: RootState)=> state.currentUser.currentVisitingUser)
     const totalTime = useRef(5000)
     const timerRef = useRef<number | null>(null);
     const timeRemainingRef = useRef(totalTime.current)
@@ -301,7 +302,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                                     storyListType == 'highlighs'  ? 
                                     userHighlights[listIndex].thumbnail
                                     :
-                                    '/images/profile-img-2.jpg'
+                                    currentVisitingUser.profile_pic || '/images/profile-img.jpeg'
                                 }
                                  width={status == 'active' ? 32 : 64} height={status == 'active' ? 32 : 64} alt=""></Image>
                             </div>
@@ -312,7 +313,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                                         ? 
                                             <span>{userHighlights[listIndex].name}</span>
                                         :
-                                            <span>afshin_bizar</span>
+                                            <span>{currentVisitingUser.username}</span>
                                         }
                                     </div>
                                 </div>
