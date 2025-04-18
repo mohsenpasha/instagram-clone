@@ -17,7 +17,7 @@ import { PostPopupSlider } from "@/components/PostPopupSlider";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { UnfollowPopup, UserList } from "@/components/SinglePost";
 import { fetchSimpleGet } from "@/api/simpleGet";
-import { changeUserHighlights, changeUserStories } from "@/store/slices/storySlice";
+import { changeStoriesHolder, changeUserStories } from "@/store/slices/storySlice";
 
 
 export default function ProfileLayout({children} : {children : React.ReactNode}){
@@ -71,7 +71,7 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     async function getUserHighlight(){
         const response = await fetchSimpleGet('http://localhost:8000/highlights/' + params.id)
         const jsonRes = await response.json()
-        dispatch(changeUserHighlights(jsonRes))
+        dispatch(changeStoriesHolder(jsonRes))
     }
         useEffect(()=>{
             if(listTitle){

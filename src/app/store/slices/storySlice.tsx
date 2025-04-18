@@ -11,7 +11,7 @@ type singleStoryType = {
 type storyType = {
   storyToggle:boolean,
   userStories: null | []
-  userHighlights: null | [
+  storiesHolder: null | [
     {
       activeStatus:boolean,
       stories:[singleStoryType]
@@ -24,7 +24,7 @@ type storyType = {
 const initialState : storyType = {
   storyToggle:false,
   userStories: null,
-  userHighlights : null,
+  storiesHolder : null,
   storyListType: null,
   isStoryMuted:true
 };
@@ -67,8 +67,8 @@ const storySlice = createSlice({
     clearUserStories: (state) => {
       state.userStories = null
     },
-    changeUserHighlights: (state, action) => {
-      state.userHighlights = action.payload.map((item)=>{
+    changeStoriesHolder: (state, action) => {
+      state.storiesHolder = action.payload.map((item)=>{
         item.activeStatus = false
         item.stories = item.stories.map((story)=>{
           story.activeStatus = false
@@ -77,9 +77,9 @@ const storySlice = createSlice({
         return item
       })
     },
-    activateHighlight: (state, action) => {
-      if(!state.userHighlights) return
-      state.userHighlights = state.userHighlights.map((item,index)=>{
+    activateStoriesHolder: (state, action) => {
+      if(!state.storiesHolder) return
+      state.storiesHolder = state.storiesHolder.map((item,index)=>{
         if(index != action.payload){
           item.activeStatus = false
         }
@@ -89,9 +89,9 @@ const storySlice = createSlice({
         return item
       })
     },
-    seenHighlightStory: (state, action) => {
-      if(!state.userHighlights) return
-      state.userHighlights = state.userHighlights.map((item,index)=>{
+    seenStoriesHolderStory: (state, action) => {
+      if(!state.storiesHolder) return
+      state.storiesHolder = state.storiesHolder.map((item,index)=>{
         if(index != action.payload[0]){
           item.activeStatus = false
           return item
@@ -109,9 +109,9 @@ const storySlice = createSlice({
         return item
       })
     },
-    resetHighlightStory: (state) => {
-      if(!state.userHighlights) return
-      state.userHighlights = state.userHighlights.map((item,index)=>{
+    resetStoriesHolder: (state) => {
+      if(!state.storiesHolder) return
+      state.storiesHolder = state.storiesHolder.map((item,index)=>{
         item.activeStatus = false
         item.stories = item.stories.map((story)=>{
           story.activeStatus = false
@@ -121,15 +121,14 @@ const storySlice = createSlice({
         return item
       })
     },
-    clearUserHighlights: (state) => {
-      state.userHighlights = null
+    clearStoriesHolder: (state) => {
+      state.storiesHolder = null
     },
     changeIsStoryMuted: (state, action) => {
       state.isStoryMuted = action.payload
     },
-    
   },
 });
 
-export const { changeStoryToggle, changeStoryType, changeUserStories, clearUserStories, changeUserHighlights, clearUserHighlights, activateHighlight, seenHighlightStory, changeIsStoryMuted, resetHighlightStory, seenUserStories, resetUserStories} = storySlice.actions;
+export const { changeStoryToggle, changeStoryType, changeUserStories, clearUserStories, changeStoriesHolder, clearStoriesHolder, activateStoriesHolder, seenStoriesHolderStory, changeIsStoryMuted, resetStoriesHolder, seenUserStories, resetUserStories} = storySlice.actions;
 export default storySlice.reducer;

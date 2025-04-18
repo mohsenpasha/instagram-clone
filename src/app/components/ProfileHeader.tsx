@@ -11,7 +11,7 @@ import { changeStoryToggle, changeStoryType } from '@/store/slices/storySlice';
 
 export default function ProfileHeader(){
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
-    const highlights = useSelector((state: RootState) => state.story.userHighlights);
+    const highlights = useSelector((state: RootState) => state.story.storiesHolder);
     const userStories = useSelector((state: RootState) => state.story.userStories);
     function toggleStories(){
         dispatch(changeStoryToggle(true))
