@@ -295,15 +295,17 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
         </div>
     )
 }
-export function PostCaption({caption,user,updated_at}){
+export function PostCaption({caption,user,updated_at,isHomePost=false}:{isHomePost?:boolean}){
     return(
-        <div className="flex justify-between py-3 px-2 md:px-0 ltr:md:pl-6 rtl:md:pr-6">
+        <div className={`flex justify-between ${isHomePost ? 'py-1' :'px-2 py-3 ltr:md:pl-6 rtl:md:pr-6'} md:px-0`}>
         <div className="flex gap-2">
-            <Link href={'/' + user.username} className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
-                <Image className="rounded-full" src={user.profile_pic || '/images/profile-img-2.jpg'} width={32} height={32} alt=""></Image>
-            </Link>
-            <div className="flex-col md:flex">
-                <div className="block">
+            {!isHomePost &&
+                <Link href={'/' + user.username} className="rounded-full flex-shrink-0 cursor-pointer size-8 overflow-hidden">
+                    <Image className="rounded-full" src={user.profile_pic || '/images/profile-img-2.jpg'} width={32} height={32} alt=""></Image>
+                </Link>
+            }
+            <div className={`flex-col md:flex`}>
+                <div className={`${isHomePost ? 'flex' : 'block'}`}>
                     <Link href={'/' + user.username}  className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
                         {user.username}
                     </Link>
@@ -313,11 +315,13 @@ export function PostCaption({caption,user,updated_at}){
                         </span>
                     </div>
                 </div>
-                <div className="text-xs text-gray flex gap-2 font-medium mt-2">
-                    {updated_at.t_ago &&
-                        <div className="font-normal"><span>{updated_at.t_ago}</span>{updated_at.t}</div>
-                    }
-                </div>
+                {!isHomePost &&
+                    <div className="text-xs text-gray flex gap-2 font-medium mt-2">
+                        {updated_at.t_ago &&
+                            <div className="font-normal"><span>{updated_at.t_ago}</span>{updated_at.t}</div>
+                        }
+                    </div>
+                }
             </div>
         </div>
         <div className="flex items-center cursor-pointer px-2">
@@ -756,6 +760,8 @@ export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,tar
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const dispatch = useDispatch()
     useEffect(()=>{
+        console.log(listType)
+        console.log(targetId)
         if(currentUrl) return
         if(listType == 'likeList'){
             dispatch(changeListUrl(`http://localhost:8000/getpostlikes/${targetId}`))
@@ -772,6 +778,7 @@ export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,tar
     },[])
     useEffect(()=>{
         if(!currentUrl) return
+        console.log(currentUrl)
             async function fetchData(currentUrl){
                     const response = await fetchSimpleGet(currentUrl)
                     const jsonRes = await response.json()
