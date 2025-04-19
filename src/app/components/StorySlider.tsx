@@ -46,20 +46,20 @@ export default function StorySlider() {
 
     if(!storiesHolder) return
     return (
-        <div ref={containerRef} className="w-full overflow-hidden relative">
+        <div ref={containerRef} className="w-full overflow-hidden relative py-4">
             <div
                 ref={contentRef}
                 style={{ transform: `translateX(${translateX}px)` }}
                 className="flex transition-transform duration-300 ease-in-out"
             >
                 {storiesHolder.map((item, index) => (
-                    <div onClick={()=>toggleHighlight(index)} key={index} className="cursor-pointer flex flex-col items-center w-fit gap-1 md:gap-2 px-[15px] py-[10px]">
+                    <div onClick={()=>toggleHighlight(index)} key={index} className="cursor-pointer flex flex-col items-center w-fit gap-1 px-[15px] py-[10px]">
                         <div className="flex size-[64px] rounded-full justify-center items-center border-[1px] border-s [background:conic-gradient(from_180deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75)]">
                             <div className="rounded-full size-[58px] bg-white overflow-hidden flex items-center justify-center">
                                 <Image className="object-cover size-[56px] rounded-full border-[1px] border-ss" src={item.thumbnail || '/images/profile-img.jpeg'} alt="" width={56} height={56} />
                             </div>
                         </div>
-                        <span>{item.name}</span>
+                        <span className="text-xs">{item.name}</span>
                     </div>
                 ))}
             </div>
