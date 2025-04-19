@@ -280,8 +280,6 @@ increaseCommentCount: (state) => {
     });
 },
     addCommentList: (state, action) => {
-      console.log(state.commentList)
-      console.log(action.payload)
       if (state.commentList) {
         state.commentList = [
             ...state.commentList, 
