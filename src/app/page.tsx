@@ -1,6 +1,6 @@
 'use client'
 import SideBar from "@/components/SideBar";
-import { appWithTranslation } from "next-i18next";
+import { appWithTranslation, useTranslation } from "next-i18next";
 import '../../i18n';
 import StorySlider from "./components/StorySlider";
 import { useEffect, useRef, useState } from "react";
@@ -90,6 +90,7 @@ function Home() {
     fetchFeedPosts()
     fetchSuggested()
   },[])
+  const { t } = useTranslation();
   return (
     <>
       <div className="flex justify-between">
@@ -102,7 +103,7 @@ function Home() {
             </div>
           </div>
           <div className="mt-6 w-[260px]">
-            <div className="text-gray text-sm font-medium my-4">Suggested for you</div>
+            <div className="text-gray text-sm font-medium my-4">{t('suggested')}</div>
             {suggestedUsers.map((item,index)=>{
              return(
                <div key={index} className="py-2">
@@ -119,7 +120,7 @@ function Home() {
                     </div>
                   </div>
                   <div className="cursor-pointer flex-shrink-0 text-bl font-medium text-xs over">
-                    Follow
+                    {t('follow')}
                   </div>
                 </div>
             </div>

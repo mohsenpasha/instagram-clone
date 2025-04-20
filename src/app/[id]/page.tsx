@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { IconCamera, IconPrivatePage } from "@/components/Icons"
 import { FollowBtn } from "@/components/FollowBtn"
 import { addPostList, changePostListUrl, clearPostList } from "@/store/slices/postSlice"
+import { useTranslation } from "react-i18next";
 
 export default function Profile(){
     const router = useRouter();
@@ -84,13 +85,14 @@ export default function Profile(){
 }
 
 export function PrivatePage(){
+    const { t } = useTranslation();
     return(
         <div className="w-full flex justify-center items-center pt-6">
             <div className="flex w-fit gap-2 items-center">
                 <IconPrivatePage/>
                 <div className="flex flex-col gap-[2px] text-sm">
-                    <span className="font-semibold">This account is private</span>
-                    <span className="text-gray">Follow to see their photos and videos.</span>
+                    <span className="font-semibold">{t('privateaccount')}</span>
+                    <span className="text-gray">{t('privateaccounttext')}</span>
                 </div>
             </div>
         </div>
@@ -99,13 +101,14 @@ export function PrivatePage(){
 
 export function NoPost(){
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
+    const { t } = useTranslation();
     return(
         <div className="w-full flex justify-center items-center md:my-14 md:p-0 p-2 border-t-[1px] border-b-[1px] border-ss">
             <div className="flex md:flex-col w-full md:w-fit gap-2 items-center md:justify-center">
                 <IconCamera className="size-16 flex-shrink-0"/>
                 <div className="flex flex-col text-sm md:mt-8 md:mb-12">
-                    <span className="md:font-black font-medium md:text-3xl">No Posts Yet</span>
-                    <span className="text-gray text-sm md:hidden block">When {userInfo.username} posts, you'll see their photos and videos here</span>
+                    <span className="md:font-black font-medium md:text-3xl">{t('nopost')}</span>
+                    <span className="text-gray text-sm md:hidden block">{t('when')} {userInfo.username} {t('noposttext')}</span>
                 </div>
             </div>
         </div>

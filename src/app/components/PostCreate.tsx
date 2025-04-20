@@ -10,6 +10,8 @@ import { fetchSearchUserAndTag } from "@/api/searchApi"
 import { useClickOutside } from "@/hooks/useClickOutside"
 import { extractTags } from "@/utils/idAndHastagConvertor"
 import { fetchAddPost } from "@/api/addPostApi"
+import { t } from "i18next"
+import { useTranslation } from "react-i18next"
 
 export default function CreatePostPopup({closeHandler}:{closeHandler:()=>void}){
     const mediaFiles = useSelector((state: RootState) => state.createData.postMedia);
@@ -94,17 +96,18 @@ export function PostUploadFirstView(){
               }));
         }
     }
+    const { t } = useTranslation();
     return(
         <div onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} className="flex flex-col w-[490px] h-[520px] rounded-lg bg-[#F5F5F5] overflow-hidden">
             <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
-                Create new post
+                {t('createnewpost')}
             </div>
             <div className="flex flex-col items-center justify-center flex-1 gap-3">
                 <IconUploadFirstView/>
-                <span className="text-xl">Drag photos and videos here</span>
-                {isDragging && <span>Drop Here</span>}
+                <span className="text-xl">{t('drag')}</span>
+                {isDragging && <span>{t('drop')}</span>}
                 <label  className="bg-bl hover:bg-[#1877f2] text-white px-4 rounded-md text-sm font-semibold h-8 flex items-center cursor-pointer" htmlFor="fileInput">
-                    Select From Computer
+                    {t('selectfromcomputer')}
                 </label>
                 <input multiple onChange={()=>handleFileChange()} ref={fileInputRef} id="fileInput" className="hidden" type="file" />
             </div>
@@ -133,14 +136,15 @@ export function CropSection(){
     function moveToFinalPart(){
         dispatch(changeIsFinalPart(true))
     }
+    const { t } = useTranslation();
     if(!mediaFiles || sliderCurrentIndex == null) return
     return(
         <div className="flex flex-col w-[400px] h-[570px] rounded-lg bg-[#F5F5F5] overflow-hidden">
             <div className="relative flex items-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss justify-end">
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    Crop
+                    {t('crop')}
                 </span>
-                <span className="text-bl cursor-pointer px-4 hover:text-bll" onClick={moveToFinalPart}>next</span>
+                <span className="text-bl cursor-pointer px-4 hover:text-bll" onClick={moveToFinalPart}>{t('next')}</span>
             </div>
             <div className="relative flex w-full h-full">
                 <div style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }} className="flex relative items-center flex-1">
@@ -679,6 +683,7 @@ export function FinalPart(){
         const cleanedData = {caption:caption,post_media:cleanedPostMedia,location:location,hashtags:hashtags,comment_disabled:isCommentOff,view_hide:isViewOff}
         fetch_add_post(cleanedData)
     }
+    const { t } = useTranslation()
     if(sliderCurrentIndex == null || !mediaFiles) return
     return(
         <div className={`${uploadingPost || uploadingCompleted && 'hidden'}flex flex-col h-[570px] rounded-lg bg-[#F5F5F5]`}>
@@ -687,7 +692,7 @@ export function FinalPart(){
                     <IconArrowBack/>
                 </span>
                 <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    Create new post
+                    {t('createnewpost')}
                 </span>
                 <span onClick={()=>sharePostHandler()} className="text-bl hover:text-bll cursor-pointer px-4">
                     share
@@ -756,7 +761,7 @@ export function FinalPart(){
                     </div>
                     <div className="flex flex-col px-4">
                         <div className="flex w-full justify-between items-center py-2">
-                            <input className="flex-1 outline-none" type="text" placeholder="Add Location" onChange={(e)=>setLocation(e.target.value)} value={location}/>
+                            <input className="flex-1 outline-none" type="text" placeholder={t('addlocation')} onChange={(e)=>setLocation(e.target.value)} value={location}/>
                             <span onClick={()=> location.length ? setLocation('') :{}} className={`${location.length && 'cursor-pointer'}`}>
                                 {location.length ?
                                 <IconClose className="size-4"/>
@@ -767,11 +772,11 @@ export function FinalPart(){
                         </div>
                         <div className="flex flex-col w-full py-4 select-none">
                             <div onClick={()=>setAccessibilityToggle(!accessibilityToggle)} className="w-full flex justify-between cursor-pointer">
-                                <span className={accessibilityToggle ? 'font-medium' : ''}>Accessibility</span>
+                                <span className={accessibilityToggle ? 'font-medium' : ''}>{t('accessibility')}</span>
                                 <IconArrow className={`size-4 ${!accessibilityToggle && 'rotate-180'}`}/>
                             </div>
                             <div className={accessibilityToggle ? 'block' : 'hidden'}>
-                                <p className="text-gray text-xs my-3">Alt text describes your photos for people with visual impairments. Alt text will be automatically created for your photos or you can choose to write your own.</p>
+                                <p className="text-gray text-xs my-3">{t('alttext')}</p>
                                 <div className="flex flex-col gap-2 pb-8">
                                 {mediaFiles.map((item,index)=>{
                                     return(
@@ -779,7 +784,7 @@ export function FinalPart(){
                                             {item.croppedDataURL && 
                                                 <Image src={item.croppedDataURL} width={44} height={44} alt=""></Image>
                                             }
-                                            <input value={item.alt || ''} onChange={(e)=>handleAltChange(e,index)} className="flex-1 border-[1px] focus:border-[#a8a8a8] border-ss rounded-md p-1 px-3 outline-none" type="text" placeholder="Write alt text..."/>
+                                            <input value={item.alt || ''} onChange={(e)=>handleAltChange(e,index)} className="flex-1 border-[1px] focus:border-[#a8a8a8] border-ss rounded-md p-1 px-3 outline-none" type="text" placeholder={t('altplaceholder')}/>
                                         </div>
                                     )
                                     })}
@@ -788,29 +793,29 @@ export function FinalPart(){
                         </div>
                         <div className="flex flex-col w-full select-none">
                             <div onClick={()=>setSettingToggle(!settingToggle)} className="w-full flex justify-between py-2 cursor-pointer">
-                                <span className={settingToggle ? 'font-medium' : ''}>Advanced Settings</span>
+                                <span className={settingToggle ? 'font-medium' : ''}>{t('advancedsettings')}</span>
                                 <IconArrow className={`size-4 ${!settingToggle && 'rotate-180'}`}/>
                             </div>
                             <div className={settingToggle ? 'block' : 'hidden'}>
                                 <div className="flex flex-col gap-2 pb-8">
                                     <div className="flex w-full justify-between items-center">
-                                        <span className="pr-1">Hide like and view counts on this post</span>
+                                        <span className="pr-1">{t('hideviewtitle')}</span>
                                         <label htmlFor="hideView" className="has-[:checked]:bg-black rounded-2xl transition-all flex-shrink-0 bg-[#dbdfe4] h-6 w-11 flex relative items-center cursor-pointer">
                                             <input id="hideView" className="peer hidden" checked={isViewOff} onChange={(e)=>{setIsViewOff(e.target.checked)}} type="checkbox" />
                                             <span className="block size-5 rounded-full bg-white absolute transition-all peer-checked:left-[21px] left-[2px]"></span>
                                         </label>
                                     </div>
-                                    <p className="text-gray text-xs">Only you will see the total number of likes and views on this post. You can change this later by going to the ··· menu at the top of the post. To hide like counts on other people's posts, go to your account settings.</p>
+                                    <p className="text-gray text-xs">{t('hidetext')}</p>
                                 </div>
                                 <div className="flex flex-col gap-2 pb-8">
                                     <div className="flex w-full justify-between items-center">
-                                        <span className="pr-1">Turn off commenting</span>
+                                        <span className="pr-1">{t('turnoffcommenting')}</span>
                                         <label htmlFor="commentStatus" className="has-[:checked]:bg-black rounded-2xl transition-all flex-shrink-0 bg-[#dbdfe4] h-6 w-11 flex relative items-center cursor-pointer">
                                             <input checked={isCommentOff} onChange={(e)=>setIsCommentOff(e.target.checked)} id="commentStatus" className="peer hidden" type="checkbox" />
                                             <span className="block size-5 rounded-full bg-white absolute transition-all peer-checked:left-[21px] left-[2px]"></span>
                                         </label>
                                     </div>
-                                    <p className="text-gray text-xs">You can change this later by going to the ··· menu at the top of your post.</p>
+                                    <p className="text-gray text-xs">{t('offcommenttext')}</p>
                                 </div>
                             </div>
                         </div>
@@ -825,7 +830,7 @@ export function UploadPostPopup(){
     return(
         <div className="flex flex-col w-[490px] h-[520px] rounded-lg bg-white overflow-hidden">
             <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
-                Sharing
+                {t('sharing')}
             </div>
             <div className="flex flex-col items-center justify-center flex-1 gap-3">
                 <Image alt="" src={'/images/uploadPost.gif'} width={96} height={96}></Image>
@@ -837,11 +842,11 @@ export function PostUploadDone(){
     return(
         <div className="flex flex-col w-[490px] h-[520px] rounded-lg bg-white overflow-hidden">
             <div className="flex items-center justify-center w-full bg-white border-b-[1px] py-2 text-base font-semibold border-ss">
-                Post shared
+                {t('postshared')}
             </div>
             <div className="flex flex-col items-center justify-center flex-1 gap-3">
                 <Image alt="" src={'/images/uploadPostComplete.gif'} width={96} height={96}></Image>
-                <div className="text-xl">Your post has been shared.</div>
+                <div className="text-xl">{t('postsharedtext')}</div>
             </div>
         </div>
     )

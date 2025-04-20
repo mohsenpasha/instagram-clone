@@ -6,6 +6,7 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { activateStoriesHolder, changeIsStoryMuted, changeStoryToggle, resetStoriesHolder, resetUserStories, seenStoriesHolderStory, seenUserStories } from "@/store/slices/storySlice";
+import { useTranslation } from "react-i18next";
 
 export function StoryList() {
     const storySlider = useRef(null);
@@ -72,7 +73,7 @@ export function StoryList() {
         return () => window.removeEventListener('resize', fixHolderPosition);
     }, []);
     return (
-        <div className="fixed top-0 left-0 w-full h-full bg-st z-50 flex items-center">
+        <div dir="ltr" className="fixed top-0 left-0 w-full h-full bg-st z-50 flex items-center">
             <span onClick={()=>setCloseToggle(true)} className="absolute top-4 right-4 cursor-pointer">
                 <IconClose className="text-white" />
             </span>
@@ -108,6 +109,8 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     const storyListRef = useRef(storyList)
     const videoRef = useRef(null)
     const dispatch = useDispatch()
+    const { t } = useTranslation();
+    
     function closeHandler(){
         clearInterval(timerRef.current!)
         dispatch(resetStoriesHolder())
@@ -126,7 +129,6 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
         if(videoRef.current){
             videoRef.current.pause()
         }
-        console.log(currentIndexRef.current,storyListRef.current.length - 1)
         if(currentIndexRef.current == storyListRef.current.length - 1){
             if(storyListType == 'highlighs' || storyListType == 'homeStories'){
                 changeHandler(listIndex + 1)
@@ -142,7 +144,6 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
         }
     }
     function prevStory(){
-        console.log(videoRef.current)
         if(videoRef.current){
             videoRef.current.pause()
         }
@@ -223,8 +224,6 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     }, [status]);
     useEffect(()=>{
         if(storyList.length == 0) return
-        console.log('setting current story')
-        console.log(storyList)
         setCurrentindex(storyList.findIndex(item => item.activeStatus === false))
     },[storyList])
     useEffect(()=>{
@@ -302,7 +301,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                                     </div>
                                 </div>
                                 <div className="text-sm flex gap-2 text-white opacity-60">
-                                    <div><span>{storyList[currentIndex].created_at.t_ago}</span>{storyList[currentIndex].created_at.t}</div>
+                                    <div><span>{storyList[currentIndex].created_at.t_ago}</span>{t(storyList[currentIndex].created_at.t)}</div>
                                 </div>
                             </div>
                         </div>

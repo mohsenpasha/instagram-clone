@@ -220,3 +220,9 @@ export function IconArrowBack({className}:IconType){
     )
 }
 
+export function IconTick({className}:IconType){
+    return(
+        <svg className={className} fill="currentColor" height="24" role="img" viewBox="0 0 24 24" width="24"><polyline fill="none" points="21.648 5.352 9.002 17.998 2.358 11.358" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></polyline></svg>
+    )
+}
+

@@ -144,7 +144,7 @@ export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:
                             </div>
                         </div>
                     </div>
-                    <div className="relative w-full h-full aspect-[4/5] overflow-hidden">
+                    <div dir="ltr" className="relative w-full h-full aspect-[4/5] overflow-hidden">
                         <div className="flex h-full transition-transform group cursor-pointer" style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }}>
                             {postDetail.media.map((item,index)=>{
                                 return(
@@ -232,9 +232,6 @@ export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:
                                 {t('view-all')} <span>{postDetail.comment_count}</span> {t('cs')}
                             </div>
                         }
-                        <div className="text-xs cursor-pointer text-gray">
-                            {postDetail.updated_at.t_ago}{postDetail.updated_at.t}
-                        </div>
                         {/* <CommentInput textareaRef={textareaRef} className="hidden md:flex" /> */}
                     </div>
                 </div>

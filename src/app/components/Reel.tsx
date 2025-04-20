@@ -14,6 +14,7 @@ import { CommentBox, CommentInput, UserList } from "./SinglePost"
 import { useClickOutside } from "@/hooks/useClickOutside"
 import { changeCurrentVisitingUser } from "@/store/slices/userSlice"
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi"
+import { useTranslation } from "react-i18next"
 
 export function ReelScroll(){
     const postList = useSelector((state: RootState) => state.popupPost.postList);
@@ -293,13 +294,14 @@ export function ReelCaption({caption,isCaptionOpen,setIsCaptionOpen}:{caption:st
     function toggleFullCaption(){
         setIsCaptionOpen(!isCaptionOpen)
     }
+    const { t } = useTranslation();
         return(
             <div onClick={toggleFullCaption} className={`${isCaptionOpen ? 'max-h-44 overflow-y-auto' : 'max-h-[18px] overflow-hidden'} px-4 text-sm flex gap-1 transition-all cursor-pointer`}>
                 <div className={`${isCaptionOpen ? 'w-full' : 'w-11/12 overflow-hidden'}`}>
                     <span className={!isCaptionOpen ? 'w-80 inline-block' : undefined}>{caption}</span>
                 </div>
                 {!isCaptionOpen && 
-                    <span className="flex-shrink-0 opacity-70 cursor-pointer">… more</span>
+                    <span className="flex-shrink-0 opacity-70 cursor-pointer">{t('more')}</span>
                 }
             </div>
         )
@@ -317,12 +319,13 @@ export function CommentPopup({ref,closePopup,position}:{ref:Ref<HTMLDivElement> 
             setIsRightSide(true)
         }
     },[position])
+    const { t } = useTranslation();
     if(!postDetail) return
     return(
         <div ref={ref} style={{left:isRightSide ? position.left + 36 : position.left - 320, bottom:position.bottom}} className="fixed z-40 flex flex-col rounded-md w-80 h-96 bg-white comment-box shadow-[0_4px_12px_rgba(0,0,0,.15)]">
             <div className="flex p-6 items-center rtl:justify-end relative">
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-bold">
-                    Comments
+                    {t('comments')}
                 </span>
                 <span onClick={closePopup} className="">
                     <IconClose className="size-4"/>

@@ -106,7 +106,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                     <TaggedPopup sliderCurrentIndex={sliderCurrentIndex} ref={TaggedRef} closePopup={()=>setIsTaggedVisible(false)}/>
                 }
                 <div className="relative mt-[70px] md:mt-0 w-full md:w-fit">
-                    <div className="relative w-full h-full aspect-[4/5] overflow-hidden">
+                    <div dir="ltr" className="relative w-full h-full aspect-[4/5] overflow-hidden">
                         <div className="flex h-full transition-transform group cursor-pointer" style={{ transform: `translateX(-${sliderCurrentIndex * 100}%)` }}>
                             {postDetail.media.map((item,index)=>{
                                 return(
@@ -227,7 +227,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
                             </div>
                         }
                         <div className="mx-2 text-xs cursor-pointer text-gray m-2">
-                            {postDetail.updated_at.t_ago}{postDetail.updated_at.t}
+                            {postDetail.updated_at.t_ago}{t(postDetail.updated_at.t)}
                         </div>
                         <CommentInput textareaRef={textareaRef} className="hidden md:flex" />
                     </div>
@@ -296,6 +296,7 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
     )
 }
 export function PostCaption({caption,user,updated_at,isHomePost=false}:{isHomePost?:boolean}){
+    const { t } = useTranslation();
     return(
         <div className={`flex justify-between ${isHomePost ? 'py-1' :'px-2 py-3 ltr:md:pl-6 rtl:md:pr-6'} md:px-0`}>
         <div className="flex gap-2">
@@ -318,7 +319,7 @@ export function PostCaption({caption,user,updated_at,isHomePost=false}:{isHomePo
                 {!isHomePost &&
                     <div className="text-xs text-gray flex gap-2 font-medium mt-2">
                         {updated_at.t_ago &&
-                            <div className="font-normal"><span>{updated_at.t_ago}</span>{updated_at.t}</div>
+                            <div className="font-normal"><span>{updated_at.t_ago}</span>{t(updated_at.t)}</div>
                         }
                     </div>
                 }
@@ -429,7 +430,7 @@ export function CommentInput({className,textareaRef,inReel=false} : {className?:
                 <Image className="rounded-full" src='/images/profile-img.jpeg' width={32} height={32} alt=""></Image>
             </div>
             <textarea ref={textareaRef} className={`resize-none outline-none max-h-20 flex-1 text-sm items-center flex pr-1`} rows={1} onInput={handleInput} placeholder={t('add-comment')} value={value} name="" id=""></textarea>
-            <button onClick={handleSendComment} disabled={!value} className="text-bl disabled:opacity-30 disabled:hover:text-bl hover:text-bll">Post</button>
+            <button onClick={handleSendComment} disabled={!value} className="text-bl disabled:opacity-30 disabled:hover:text-bl hover:text-bll">{t('posting')}</button>
         </div>
     )
 }
@@ -492,10 +493,11 @@ export function EmojiBox({isBottom0,emojiBoxRef,insertEmoji} : {isBottom0? : boo
 }
 
 export function NoComment(){
+    const { t } = useTranslation();
     return(
         <div className="flex-1 flex flex-col justify-center items-center gap-1">
-            <div className="text-2xl font-bold">No comments yet.</div>
-            <span className="text-sm">Start the conversation.</span>
+            <div className="text-2xl font-bold">{t('nocomment')}</div>
+            <span className="text-sm">{t('startconversation')}</span>
         </div>
     )
 }
@@ -663,7 +665,6 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
             dispatch(changeRepliedTo({id:commentDetail.id,username:commentDetail.user.username}))
         }
     }
-    const parsedContent = stringToLink(commentDetail.comment);
     return(
         <>
             <div className={`flex justify-between py-3 px-2 md:px-0 ${isReply && '!pl-8'}`}>
@@ -685,7 +686,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                         <div className="text-xs text-gray flex gap-2 font-medium mt-2">
                             <div className="font-normal">
                                 {commentDetail.updated_at.t_ago ? 
-                                <span>{commentDetail.updated_at.t_ago}{commentDetail.updated_at.t}</span>
+                                <span>{commentDetail.updated_at.t_ago}{t(commentDetail.updated_at.t)}</span>
                                 :
                                 <span>3</span>
                                 }
@@ -718,11 +719,11 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                     {commentUrl.current && commentDetail.reply_count - (commentDetail.replyList?.length || 0) > 0
                         ? 
                         <>
-                        <span>View replies ({commentDetail.reply_count - (commentDetail.replyList?.length || 0)})</span>
+                        <span>{t('viewreply')} ({commentDetail.reply_count - (commentDetail.replyList?.length || 0)})</span>
                         {replyLoading && <IconLoadingButton className="size-4"/>}
                         </>
                         :
-                        <span>Hide replies</span>
+                        <span>{t('hidereply')}</span>
                     }
                 </div>
             }
@@ -813,9 +814,9 @@ export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,tar
                     :
                     <>
                         {listType == 'followerList' ?
-                            <span>Followers</span>
+                            <span>{t('followers')}</span>
                             :
-                            <span>Following</span>
+                            <span>{t('following')}}</span>
                         }
                     </>
                     }
@@ -850,6 +851,7 @@ export function UnfollowPopup({ref,inList=true,isReel=false}:{ref:React.Ref<HTML
         }
         dispatch(changeUnfollow(null))
     }
+    const { t } = useTranslation();
     return(
         <div className="fixed z-50 top-0 right-0 w-[100vw] h-[100vh] bg-black bg-opacity-60 flex justify-center items-center">
             <div ref={ref} className="w-[400px] flex flex-col justify-center items-center bg-white rounded-lg">
@@ -858,15 +860,15 @@ export function UnfollowPopup({ref,inList=true,isReel=false}:{ref:React.Ref<HTML
                         <Image className="w-full h-full object-cover rounded-full" src={userDetail?.profile_pic || '/images/profile-img.jpeg'} alt="" width={90} height={90}></Image>
                     </div>
                     <span>
-                        Unfollow @{userDetail?.username}?
+                        {t('unfollow')} @{userDetail?.username}?
                     </span>
                 </div>
                 <div className="flex flex-col w-full">
                     <div onClick={unfollowHandler} className="border-t-[1px] font-semibold border-ss py-4 text-[#ED4956] cursor-pointer text-center">
-                        Unfollow
+                        {t('unfollow')}
                     </div>
                     <div onClick={()=>dispatch(changeUnfollow(null))} className="border-t-[1px] border-ss py-4 cursor-pointer text-center">
-                        Cancel
+                        {t('cancel')}
                     </div>
                 </div>
             </div>            
@@ -879,6 +881,7 @@ export function TaggedPopup({ref,closePopup,sliderCurrentIndex}){
     const postDetail = useSelector((state: RootState)=> state.popupPost.postDetail)
     console.log(sliderCurrentIndex)
     console.log(postDetail.media[sliderCurrentIndex])
+    const { t } = useTranslation();
     return(
         <div className="fixed w-screen h-screen top-0 left-0 z-50 bg-black bg-opacity-65">
             <div ref={ref} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] max-h-[400px] bg-white rounded-lg flex flex-col">
@@ -887,7 +890,7 @@ export function TaggedPopup({ref,closePopup,sliderCurrentIndex}){
                         <IconClose className="size-[18px]"/>
                     </span>
                     <span className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 font-semibold">
-                        Tagged
+                        {t('taggeds')}
                     </span>
                 </div>
                 <div className="overflow-y-auto flex-1">

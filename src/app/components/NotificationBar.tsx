@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { simplePost } from "@/api/simplePost"
 import { seenMessages } from "@/store/slices/notificationSlice"
+import { useTranslation } from "react-i18next"
 
 export default function NotificationBar({closeAnimationStat,ref}:{closeAnimationStat:boolean,ref?:RefObject<HTMLElement | null>}){
     const notificationInfo = useSelector((state: RootState) => state.notificationInfo.notificationList)
@@ -72,25 +73,28 @@ export default function NotificationBar({closeAnimationStat,ref}:{closeAnimation
       )
     }
   
+    const { t } = useTranslation();
     return (
       <div
         ref={ref}
-        className={`absolute flex flex-col h-[100vh] top-0 left-[74px] bg-white rounded-2xl rounded-l-none rounded-bl-none w-96 z-50 py-2 shadow-[4px_0px_8px_rgba(0,0,0,.1)] ${
+        className={`absolute flex flex-col h-[100vh] top-0  ltr:left-[74px] rtl:right-[74px] bg-white rounded-2xl rounded-l-none rounded-bl-none w-96 z-50 py-2 ltr:shadow-[4px_0px_8px_rgba(0,0,0,.1)] rtl:shadow-[-4px_0px_8px_rgba(0,0,0,.1)] ${
           closeAnimationStat ? "animate-maxWClose" : "animate-maxW"
         }`}
       >
-        <div className="p-6 pt-4 text-2xl font-bold">Notifications</div>
+        <div className="p-6 pt-4 text-2xl font-bold">{t('notification')}</div>
         <div className="flex flex-col flex-1 text-gray text-sm font-medium overflow-auto">
-          {renderSection("New", groupedNotifications.new)}
-          {renderSection("Today", groupedNotifications.today)}
-          {renderSection("Yesterday", groupedNotifications.yesterday)}
-          {renderSection("Previous", groupedNotifications.past)}
+          {renderSection(t("new"), groupedNotifications.new)}
+          {renderSection(t("today"), groupedNotifications.today)}
+          {renderSection(t("yesterday"), groupedNotifications.yesterday)}
+          {renderSection(t("previous"), groupedNotifications.past)}
         </div>
       </div>
     )
 }
 
 export function FollowNotification({user,message,time}:{user:{},message:string}){
+    const { t } = useTranslation();
+  
     return(
         <Link href={'/' + user.username} className={`flex w-full h-[60px] items-center px-6 py-2 justify-between hover:bg-[#F5F5F5]`}>
             <div className="flex w-full gap-2 items-center">
@@ -100,8 +104,8 @@ export function FollowNotification({user,message,time}:{user:{},message:string})
                 <div className={`flex flex-col text-sm leading-[18px] relative`}>
                     <div className="text-black truncate inline-block w-fit" href="#">
                         <span className="font-semibold">{user.username} </span>
-                        <span className="font-normal">started following you.</span>
-                        <span className="ml-1 text-gray">{time.t_ago + time.t}</span>
+                        <span className="font-normal">{t('startedfollowingyou')}</span>
+                        <span className="ml-1 text-gray">{time.t_ago + t(time.t)}</span>
                         </div>
                 </div>
             </div>
@@ -113,6 +117,7 @@ export function FollowNotification({user,message,time}:{user:{},message:string})
 }
 
 export function LikeNotification({user,message,post,time}:{user:{},message:string}){
+    const { t } = useTranslation();
     return(
         <Link href={'/p/' + post.id} className={`flex w-full h-[60px] items-center px-6 py-2 justify-between hover:bg-[#F5F5F5]`}>
             <div className="flex w-full gap-2 items-center">
@@ -122,8 +127,8 @@ export function LikeNotification({user,message,post,time}:{user:{},message:strin
                 <div className={`flex flex-col text-sm leading-[18px] relative`}>
                     <div className="text-black truncate inline-block w-fit" href="#">
                         <span className="font-semibold">{user.username} </span>
-                        <span className="font-normal">liked your post</span>
-                        <span className="ml-1 text-gray">{time.t_ago + time.t}</span>
+                        <span className="font-normal">{t('likedyourpost')}</span>
+                        <span className="ml-1 text-gray">{time.t_ago + t(time.t)}</span>
                     </div>
                 </div>
             </div>
@@ -135,6 +140,7 @@ export function LikeNotification({user,message,post,time}:{user:{},message:strin
 }
 
 export function CommentNotification({user,comment,post,time}:{user:{},message:string}){
+    const { t } = useTranslation();
     return(
         <Link href={'/p/' + post.id} className={`flex w-full h-[60px] items-center px-6 py-2 justify-between hover:bg-[#F5F5F5]`}>
             <div className="flex w-full gap-2 items-center">
@@ -146,9 +152,9 @@ export function CommentNotification({user,comment,post,time}:{user:{},message:st
                         <div className="font-normal inline-block">
                         <span className="font-semibold float-left mr-1">{user.username}</span>
                             <span>
-                                commented: {comment}
+                                {t('commented')} {comment}
                             </span>
-                            <span className="ml-1 text-gray" dir="ltr">{time.t_ago != 0 && (time.t_ago + time.t)}</span>
+                            <span className="ml-1 text-gray" dir="ltr">{time.t_ago != 0 && (time.t_ago + t(time.t))}</span>
                         </div>
                     </div>
                 </div>
