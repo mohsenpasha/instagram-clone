@@ -6,7 +6,7 @@ import ProfileHeader from "@/components/ProfileHeader";
 import Link from "next/link";
 import { useTranslation } from "next-i18next";
 import i18n  from '@/../../i18n'
-import { IconPosts, IconReels, IconTagged } from "@/components/Icons";
+import { IconPosts, IconReels, IconSave, IconTagged } from "@/components/Icons";
 import StoryHolder, { StoryList } from "@/components/Story";
 import { changeCurrentVisitingUser, changeUnfollow } from "@/store/slices/userSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,6 +38,7 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
     const [userListType,setUserListType] = useState<'likeList' | 'followerList' | 'followingList' | 'commentlikeList' | null>(null)
     const [userListTarget,setUserListTarget] = useState<string | null>(null)
     const [isUnfollowInList,setIsUnfollowInList] = useState(false)
+    const [isYourProfile,setIsYourProfile] = useState(false)
     useClickOutside([userListRef, userHoverPreviewRef], () => !unfollowDetail ? dispatch(changeListTitle(null)) : {});
     useClickOutside(unfollowPopupRef, () => dispatch(changeUnfollow(null)));
     function checkUserListTypeAndTarget(){
@@ -94,6 +95,12 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
         getUserData()
         getUserHighlight()
         getUserStories()
+        if(params.id == localStorage.getItem('currentUsername')){
+            setIsYourProfile(true)
+        }
+        else{
+            setIsYourProfile(false)
+        }
     },[])
     return(
             <div className={`flex justify-between`}>
@@ -113,6 +120,12 @@ export default function ProfileLayout({children} : {children : React.ReactNode})
                                             <IconReels className="size-[12px]" />
                                             REELS
                                         </Link>
+                                        {isYourProfile &&
+                                            <Link className={`py-4 border-black mt-[-1px] ${pathname.endsWith('saved') ? 'border-t-[1px] text-black' : 'text-gray'} w-4/12 md:w-fit flex justify-center gap-[6px] items-center`} href={`/${params.id}/saved`}>
+                                                <IconSave className="size-[12px]" />
+                                                {t('saved')}
+                                            </Link>
+                                        }
                                         <Link className={`py-4 border-black mt-[-1px] ${pathname.endsWith('tagged') ? 'border-t-[1px] text-black' : 'text-gray'} w-4/12 md:w-fit flex justify-center gap-[6px] items-center`} href={`/${params.id}/tagged`}>
                                             <IconTagged className="size-[12px]" />
                                             {t('tagged')}

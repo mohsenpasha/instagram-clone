@@ -26,8 +26,14 @@ const savedSlice = createSlice({
         state.folders = [action.payload,...state.folders]
       }
     },
+    clearSavedFolder: (state) =>{
+        state.folders = []
+    },
+    clearSavedPosts: (state) =>{
+      state.folders = []
+  },
   },
 });
 
-export const { addSavedPosts, addSavedFolder} = savedSlice.actions;
+export const { addSavedPosts, addSavedFolder, clearSavedFolder, clearSavedPosts} = savedSlice.actions;
 export default savedSlice.reducer;

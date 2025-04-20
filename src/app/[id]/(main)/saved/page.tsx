@@ -2,10 +2,11 @@
 import { fetchAddSavedFolder } from "@/api/addSavedFolder"
 import { fetchSimpleGet } from "@/api/simpleGet"
 import { IconArrow, IconPlus, IconTick } from "@/components/Icons"
-import { addSavedFolder, addSavedPosts } from "@/store/slices/savedSlice"
+import { addPostList, clearPostList } from "@/store/slices/postSlice"
+import { addSavedFolder, addSavedPosts, clearSavedFolder, clearSavedPosts } from "@/store/slices/savedSlice"
 import { RootState } from "@/store/store"
-import { t } from "i18next"
 import Image from "next/image"
+import Link from "next/link"
 import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useDispatch, useSelector } from "react-redux"
@@ -29,6 +30,9 @@ export default function SavedPaged(){
     },[isLoading])
     useEffect(()=>{
         setIsloading(true)
+        dispatch(clearPostList())
+        dispatch(clearSavedPosts())
+        dispatch(clearSavedFolder())
     },[])
     const { t } = useTranslation()
     function nextSection(){
@@ -41,7 +45,7 @@ export default function SavedPaged(){
                     <div className="text-gray text-sm">
                         {t('savedtext')}
                     </div>
-                    <div onClick={()=>setAddToggleFolder(true)} className="text-bl hover:text-bll flex font-medium items-center gap-1">
+                    <div onClick={()=>setAddToggleFolder(true)} className="text-bl hover:text-bll cursor-pointer flex font-medium items-center gap-1">
                         <IconPlus className="size-3"/>
                         <span className="text-sm">{t('newsavefolder')}</span>
                     </div>
@@ -68,9 +72,14 @@ export default function SavedPaged(){
 
 export function AllSavedPosts(){
     const allSavedPost = useSelector((state: RootState)=> state.saved.posts)
+    const dispatch = useDispatch()
     const { t } = useTranslation()
+    function changePostList(){
+        const filterdPosts = allSavedPost.map(item => item.post);
+        dispatch(addPostList(filterdPosts))
+    }
     return(
-        <div className="relative size-[300px] cursor-pointer flex justify-between flex-wrap aspect-square">
+        <Link href={'saved/all-posts'} onClick={changePostList} className="relative size-[300px] cursor-pointer flex justify-between flex-wrap aspect-square">
             <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_top,rgba(38,38,38,0.6),rgba(255,255,255,0))] hover:bg-[linear-gradient(to_top,rgba(38,38,38,.2),rgba(255,255,255,0))]">
                 <span className="text-white text-xl absolute bottom-2 right-3">{t('allposts')}</span>
             </div>
@@ -84,7 +93,7 @@ export function AllSavedPosts(){
                     </div>
                 )
             })}
-        </div>
+        </Link>
     )
 }
 
@@ -93,6 +102,7 @@ function SavedFolder({folderName}:{folderName:string}){
     const allFolders = useSelector((state: RootState)=> state.saved.folders)
     const [currentFolder,setCurrentFolder] = useState(null)
     const [folderThumnail,setFolderThumnail] = useState(null)
+    const dispatch = useDispatch()
     useEffect(()=>{
         if(allSavedPost.length == 0, allFolders.length == 0) return
         setCurrentFolder(allFolders[allFolders.findIndex((item)=>item.name == folderName)])
@@ -102,16 +112,20 @@ function SavedFolder({folderName}:{folderName:string}){
         const firstPostIndex = allSavedPost.findIndex((item)=> item.post.id == currentFolder.posts[0])
         setFolderThumnail(allSavedPost[firstPostIndex].post.media[0])
     },[currentFolder])
+    function changePostList(){
+        const filterdPosts = allSavedPost.filter((item)=> currentFolder.posts.includes(item.post.id)? true : false).map(item => item.post);
+        dispatch(addPostList(filterdPosts))
+    }
     if(!currentFolder) return
     return(
-        <div className="relative size-[300px] overflow-hidden cursor-pointer flex justify-between flex-wrap aspect-square">
-            <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_top,rgba(38,38,38,0.6),rgba(255,255,255,0))] hover:bg-[linear-gradient(to_top,rgba(38,38,38,.2),rgba(255,255,255,0))]">{currentFolder.name}
-                <span className="text-white text-xl absolute bottom-2 right-3">{currentFolder.name}</span>                
+        <Link href={'saved/'+currentFolder.name} onClick={changePostList} className="relative size-[300px] overflow-hidden cursor-pointer flex justify-between flex-wrap aspect-square">
+            <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(to_top,rgba(38,38,38,0.6),rgba(255,255,255,0))] hover:bg-[linear-gradient(to_top,rgba(38,38,38,.2),rgba(255,255,255,0))]">
+                <span className="text-white text-xl absolute bottom-2 right-3">{currentFolder.name}</span>
             </div>
             {folderThumnail &&
                 <Image src={folderThumnail.file} width={300} height={300} alt=""></Image>
             }
-        </div>
+        </Link>
     )
 }
 
@@ -123,13 +137,13 @@ export function NewFolderPopup({newFolderName,setNewFolderName,closePopup,nextSe
             </div>
                 <div className="relative rounded-lg w-[400px] bg-white z-40">
                     <div className="relative justify-end p-2 flex border-b-[1px] border-ss">
-                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-medium">مجموعه جدید</span>
+                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-medium">{t('newsavefolder')}</span>
                         <span className="cursor-pointer" onClick={closePopup}>
                             <IconPlus className="rotate-45 size-6"/>
                         </span>
                     </div>
                     <div className="w-10/12 border m-auto my-4 border-ss rounded-lg overflow-hidden">
-                        <input value={newFolderName} onChange={(event)=>setNewFolderName(event.target.value)} className="w-full outline-none p-2 text-sm bg-[#F5F5F5]" type="text" placeholder="نام مجموعه" />
+                        <input value={newFolderName} onChange={(event)=>setNewFolderName(event.target.value)} className="w-full outline-none p-2 text-sm bg-[#F5F5F5]" type="text" placeholder={t('collectionname')} />
                     </div>
                     <button onClick={nextSection} disabled={newFolderName.length == 0} className="w-full border-t-[1px] border-ss flex justify-center items-center py-4 disabled:text-gray text-bl text-sm font-medium">
                         {t('next')}
@@ -155,9 +169,6 @@ export function SelectPostPopup({closePopup,previousSection,folderName}:{closePo
         dispatch(addSavedFolder(jsonRes))
         closePopup()
     }
-    useEffect(()=>{
-        console.log(selectedPostIds)
-    },[selectedPostIds])
     const allSavedPost = useSelector((state: RootState)=> state.saved.posts)
     const { t } = useTranslation()
     return(
@@ -166,7 +177,7 @@ export function SelectPostPopup({closePopup,previousSection,folderName}:{closePo
             </div>
                 <div className="relative rounded-lg w-[400px] bg-white z-40">
                     <div className="relative justify-between p-2 flex border-b-[1px] items-center border-ss w-full">
-                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-medium">افزودن از موارد ذخیره‌شده</span>
+                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-medium">{t('addfromsaved')}</span>
                         <span onClick={previousSection} className="cursor-pointer">
                             <IconArrow className="rotate-90 size-5"/>
                         </span>
@@ -179,7 +190,7 @@ export function SelectPostPopup({closePopup,previousSection,folderName}:{closePo
                             {allSavedPost.map((item,index)=>{
                                 const media = item.post.media[0]
                                 return(
-                                    <label className="relative size-[133px] overflow-hidden cursor-pointer" key={index}>
+                                    <label className="relative size-[132px] overflow-hidden cursor-pointer" key={index}>
                                         <input onChange={(e) => handleCheckboxChange(item.post.id, e.target.checked)} className="peer hidden" type="checkbox" value={item.post.id} />
                                         <div className="hidden absolute z-50 w-full h-full items-center justify-center peer-checked:flex">
                                             <IconTick className="text-white"/>
@@ -192,7 +203,7 @@ export function SelectPostPopup({closePopup,previousSection,folderName}:{closePo
                         </div>
                    </div>
                    <div onClick={fetchNewFolder} className="w-full border-t-[1px] border-ss flex justify-center items-center py-4 text-bl text-sm font-medium cursor-pointer">
-                        تمام
+                        {t('done')}
                     </div>
                 </div>
         </div>

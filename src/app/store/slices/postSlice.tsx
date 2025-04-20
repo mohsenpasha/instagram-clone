@@ -58,10 +58,9 @@ const postSlice = createSlice({
       state.postListUrl = action.payload; 
     },
     addPostList: (state, action) => {
-      action.payload.map((item)=>{
-        item.activeStatus = false
-        state.postList = [...state.postList,item];
-      })
+      action.payload.forEach(item => {
+        state.postList.push({ ...item, activeStatus: false });
+      });
     },
     likeActivePostList: (state) => {
         state.postList = state.postList.map((item)=>{
