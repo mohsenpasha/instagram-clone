@@ -5,6 +5,7 @@ import searchReducer from "./slices/searchSlice";
 import notificationReducer from "./slices/notificationSlice";
 import createPostReducer from "./slices/postUploadSlice";
 import storyReducer from "./slices/storySlice";
+import savedReducer from "./slices/savedSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     notificationInfo:notificationReducer,
     createData:createPostReducer,
     story:storyReducer,
+    saved:savedReducer
   },
 });
 
