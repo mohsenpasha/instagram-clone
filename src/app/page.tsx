@@ -96,13 +96,13 @@ function Home() {
       <div className="flex justify-between">
         <SideBar/>
         <div className="flex justify-center gap-4 w-full md:w-[100vw-72px] xl:w-10/12">
-          <div className="w-full ml-6 md:px-4 xl:px-0 lg:w-[780px] flex flex-col justify-center items-center">
+          <div className="w-full md:ml-6 md:px-4 xl:px-0 lg:w-8/12 xl:w-[740px] flex flex-col justify-center items-center">
             <StorySlider/>
-            <div className="flex w-8/12">
+            <div className="flex w-full md:w-8/12">
               <HomePosts/>
             </div>
           </div>
-          <div className="mt-6 w-[260px]">
+          <div className="mt-6 hidden w-[260px] xl:block">
             <div className="text-gray text-sm font-medium my-4">{t('suggested')}</div>
             {suggestedUsers.map((item,index)=>{
              return(
