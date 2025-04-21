@@ -22,6 +22,8 @@ export default function CreatePostPopup({closeHandler}:{closeHandler:()=>void}){
     const dispatch = useDispatch()
     function closeEmptyCreatePost(){
         closeHandler()
+        dispatch(changeIsFinalPart(false))
+        dispatch(changeUploadingCompleted(false))
         setToggleCancel(false)
         dispatch(clearPostMedia())
     }
