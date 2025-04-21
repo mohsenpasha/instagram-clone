@@ -1,4 +1,4 @@
-export async function fetchSavePost(postId:string){
+export async function fetchSavePost(postId:number){
     const response = await fetch(`http://localhost:8000/save/${postId}/`, {
         method: "POST",
         credentials: "include",
@@ -9,7 +9,7 @@ export async function fetchSavePost(postId:string){
     return(response)
 }
 
-export async function fetchUnsavePost(postId:string){
+export async function fetchUnsavePost(postId:number){
     const response = await fetch(`http://localhost:8000/unsave/${postId}/`, {
         method: "POST",
         credentials: "include",

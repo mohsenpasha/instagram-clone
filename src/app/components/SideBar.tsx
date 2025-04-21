@@ -24,7 +24,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
     const [isMinimal,setIsMinimal] = useState(false)
     const [newNotificationCount,setNewNotificationCount] = useState(0)
     const [toggleCreatePost,setToggleCreatePost] = useState(false)
-  const socketRef = useRef(null);
+  const socketRef = useRef<WebSocket>(null);
 
   useEffect(() => {
     const socket = new WebSocket(`ws://localhost:8000/ws/notifications/`);

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { IconComment, IconHeart } from "./Icons";
 
 type postHover = {

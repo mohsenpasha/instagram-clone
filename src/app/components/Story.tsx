@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 
 export function StoryList() {
     const storySlider = useRef(null);
-    const activeStory = useRef(null);
+    const activeStory = useRef<HTMLElement>(null);
     const allStory = useRef(null);
     const [storyLeftPosition, setStoryLeftPosition] = useState(0);
     const storyListType = useSelector((state: RootState)=> state.story.storyListType)
@@ -91,40 +91,57 @@ export function StoryList() {
         </div>
     );
 }
-export default function StoryHolder({status,ref,changeHandler,listIndex,closeStatus}:{status:'active' | 'before' | 'after',ref:RefObject<null>,changeHandler:(id:number)=>void,listIndex:number,closeStatus:boolean}){
+
+type singleStoryyType = {
+        file:string,
+        media_type: 'image' | 'video',
+        activeStatus:boolean,
+        created_at:{
+        t_ago: string,
+            t: string
+        }
+  }
+
+export default function StoryHolder({status,ref,changeHandler,listIndex,closeStatus}:{status:'active' | 'before' | 'after',ref:RefObject<HTMLElement>,changeHandler:(id:number)=>void,listIndex:number,closeStatus:boolean}){
     const storyListType = useSelector((state: RootState)=> state.story.storyListType)
     const storiesHolder = useSelector((state: RootState)=> state.story.storiesHolder)
     const userStories = useSelector((state: RootState)=> state.story.userStories)
     const isStoryMuted = useSelector((state: RootState)=> state.story.isStoryMuted)
     const currentVisitingUser = useSelector((state: RootState)=> state.currentUser.currentVisitingUser)
     const totalTime = useRef(5000)
-    const timerRef = useRef<number | null>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
     const timeRemainingRef = useRef(totalTime.current)
     const [timerProgress,setTimerProgress] = useState(-100)
     const [isStoryPaused,setIsStoryPaused] = useState(false)
     const isUnderMd = useMediaQuery("(max-width: 768px)");
-    const [storyList,setStoryList] = useState([])
-    const [currentIndex,setCurrentindex] = useState(null)
+    const [storyList,setStoryList] = useState<singleStoryyType[] | []>([])
+    const [currentIndex,setCurrentindex] = useState<number | null>(null)
     const currentIndexRef = useRef(currentIndex)
     const storyListRef = useRef(storyList)
-    const videoRef = useRef(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
+    const [isLastStory,setIsLastStory] = useState(false)
     const dispatch = useDispatch()
     const { t } = useTranslation();
     
     function closeHandler(){
+        console.log('close handler')
         clearInterval(timerRef.current!)
         dispatch(resetStoriesHolder())
         dispatch(resetUserStories())
         dispatch(changeStoryToggle(false))
     }
     function nextStory(){
+        console.log('next story')
         if(storyListType == 'userStory' && currentIndexRef.current == storyListRef.current.length - 1){
             closeHandler()
             return
         }
-        if((storyListType == 'highlighs' || storyListType == 'homeStories') && currentIndexRef.current == storyListRef.current.length - 1 && listIndex == storiesHolder?.length - 1){
-            closeHandler()
-            return
+        if((storyListType == 'highlighs' || storyListType == 'homeStories') && currentIndexRef.current == storyListRef.current.length - 1){
+            if(!storiesHolder) return
+            if(listIndex == storiesHolder?.length - 1){
+                closeHandler()
+                return
+            }
         }
         if(videoRef.current){
             videoRef.current.pause()
@@ -144,22 +161,23 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
         }
     }
     function prevStory(){
+        setIsStoryPaused(false)
         if(videoRef.current){
             videoRef.current.pause()
         }
-        if(currentIndex == 0){
+        if(currentIndexRef.current == null) return
+        if(currentIndexRef.current == 0){
             changeHandler(listIndex - 1)
         }
         else{
             if(storyListType == 'highlighs' || storyListType == 'homeStories'){
-                dispatch(seenStoriesHolderStory([listIndex,currentIndex - 2]))
+                dispatch(seenStoriesHolderStory([listIndex,currentIndexRef.current - 2]))
             }
             else{
-                dispatch(seenUserStories(currentIndex - 2))
+                dispatch(seenUserStories(currentIndexRef.current - 2))
             }
-            resetTimer()
-            startTimer()
-            setIsStoryPaused(false)
+            // resetTimer()
+            // startTimer()
         }
     }
     function resetTimer(){
@@ -181,6 +199,17 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     },[closeStatus])
     useEffect(() => {
         currentIndexRef.current = currentIndex
+        if(storyListType == 'userStory' && currentIndex == storyListRef.current.length - 1){
+            setIsLastStory(true)
+        }
+        else if((storyListType == 'highlighs' || storyListType == 'homeStories') && currentIndexRef.current == storyList.length - 1){
+            if(!storiesHolder) return
+            if(listIndex == storiesHolder?.length - 1)
+            setIsLastStory(true)
+        }
+        else{
+            setIsLastStory(false)
+        }
     }, [currentIndex])
     
     useEffect(() => {
@@ -189,7 +218,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
     useEffect(()=>{
         if(!storiesHolder) return
         if(storyListType == 'userStory') return
-        setStoryList(storiesHolder[listIndex].stories)
+        setStoryList(storiesHolder[listIndex].stories as singleStoryyType[])
             resetTimer()
             startTimer()
             setIsStoryPaused(false)
@@ -203,9 +232,8 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
             setIsStoryPaused(false)
     },[userStories])
     useEffect(() => {
-        const video = videoRef.current;
-        
-        if (!video) return;
+        if(!videoRef.current) return
+        const video : HTMLVideoElement = videoRef.current;
         
         if (status === 'active') {
             video.currentTime = 0;
@@ -247,8 +275,6 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                 timeRemainingRef.current -= 100;
                     setTimerProgress(-1 * (timeRemainingRef.current * 100) / totalTime.current);
                     if (timeRemainingRef.current <= 0) {
-                        // clearInterval(timerRef.current!);
-                        // changeStory()
                         clearInterval(timerRef.current!);
                         nextStory()
                     }
@@ -283,9 +309,9 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                             <div className={`rounded-full flex-shrink-0 cursor-pointer ${status == 'active' ? 'size-8' : 'size-16'} items-center`}>
                                 <Image className="rounded-full w-full h-full object-cover" src={
                                     storyListType == 'highlighs' || storyListType == 'homeStories'  ? 
-                                    storiesHolder[listIndex].thumbnail
+                                    storiesHolder && storiesHolder[listIndex].thumbnail
                                     :
-                                    currentVisitingUser.profile_pic || '/images/profile-img.jpeg'
+                                    currentVisitingUser && currentVisitingUser.profile_pic || '/images/profile-img.jpeg'
                                 }
                                  width={status == 'active' ? 32 : 64} height={status == 'active' ? 32 : 64} alt=""></Image>
                             </div>
@@ -294,9 +320,9 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                                     <div className="text-sm bg-wh pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
                                         {storyListType == 'highlighs' || storyListType == 'homeStories'
                                         ? 
-                                            <span>{storiesHolder[listIndex].name}</span>
+                                            <span>{storiesHolder && storiesHolder[listIndex].name}</span>
                                         :
-                                            <span>{currentVisitingUser.username}</span>
+                                            <span>{currentVisitingUser && currentVisitingUser.username}</span>
                                         }
                                     </div>
                                 </div>
@@ -368,8 +394,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                             </span>
                         }
                         {
-                            (storyListType == 'userStory' && currentIndexRef.current != storyListRef.current.length - 1) ||
-                            !((storyListType == 'highlighs' || storyListType == 'homeStories') && currentIndexRef.current == storyListRef.current.length - 1 && listIndex == storiesHolder?.length - 1) &&
+                            !isLastStory && 
                             <span onClick={()=>nextStory()} className="rotate-90 rounded-full bg-white size-6 flex items-center justify-center cursor-pointer">
                                 <IconArrow className="size-4"/>
                             </span>

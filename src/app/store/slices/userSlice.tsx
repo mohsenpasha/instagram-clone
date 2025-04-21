@@ -1,10 +1,22 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-type UserDetail = null | {
-
+type UserTypes = {
+  myUsername:null | string,
+  unfollowDetail:null | {username:string,profile_pic:string},
+  currentVisitingUser:null | {
+    name:string,
+    username:string,
+    isLoading:boolean,
+    is_following:boolean,
+    profile_pic:string,
+    is_private:boolean,
+    follower_count:number,
+    following_count:number,
+    post_count:number
+  }
 }
 
-const initialState : {myUsername:null | string,unfollowDetail:null | {username:string,profile_pic:string},currentVisitingUser:null | {}} = {
+const initialState : UserTypes = {
   myUsername: null,
   unfollowDetail:null,
   currentVisitingUser:null
@@ -27,9 +39,11 @@ const userSlice = createSlice({
       state.currentVisitingUser = action.payload
     },
     toggleIsLoading: (state, action) => {
+      if(!state.currentVisitingUser) return
       state.currentVisitingUser.isLoading = action.payload
     },
     toggleIsFollowing: (state, action) => {
+      if(!state.currentVisitingUser) return
       state.currentVisitingUser.is_following = action.payload
     },
   },

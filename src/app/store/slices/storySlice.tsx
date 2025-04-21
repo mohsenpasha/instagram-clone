@@ -13,8 +13,10 @@ type storyType = {
   userStories: null | []
   storiesHolder: null | [
     {
+      thumbnail:string,
+      name:string,
       activeStatus:boolean,
-      stories:[singleStoryType]
+      stories:singleStoryType[]
     }
   ],
   storyListType: null | 'userStory' | 'highlighs' | 'homeStories',

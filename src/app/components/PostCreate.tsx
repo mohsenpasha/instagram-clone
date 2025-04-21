@@ -659,7 +659,7 @@ export function FinalPart(){
         }
         dispatch(changeAddingTaggedUser(false))
     }
-    function handleAltChange(event,index){
+    function handleAltChange(event:React.ChangeEvent<HTMLInputElement>,index:number){
         dispatch(changeMediaAlt({index:index, alt:event.target.value}))
     }
     const imgContainerRef = useRef(null)
@@ -672,6 +672,7 @@ export function FinalPart(){
         dispatch(changeUploadingCompleted(true))
     }
     function sharePostHandler(){
+        if(!mediaFiles) return
         const keysToRemove = ["previewUrl", "transform",'name','size','type','order'];
         const hashtags = extractTags(caption)
         const cleanedPostMedia = mediaFiles.map(item => {

@@ -1,10 +1,13 @@
 export function getSearchHistory(){
-    const t = JSON.parse(localStorage.getItem('searchHistory'))
+    if(localStorage.getItem('searchHistory') == null){
+        return []
+    }
+    const t = JSON.parse(localStorage.getItem('searchHistory')) 
     return t
 }
 export function addSingleSearch(type:'tag' | 'user',id : string,subtitle:string,profile_pic?:string):void {
-    const t = getSearchHistory() || []
-    const current : searchType = {type:type,id:id,subtitle:subtitle,profile_pic:profile_pic}
+    const t = getSearchHistory()
+    const current = {type:type,id:id,subtitle:subtitle,profile_pic:profile_pic}
     const isInIt = t.filter((item)=>{
         return item.type == 'user' && item.id == id
     })

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "next-i18next";
 import PostList from "./PostList";
 import { FollowBtn } from "./FollowBtn";
-import { MessageBtn } from "./MessageBtn";
 import { fetchGetUserHoverInfo } from "@/api/userHoverProfile";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -17,11 +16,25 @@ type hoverType = {
     },
     isHover:boolean,
     username:string,
-    inComment?:boolean
+    inComment?:boolean,
+    ref:React.Ref<HTMLDivElement>
+}
+
+type userType = {
+    username:string,
+    profile_pic:string,
+    name:string,
+    is_following:boolean,
+    is_private:boolean,
+    post_count:number
+    follower_count:number,
+    following_count:number
+    recent_posts:[]
+
 }
 
 export default function UserHoverPreview({position,isHover,username,ref,inComment=false}:hoverType){
-    const [userHoverInfo,setUserHoverInfo] = useState<null | {}>(null)
+    const [userHoverInfo,setUserHoverInfo] = useState<null | userType>(null)
     const userList = useSelector((state: RootState) => state.popupPost.userList);
     const [isRightSide,setIsRightSide] = useState(true)
     const userDatailHover = userList?.filter((item)=>{
@@ -35,9 +48,6 @@ export default function UserHoverPreview({position,isHover,username,ref,inCommen
     useEffect(()=>{
         if(isHover){
             doFetch()
-        }
-        else{
-            // setUserHoverInfo(null)
         }
         },[isHover])
     const [underMd,setUnderMd] = useState<boolean>(false)

@@ -55,7 +55,8 @@ export function PostPopupSlider(){
         }
     }
     useEffect(()=>{
-        currentPostIndex.current = postList.findIndex((item)=> item.id == postUrl.replace('/p/',''))
+        if(!postUrl) return
+        currentPostIndex.current = postList.findIndex((item)=> String(item.id) == postUrl.replace('/p/',''))
         checkFirstLastIndex()
     },[])
     async function fetchPost(){
@@ -76,6 +77,7 @@ export function PostPopupSlider(){
         fetchPost()
     },[postUrl])
     function changeArrow(event,dir:'next' | 'prev'){
+        if(!postList) return
         event.preventDefault()
         if(currentPostIndex.current == null) return
         let nextPostId;

@@ -8,19 +8,19 @@ import { changeUnfollow, toggleIsFollowing } from "@/store/slices/userSlice";
 import { RootState } from "@/store/store";
 
 type FollowBtnType = {
-    className:string,
+    className?:string,
     haveIcon?:boolean,
     isReel?:boolean,
     userData:{
         username:string,
-        is_following:boolean,
-        isLoading:boolean,
+        is_following?:boolean,
+        isLoading?:boolean,
         profile_pic:string,
-        fullSize:boolean
     },
     directUnfollow?:boolean,
-    inList:boolean,
-    inComment:boolean
+    inList?:boolean,
+    inComment?:boolean,
+    fullSize?:boolean
 }
 
 export function FollowBtn({className, haveIcon,isReel=false,fullSize=false,userData,directUnfollow=false,inList=true,inComment=false}:FollowBtnType){
@@ -36,6 +36,7 @@ export function FollowBtn({className, haveIcon,isReel=false,fullSize=false,userD
         const response = await fetchFollowUser(userData.username,dispatch,inList,inComment)
         if(inComment) return
         if(isReel){
+            if(!currentVisitingUser) return
             dispatch(followPostListUser({username:currentVisitingUser.username,action:'follow'}))
         }
         else if(inList){
@@ -49,6 +50,7 @@ export function FollowBtn({className, haveIcon,isReel=false,fullSize=false,userD
         const response = await fetchUnfollowUser(userData.username,dispatch,inList,inComment)
         if(inComment) return
         if(isReel){
+            if(!currentVisitingUser) return
             dispatch(followPostListUser({username:currentVisitingUser.username,action:'unfollow'}))
         }
         else if(inList){

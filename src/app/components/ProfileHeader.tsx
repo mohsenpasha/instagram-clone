@@ -21,10 +21,12 @@ export default function ProfileHeader(){
     const params = useParams()
     const dispatch = useDispatch()
     function toggleFollowerList(){
+        if(!userInfo) return
         if((userInfo.is_private && !userInfo.is_following) || userInfo.follower_count == 0) return
         dispatch((changeListTitle('Followers')))
     }
     function toggleFollowingList(){
+        if(!userInfo) return
         if((userInfo.is_private && !userInfo.is_following) || userInfo.following_count == 0) return
         dispatch((changeListTitle('Following')))
     }

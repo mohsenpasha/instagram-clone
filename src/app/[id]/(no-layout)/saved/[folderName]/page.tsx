@@ -22,7 +22,7 @@ export default function SavedFolderPage(){
     return(
         <>
             <Link className="text-gray flex items-center mt-6 gap-1" href={'../saved'}>
-                <IconArrow className="size-6 text-gray rotate-90"/>
+                <IconArrow className="size-6 text-gray rtl:rotate-90 ltr:-rotate-90"/>
                 <span>{t('saved')}</span>
             </Link>
             <div className="text-xl pt-2 pb-3 font-semibold">{folderName == 'all-posts' ? t('allposts') : folderName}</div>

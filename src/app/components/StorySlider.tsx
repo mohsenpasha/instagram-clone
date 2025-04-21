@@ -64,15 +64,12 @@ export default function StorySlider() {
                 ))}
             </div>
 
-            {/* دکمه راست */}
             {translateX > maxTranslateX && (
                 <span
                     onClick={slideRight}
                     className="absolute top-1/2 right-2 -translate-y-1/2 bg-[position:-162px_-98px] bg-[url(/images/icons.png)] w-[30px] h-[30px] cursor-pointer z-10"
                 ></span>
             )}
-
-            {/* دکمه چپ */}
             {translateX < 0 && (
                 <span
                     onClick={slideLeft}

@@ -1,4 +1,4 @@
-export async function fetchSearchUserAndTag(searchType:string,searchValue){
+export async function fetchSearchUserAndTag(searchType:string,searchValue:string){
     const response = await fetch(`http://localhost:8000/search/${searchType}/`, {
         method: "POST",
         credentials: "include",

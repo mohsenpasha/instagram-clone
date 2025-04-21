@@ -50,13 +50,13 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         textareaRef.current?.focus()
     }
     function toggleVideoPause(index?:number,action?:'play' | 'pause') {
-        const currentVideo = videoRefs.current[index];
-        videoRefs.current.forEach((video) => {
+        videoRefs.current.forEach((video:HTMLVideoElement) => {
             if (!video.paused && video != currentVideo) {
-              video.pause();
+                video.pause();
             }
-          });
-          if(!index) return
+        });
+        if(!index) return
+        const currentVideo : HTMLVideoElement = videoRefs.current[index];
         if (currentVideo) {
             if (action == 'play') {
                 setTimeout(()=>{
@@ -79,6 +79,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
         }
     }
     function handleSliderChange(dir:'next' | 'prev'){
+        if(!postDetail) return
         setIsTaggedVisible(false)
         if(dir == 'next'){
             if(sliderCurrentIndex + 1 < postDetail.media.length){
@@ -99,6 +100,7 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
             toggleVideoPause()
         }
     },[sliderCurrentIndex])
+    if(!postDetail) return
     return(
         <>
             <div className={`bg-white flex border-[1px] border-ss relative pb-12 md:pb-0 md:h-[85vh] ${isPopup && 'md:max-w-max'} flex-wrap md:flex-nowrap`}>
@@ -243,6 +245,7 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
     const postDetail = useSelector((state: RootState) => state.popupPost.postDetail);
     const { t } = useTranslation();
     async function likePostHandler(fetchLess=false){
+        if(!postDetail) return
         dispatch(likePost())
         if(!fetchLess){
             const respose = await fetchLikePost(postDetail.id)
@@ -253,19 +256,23 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
         }
     }
     function unlikePostHandler(fetchLess=false){
+        if(!postDetail) return
         if(!fetchLess){
             fetchUnlikePost(postDetail.id)
         }
         dispatch(unlikePost())
     }
     async function savePostHandler(){
+        if(!postDetail) return
         dispatch(savePost())
         const response = await fetchSavePost(postDetail.id)
     }
     async function unsavePostHandler(){
+        if(!postDetail) return
         dispatch(unsavePost())
         const response = await fetchUnsavePost(postDetail.id)
     }
+    if(!postDetail) return
     return(
         <div className="py-2 pt-[6px] flex justify-between w-full items-center">
             <div className="flex items-center">
@@ -295,7 +302,7 @@ export function PostAction({handleCommentToggle}:{handleCommentToggle:()=>void})
         </div>
     )
 }
-export function PostCaption({caption,user,updated_at,isHomePost=false}:{isHomePost?:boolean}){
+export function PostCaption({caption,user,updated_at,isHomePost=false}:{isHomePost?:boolean,caption:string,user:{username:string,profile_pic:string}}){
     const { t } = useTranslation();
     return(
         <div className={`flex justify-between ${isHomePost ? 'py-1' :'px-2 py-3 ltr:md:pl-6 rtl:md:pr-6'} md:px-0`}>
@@ -386,6 +393,7 @@ export function CommentInput({className,textareaRef,inReel=false} : {className?:
         }
       };
     async function fetchSend(){
+        if(!postDetail) return
         let requestData;
         if(repliedTo){
             requestData = {comment:value,postId:String(postDetail.id),replied_to:repliedTo.id}
@@ -394,7 +402,7 @@ export function CommentInput({className,textareaRef,inReel=false} : {className?:
             requestData = {comment:value,postId:String(postDetail.id)}
         }
         const response = await fetchAddComment(requestData)
-        if(response.status == 200){
+        if(response && response.status == 200){
             const jsonRes = await response.json()
             console.log(inReel)
             if(inReel){
@@ -409,7 +417,6 @@ export function CommentInput({className,textareaRef,inReel=false} : {className?:
                 dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
             }
             else{
-                // if(postDetail.comment_count == 0) return
                 dispatch(addCommentList([jsonRes]))
             }
         }
@@ -566,19 +573,35 @@ export function CommentBox({closeCommentBox,textareaRef}:{closeCommentBox?:()=>v
         </>
     )
 }
-function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
+
+type SingleCommentType = {
+    commentDetail:{
+        id:number,
+        parentCommentId:number,
+        reply_count:number,
+        like_count:number,
+        comment:string,
+        is_liked:boolean,
+        updated_at:{t_ago:number,t:string},
+        replyList:[]
+        user:{
+            username:string,
+            profile_pic:string
+        }
+    },
+    isReply?:boolean
+}
+function Comment({commentDetail,isReply}:SingleCommentType){
     const dispatch = useDispatch()
     if(!commentDetail) return
     const repliedTo = useRef(commentDetail.user.username)
     const commentUrl = useRef(`http://localhost:8000/comment/replies/${commentDetail.id}`)
     const [isHover,setIsHover] = useState<boolean>(false)
-    const [hoveringUsername,setHoveringUsername] = useState<null | string>(null)
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<{left:number,top:number,bottom:number,height:number}>({left:0,top:0,bottom:0,height:0})
     const [replyLoading,setReplyLoading] = useState(false)
     const underMd = useMediaQuery("(max-width: 768px)");
-    function mouseEnter(event : React.MouseEvent<Element, MouseEvent>,username:string){
+    function mouseEnter(event : React.MouseEvent<Element, MouseEvent>):void{
         if(underMd) return
-        setHoveringUsername(username)
         setIsHover(true)
         const number = getPosition(event.target as HTMLElement)
         setUserPreviewHoverPosition(number)
@@ -644,18 +667,36 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
         dispatch(clearReplyList(commentDetail.id))
 
     }
-    function fixReplies(repliedCommentDetail){
-        repliedCommentDetail.map((item)=>{
+    type CommentType = {
+        id: number;
+        user: {
+            username: string;
+        };
+        replies?: CommentType[];
+        reply_count: number;
+    };
+    function fixReplies(repliedCommentDetail: CommentType[]) {
+        repliedCommentDetail.map((item) => {
             let { replies, reply_count, ...newCommentDetail } = item;
-            newCommentDetail = {...newCommentDetail,replied_to:repliedTo.current}
-            newCommentDetail = {...newCommentDetail,parentCommentId:commentDetail.id}
-            dispatch(addReplyList({id:commentDetail.id,newReply:newCommentDetail}))
-            if(item.replies){
-                repliedTo.current = item.user.username
-                fixReplies(item.replies)
+    
+            newCommentDetail = {
+                ...newCommentDetail,
+                replied_to: repliedTo.current,
+                parentCommentId: commentDetail.id,
+            };
+    
+            dispatch(addReplyList({
+                id: commentDetail.id,
+                newReply: newCommentDetail
+            }));
+    
+            if (item.replies) {
+                repliedTo.current = item.user.username;
+                fixReplies(item.replies);
             }
-            repliedTo.current = commentDetail.user.username
-        })
+    
+            repliedTo.current = commentDetail.user.username;
+        });
     }
     function handleReply(){
         if(commentDetail.parentCommentId){
@@ -676,7 +717,7 @@ function Comment({commentDetail,isReply}:{commentDetail:{},isReply?:boolean}){
                         <div className="block">
                             <Link href={'/' + commentDetail?.user.username} onMouseEnter={mouseEnter} onMouseOut={mouseOut} className="text-sm pr-1 rtl:pr-0 rtl:pl-1 inline mr-1 md:mr-0 font-medium float-left rtl:float-right">
                                 {commentDetail.user.username}
-                            </Link>
+                            </Link> 
                             <div className="text-sm whitespace-break-spaces">
                                 <span className="leading-3">
                                     {stringToLink(commentDetail.comment)}
@@ -747,7 +788,7 @@ function getPosition(element : HTMLElement){
 type userListType = {
     closePopup:()=>void,
     ref:React.Ref<HTMLDivElement> | undefined,
-    hoverPreviewRef:React.Ref<HTMLElement> | undefined,
+    hoverPreviewRef:React.Ref<HTMLDivElement> | undefined,
     targetId:string,
     listType:'likeList' | 'followerList' | 'followingList' | 'commentlikeList'
 }
@@ -835,12 +876,13 @@ export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,tar
     )
 }
 
-export function UnfollowPopup({ref,inList=true,isReel=false}:{ref:React.Ref<HTMLElement> | undefined,inList?:boolean,isReel?:boolean}){
+export function UnfollowPopup({ref,inList=true,isReel=false}:{ref:React.Ref<HTMLDivElement> | undefined,inList?:boolean,isReel?:boolean}){
     const dispatch = useDispatch()
     const userDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const currentVisitingUser = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     function unfollowHandler(){
         if(isReel){
+            if(!currentVisitingUser) return
             dispatch(followPostListUser({username:currentVisitingUser.username,action:'unfollow'}))
         }
         else if(inList){
@@ -876,11 +918,14 @@ export function UnfollowPopup({ref,inList=true,isReel=false}:{ref:React.Ref<HTML
     )
 }
 
+type taggedType = {
+    ref:React.Ref<HTMLDivElement>,
+    closePopup:()=>void,
+    sliderCurrentIndex:number
+}
 
-export function TaggedPopup({ref,closePopup,sliderCurrentIndex}){
+export function TaggedPopup({ref,closePopup,sliderCurrentIndex} : taggedType){
     const postDetail = useSelector((state: RootState)=> state.popupPost.postDetail)
-    console.log(sliderCurrentIndex)
-    console.log(postDetail.media[sliderCurrentIndex])
     const { t } = useTranslation();
     return(
         <div className="fixed w-screen h-screen top-0 left-0 z-50 bg-black bg-opacity-65">

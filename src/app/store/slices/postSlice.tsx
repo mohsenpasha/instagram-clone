@@ -1,19 +1,35 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 type postDetail = null | {
-    is_saved:boolean,
-    is_liked:boolean,
-    caption:string,
-    like_count:number,
-    user:{
-        username:string,
-        profile_pic:string,
-        like_count:number
-    },
-    media:[{
-        file:string,
-        media_type: 'image' | 'video',
-    }]
+  id:number,
+  like_count:number,
+  comment_count:number,
+  caption:string,
+  is_liked:boolean,
+  is_saved:boolean,
+  updated_at:{
+    t_ago: number,
+    t:string
+  }
+  media:[
+      {
+          media_type: 'image' | 'video',
+          file:string,
+          tagged_users:{
+              user:{
+                username: string;
+                name:string,
+                profile_pic:string
+              }
+              x: number;
+              y: number;
+            }[],
+      }
+  ],
+  user:{
+      username:string,
+      profile_pic:string
+  }
 }
 
 type postPopupType = {
@@ -22,11 +38,17 @@ type postPopupType = {
   listTitle:string | null,
   listUrl:string | null,
   commentId:string | null,
-  userList:[] | null,
+  userList:[
+    {
+      username:string,
+      profile_pic:string,
+      is_following:boolean
+    }
+  ] | null,
   commentList:null,
   replied_to:{id:string,username:string} | null,
   commentHoverIsLoading:boolean,
-  postList:[],
+  postList:[] | postDetail[],
   postListUrl: string | null
 }
 const initialState : postPopupType = {

@@ -8,7 +8,7 @@ import { activatePostListStatus, changeListTitle, changeUrl, likeActivePostList,
 import { fetchSavePost, fetchUnsavePost } from "@/api/saveApi";
 import { IconComment, IconDirect, IconHeart, IconMore, IconMute, IconSave, IconUnMute, IconUser } from "./Icons";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { JSX, useEffect, useRef, useState } from "react";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { changeUnfollow } from "@/store/slices/userSlice";
 import { disableScroll, enableScroll } from "@/utils/scroll";
@@ -37,7 +37,31 @@ export default function HomePosts(){
     )
 }
 
-export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:{}}){
+type postDetailType = {
+    id:number,
+    like_count:number,
+    comment_count:number,
+    caption:string,
+    is_liked:boolean,
+    is_saved:boolean,
+    media:[
+        {
+            media_type:string,
+            file:string,
+            tagged_users:{
+                username: string;
+                x: number;
+                y: number;
+              }[],
+        }
+    ],
+    user:{
+        username:string,
+        profile_pic:string
+    }
+}
+
+export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:postDetailType}){
     const dispatch = useDispatch()
     const [commentToggle,setCommentToggle] = useState<boolean>(false)
     const underMd = useMediaQuery("(max-width: 768px)");
@@ -68,13 +92,13 @@ export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:
         textareaRef.current?.focus()
     }
     function toggleVideoPause(index?:number,action?:'play' | 'pause') {
-        const currentVideo = videoRefs.current[index];
-        videoRefs.current.forEach((video) => {
+        videoRefs.current.forEach((video:HTMLVideoElement) => {
             if (!video.paused && video != currentVideo) {
-              video.pause();
+                video.pause();
             }
-          });
-          if(!index) return
+        });
+        if(!index) return
+        const currentVideo : HTMLVideoElement = videoRefs.current[index];
         if (currentVideo) {
             if (action == 'play') {
                 setTimeout(()=>{
@@ -169,7 +193,7 @@ export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:
                                             </span>
                                         </div>
                                         }
-                                        {item.tagged_users.length != 0 &&
+                                        {item.tagged_users && item.tagged_users.length != 0 &&
                                         <>
                                             {item.media_type != 'video' && item.tagged_users.map((tagged,index)=>{
                                                 return(
@@ -242,7 +266,7 @@ export function SingleHomePost({isPopup,postDetail}:{isPopup:boolean,postDetail:
 }
 
 
-export function HomePostAction({handleCommentToggle,postDetail}:{handleCommentToggle:()=>void,postDetail:{}}){
+export function HomePostAction({handleCommentToggle,postDetail}:{handleCommentToggle:()=>void,postDetail:postDetailType}){
     const dispatch = useDispatch()
     const { t } = useTranslation();
     async function likePostHandler(fetchLess=false){
@@ -273,8 +297,8 @@ export function HomePostAction({handleCommentToggle,postDetail}:{handleCommentTo
         dispatch(unsaveActivePostList())
         const response = await fetchUnsavePost(postDetail.id)
     }
-    function clickHandle(event){
-        event.preventDefault(``)
+    function clickHandle(event:React.MouseEvent<HTMLDivElement, MouseEvent>){
+        event.preventDefault()
         dispatch(changeUrl(`/p/${postDetail.id}`))
     }
     return(

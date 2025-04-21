@@ -1,8 +1,6 @@
 'use client'
 import Image from "next/image";
 import Link from "next/link";
-import UserHoverPreview from "./UserHoverPreview";
-import { useState } from "react";
 import { FollowBtn } from "./FollowBtn";
 type userPreview = {
     mouseEnter? : (event:React.MouseEvent<Element, MouseEvent>,username:string)=> void,

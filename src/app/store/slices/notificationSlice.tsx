@@ -1,8 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { act } from "react";
 
 
-const initialState : {notificationList:{}[],isNotificationCloseAnimationStarted:boolean} = {
+const initialState : {notificationList:{is_read:boolean}[],isNotificationCloseAnimationStarted:boolean} = {
   notificationList:[],
   isNotificationCloseAnimationStarted:false
 };

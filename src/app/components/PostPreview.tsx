@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import PostHover from "./PostHover";
-import { useDispatch, useSelector } from "react-redux";
-import { IconPosts, IconReels, IconView } from "./Icons";
-import { changeUrl, remove } from '@/store/slices/postSlice'
+import { useDispatch } from "react-redux";
+import { IconReels, IconView } from "./Icons";
+import { changeUrl } from '@/store/slices/postSlice'
 
 type postType = {
     isReel: boolean
@@ -14,9 +14,9 @@ type postType = {
 }
 export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=false,popupOpen=true}:postType){
     const dispatch = useDispatch();
-    function clickHandle(event){
+    function clickHandle(event:React.MouseEvent){
         if(popupOpen){
-            event.preventDefault(``)
+            event.preventDefault()
             dispatch(changeUrl(`/p/${postDetail.id}`))
         }
     }

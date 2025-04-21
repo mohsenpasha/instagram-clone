@@ -1,7 +1,4 @@
-import { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
-
-export async function fetchLikePost(postId:string){
+export async function fetchLikePost(postId:number){
     const response = await fetch(`http://localhost:8000/like/${postId}/`, {
         method: "POST",
         credentials: "include",
@@ -12,7 +9,7 @@ export async function fetchLikePost(postId:string){
     return(response)
 }
 
-export async function fetchUnlikePost(postId:string){
+export async function fetchUnlikePost(postId:number){
     const response = await fetch(`http://localhost:8000/unlike/${postId}/`, {
         method: "POST",
         credentials: "include",
@@ -24,7 +21,7 @@ export async function fetchUnlikePost(postId:string){
 }
 
 
-export async function fetchlikeComment(commentId:string){
+export async function fetchlikeComment(commentId:number){
     const response = await fetch(`http://localhost:8000/comment/like/${commentId}/`, {
         method: "POST",
         credentials: "include",
@@ -35,7 +32,7 @@ export async function fetchlikeComment(commentId:string){
     return(response)
 }
 
-export async function fetchUnlikeComment(commentId:string){
+export async function fetchUnlikeComment(commentId:number){
     const response = await fetch(`http://localhost:8000/comment/unlike/${commentId}/`, {
         method: "POST",
         credentials: "include",

@@ -21,7 +21,7 @@ export function ReelScroll(){
     const listTitle = useSelector((state: RootState) => state.popupPost.listTitle);
     const unfollowDetail = useSelector((state: RootState) => state.currentUser.unfollowDetail);
     const commentId = useSelector((state: RootState) => state.popupPost.commentId);
-    const activeReelRef = useRef(null)
+    const activeReelRef = useRef<HTMLDivElement>(null)
     const activeReelIndex = useRef(-1)
     const [sliderTop,setSliderTop] = useState(0)
     const [isVideoMuted,setIsVideoMuted] = useState(true)
@@ -39,16 +39,16 @@ export function ReelScroll(){
             window.removeEventListener('keydown',(event)=>{keyboardHandler(event)}) 
         }
     },[])
-    function wheelHandler(event){
-        if(event.target.closest('.comment-box') != null) return
-        if(event.deltaY > 0){
-            changeActiveReel()
-        }
-        else{
-            changeActiveReel('prev')
+    function wheelHandler(event: React.WheelEvent<HTMLDivElement>) {
+        if (event.target instanceof Element && event.target.closest('.comment-box') != null) return;
+    
+        if (event.deltaY > 0) {
+            changeActiveReel();
+        } else {
+            changeActiveReel('prev');
         }
     }
-    function keyboardHandler(event){
+    function keyboardHandler(event: React.KeyboardEvent<HTMLDivElement>){
         if(event.key == 'ArrowUp'){
             changeActiveReel('prev')
         }
@@ -75,6 +75,7 @@ export function ReelScroll(){
         }
     }
     function reelScroll(){
+        if(!activeReelRef.current) return
         const reelHeight = activeReelRef.current.getBoundingClientRect().height
         const reelTop = activeReelRef.current.getBoundingClientRect().top
         let finialTop = 0;
@@ -90,7 +91,7 @@ export function ReelScroll(){
         setSliderTop(finialTop)
     }
     useEffect(()=>{
-        if(postList.length == 0) return
+        if(!postList && postList.length == 0) return
         activeReelIndex.current = postList.findIndex((item)=> item.activeStatus == true)
         if(activeReelIndex.current == -1){
             dispatch(activatePostListStatus(postList[0].id))
@@ -121,8 +122,8 @@ export function ReelScroll(){
     )
 }
 type positionType = {left:number,top:number,bottom:number,height:number}
-export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData:{},ref:RefObject<null> | null,isVideoMuted:boolean,setIsVideoMuted:Dispatch<SetStateAction<boolean>>}){
-    const videoRef = useRef(null)
+export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData:{activeStatus:boolean},ref:RefObject<null> | null,isVideoMuted:boolean,setIsVideoMuted:Dispatch<SetStateAction<boolean>>}){
+    const videoRef = useRef<HTMLVideoElement>(null)
     const [userPreviewHoverPosition,setUserPreviewHoverPosition] = useState<positionType>({left:0,top:0,bottom:0,height:0})
     const currentVsitingUser = useSelector((state: RootState)=> state.currentUser.currentVisitingUser)
     const commentList = useSelector((state: RootState)=> state.popupPost.commentList)
@@ -184,11 +185,14 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
     },[])
     useEffect(()=>{
         if(postData.activeStatus && !isVideoPaused){
-            videoRef.current.play()
+            if(videoRef.current){
+                videoRef.current.play()
+            }
             dispatch(changeCurrentVisitingUser({...postData.user}))
             dispatch(addPostDetail({...postData}))
         }
         if(!postData.activeStatus){
+            if(!videoRef.current) return
             videoRef.current.pause()
         }
     },[postData])
