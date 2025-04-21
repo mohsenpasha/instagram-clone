@@ -37,6 +37,7 @@ export default function UserHoverPreview({position,isHover,username,ref,inCommen
     const [userHoverInfo,setUserHoverInfo] = useState<null | userType>(null)
     const userList = useSelector((state: RootState) => state.popupPost.userList);
     const [isRightSide,setIsRightSide] = useState(true)
+    const [myUsername,setMyUsername] = useState('')
     const userDatailHover = userList?.filter((item)=>{
         return item.username == username
     })
@@ -61,6 +62,7 @@ export default function UserHoverPreview({position,isHover,username,ref,inCommen
     }
     window.addEventListener('resize',handlePageResize)
     useEffect(()=>{
+        setMyUsername(localStorage.getItem('currentUsername'))
         handlePageResize()
     },[])
     let top = 0
@@ -122,11 +124,14 @@ export default function UserHoverPreview({position,isHover,username,ref,inCommen
                 }
                 <div className="px-4 flex w-full gap-2">
                     <div className="w-full">
-                        {inComment ?
-                            <FollowBtn directUnfollow={true} inComment={inComment} fullSize={true} userData={userHoverInfo}/>
-                        :
-                        userDatailHover &&
-                            <FollowBtn directUnfollow={true} fullSize={true} userData={userDatailHover[0]}/>
+                        {myUsername != userHoverInfo.username &&
+                            (
+                                inComment ?
+                                <FollowBtn directUnfollow={true} inComment={inComment} fullSize={true} userData={userHoverInfo}/>
+                                :
+                                userDatailHover &&
+                                <FollowBtn directUnfollow={true} fullSize={true} userData={userDatailHover[0]}/>
+                            )
                         }
                     </div>
                 </div>

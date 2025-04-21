@@ -140,7 +140,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                         <button onClick={() => i18n.changeLanguage("en")}>English</button> */}
 
                         <li>
-                            <Link title={t('home')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
+                            <Link title={t('home')} href="../" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconHome className={'shrink-0'}/>
                                 {!isMinimal &&
                                 <span className="hidden xl:inline-block">{t('home')}</span>
