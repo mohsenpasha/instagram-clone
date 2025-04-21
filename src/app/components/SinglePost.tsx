@@ -417,7 +417,9 @@ export function CommentInput({className,textareaRef,inReel=false} : {className?:
                 dispatch(increaseReplyCount((repliedTo.parentId || repliedTo.id)))
             }
             else{
-                dispatch(addCommentList([jsonRes]))
+                if(postDetail.comment_count != 0){
+                    dispatch(addCommentList([jsonRes]))
+                }
             }
         }
 
