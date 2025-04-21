@@ -22,9 +22,9 @@ export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=fal
     }
     return(
         <Link onClick={(event)=>clickHandle(event)} href={`/p/${postDetail.id}`} className={"group animate-Skeleton overflow-hidden relative " + (isHoverPreview ? 'w-[calc(33.33%-3px)] aspect-square' : (isReel ? "w-[calc(25%-3px)] aspect-[2/3]" : "w-[calc(33.33%-3px)] aspect-[3/4]"))}>
-            {!noIcon && 
+            {/* {!noIcon && 
                 <IconReels white className="absolute right-2 top-2"/>
-            }
+            } */}
             <Image className="object-cover w-full h-full" src={postDetail.preview_image} alt="" width={350} height={350}></Image>
             {!noIcon &&
                 <PostHover likeCount={postDetail.like_count} commentCount={postDetail.comment_count} isCommentDisable={postDetail.disable_comments} />
