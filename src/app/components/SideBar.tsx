@@ -189,10 +189,12 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                         </li>
                         <li className="hidden md:block">
                             <div onClick={()=>notificationBarToggle(!isSearchActive)} title={t('notification')} className="relative flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
-                                {newNotificationCount != 0 && 
-                                    <UnSeenCounter counter={newNotificationCount}/>
-                                }
-                                <IconHeart className={'shrink-0'}/>
+                                <div className="relative">
+                                    {newNotificationCount != 0 && 
+                                        <UnSeenCounter counter={newNotificationCount}/>
+                                    }
+                                    <IconHeart className={'shrink-0'}/>
+                                </div>
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('notification')}</span>
                                 }
@@ -233,7 +235,7 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
 
 export function UnSeenCounter({counter}:{counter:number}){
     return(
-        <span className="absolute bg-[#FF3040] size-5 rounded-full text-white flex items-center justify-center right-0 top-1 border-[1px] border-white text-[11px]">
+        <span className="absolute bg-[#FF3040] size-5 rounded-full text-white flex items-center justify-center right-0 top-0 translate-x-1/2 -translate-y-1/2 border-[1px] border-white text-[11px]">
             {counter}
         </span>
     )
