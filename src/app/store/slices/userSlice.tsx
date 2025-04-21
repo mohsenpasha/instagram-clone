@@ -45,6 +45,15 @@ const userSlice = createSlice({
     toggleIsFollowing: (state, action) => {
       if(!state.currentVisitingUser) return
       state.currentVisitingUser.is_following = action.payload
+      if(action.payload){
+        if(!state.currentVisitingUser.follower_count){
+          state.currentVisitingUser.follower_count = 0
+        }
+        state.currentVisitingUser.follower_count += 1
+      }
+      else{
+        state.currentVisitingUser.follower_count -= 1
+      }
     },
   },
 });
