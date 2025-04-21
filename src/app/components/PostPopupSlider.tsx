@@ -1,11 +1,12 @@
-import { useClickOutside } from "@/hooks/useClickOutside";
+'use client'
 import { IconArrow, IconClose } from "./Icons";
 import SinglePost from "./SinglePost";
 import { useTranslation } from "next-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addPostDetail, addPostList, change, changePostListUrl, changeUrl, clearCommentList, clearUserList, remove } from '@/store/slices/postSlice'
+import { addPostDetail, addPostList, changePostListUrl, changeUrl, clearCommentList, clearUserList, remove } from '@/store/slices/postSlice'
 import { RootState } from "@/store/store";
+import { useRouter } from "next/router";
 
 export function PostPopupSlider(){
     const { t } = useTranslation()

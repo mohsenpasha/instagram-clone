@@ -5,18 +5,16 @@ import { useEffect, useRef, useState } from "react"
 import { useParams } from 'next/navigation'
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { useRouter } from "next/navigation";
 import { IconCamera, IconPrivatePage } from "@/components/Icons"
 import { FollowBtn } from "@/components/FollowBtn"
 import { addPostList, changePostListUrl, clearPostList } from "@/store/slices/postSlice"
 import { useTranslation } from "react-i18next";
 
 export default function Profile(){
-    const router = useRouter();
-    const popupPost = useSelector((state: RootState) => state.popupPost.postDetail);
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const postList = useSelector((state: RootState) => state.popupPost.postList);
     const postListUrl = useSelector((state: RootState) => state.popupPost.postListUrl);
+    const postUrl = useSelector((state: RootState) => state.popupPost.url);
     const hasFetchedPostFirstTime = useRef(false);
     const dispatch = useDispatch();
     const params = useParams()
@@ -37,7 +35,6 @@ export default function Profile(){
         dispatch(changePostListUrl(jsonRes.next))
         setIsLoading(false);
     }
-    
     useEffect(()=>{
         dispatch(clearPostList())
         dispatch(changePostListUrl(`http://localhost:8000/${params.id}/posts`))
