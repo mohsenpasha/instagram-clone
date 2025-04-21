@@ -100,7 +100,7 @@ export function NoPost(){
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const { t } = useTranslation();
     return(
-        <div className="w-full flex justify-center items-center md:my-14 md:p-0 p-2 border-t-[1px] border-b-[1px] border-ss">
+        <div className="w-full flex justify-center items-center md:my-14 md:p-0 p-2 border-t-[1px] border-b-[1px] md:border-0 border-ss">
             <div className="flex md:flex-col w-full md:w-fit gap-2 items-center md:justify-center">
                 <IconCamera className="size-16 flex-shrink-0"/>
                 <div className="flex flex-col text-sm md:mt-8 md:mb-12">
