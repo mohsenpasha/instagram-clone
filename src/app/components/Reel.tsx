@@ -94,6 +94,7 @@ export function ReelScroll(){
         if(!postList && postList.length == 0) return
         activeReelIndex.current = postList.findIndex((item)=> item.activeStatus == true)
         if(activeReelIndex.current == -1){
+            if(postList.length == 0) return
             dispatch(activatePostListStatus(postList[0].id))
             return
         }
@@ -250,7 +251,9 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                     }
                     <ReelCaption caption={postData.caption} isCaptionOpen={isCaptionOpen} setIsCaptionOpen={setIsCaptionOpen}/>
                 </div>
+                {postData.media &&
                 <video ref={videoRef} className="h-full w-full object-cover" muted={isVideoMuted} loop autoPlay={postData.activeStatus} src={postData.media[0].file}></video>
+                }
             </div>
             <div className="xs:static text-white xs:text-black absolute bottom-0 right-0 w-12 flex flex-col justify-end gap-2 items-center z-30">
                 <div className="p-2 flex items-center flex-col gap-1 cursor-pointer">
@@ -285,7 +288,9 @@ export function SingleReel({postData,ref,isVideoMuted,setIsVideoMuted}:{postData
                 </div>
 
                 <Link href='#' className="flex my-2 items-center flex-col gap-1 rounded-[4px] border-[1px] border-black size-6 overflow-hidden hover:opacity-40">
-                    <Image src={postData.user.profile_pic || '/images/profile-img-2.jpeg'} width={24} height={24} alt={""}></Image>
+                    {postData.user && postData.user.profile_pic && 
+                        <Image src={postData.user.profile_pic || '/images/profile-img-2.jpeg'} width={24} height={24} alt={""}></Image>
+                    }
                 </Link>
             </div>
             {toggleCommentPopup && 

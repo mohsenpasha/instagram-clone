@@ -39,7 +39,8 @@ export default function Profile(){
         dispatch(clearPostList())
         dispatch(changePostListUrl(`http://localhost:8000/${params.id}/posts`))
         if(!userInfo.is_private && !hasFetchedPostFirstTime.current){
-            fetchPosts()
+            setIsLoading(true)
+            // fetchPosts()
             hasFetchedPostFirstTime.current = true
             window.addEventListener("scroll", handleScroll);
             // return () => window.removeEventListener("scroll", handleScroll);

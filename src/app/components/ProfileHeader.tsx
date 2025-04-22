@@ -8,11 +8,13 @@ import { RootState } from '@/store/store';
 import { FollowBtn } from './FollowBtn';
 import { changeListTitle } from '@/store/slices/postSlice';
 import { changeStoryToggle, changeStoryType } from '@/store/slices/storySlice';
+import { useEffect, useState } from 'react';
 
 export default function ProfileHeader(){
     const userInfo = useSelector((state: RootState) => state.currentUser.currentVisitingUser);
     const highlights = useSelector((state: RootState) => state.story.storiesHolder);
     const userStories = useSelector((state: RootState) => state.story.userStories);
+    const [isYourProfile,setIsYourProfile] = useState(false)
     function toggleStories(){
         dispatch(changeStoryToggle(true))
         dispatch(changeStoryType('userStory'))
@@ -30,6 +32,14 @@ export default function ProfileHeader(){
         if((userInfo.is_private && !userInfo.is_following) || userInfo.following_count == 0) return
         dispatch((changeListTitle('Following')))
     }
+    useEffect(()=>{
+        if(params.id == localStorage.getItem('currentUsername')){
+            setIsYourProfile(true)
+        }
+        else{
+            setIsYourProfile(false)
+        }
+    },[])
     if(!userInfo) return
     return(
         <div className='md:py-6 border-b-[1px] border-d'>
@@ -38,20 +48,25 @@ export default function ProfileHeader(){
                     {userStories && userStories.length != 0 ?
                         <div onClick={()=>toggleStories()} className='rounded-full size-[86px] md:size-[162px] p-[2px] [background:conic-gradient(from_180deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5,#feda75)] flex items-center justify-center cursor-pointer'>
                             <div className='size-[80px] md:size-[156px] rounded-full flex items-center justify-center bg-white'>
-                                <Image className='size-[77px] md:size-[150px] rounded-full border-[1px] border-ss' src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
+                                <Image className='size-[77px] md:size-[150px] object-cover rounded-full border-[1px] border-ss' src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
                             </div>
                         </div>
                     :
                     <div className='size-[77px] md:size-[150px] rounded-full flex items-center justify-center'>
-                        <Image className='size-[77px] md:size-[150px] rounded-full border-[1px] border-ss' src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
+                        <Image className='size-[77px] md:size-[150px] object-cover rounded-full border-[1px] border-ss' src={userInfo.profile_pic || '/images/profile-img.jpeg'} width={150} height={150} alt='' />
                     </div>
                     }
                 </div>
                 <div className='w-8/12 grid'>
                     <div className="flex items-center gap-2">
                         <div className='text-xl'>{params.id}</div>
-                        <FollowBtn inList={false} userData={userInfo}/>
-                        <div>{t('message')}</div>
+                        {isYourProfile ?
+                        <div className='cursor-pointer bg-[#EFEFEF] rounded-md font-medium text-sm py-1 px-4 hover:bg-[#dbdbdb]'>
+                            {t('editprofile')}
+                        </div>
+                        :
+                            <FollowBtn inList={false} userData={userInfo}/>
+                        }
                     </div>
                     <div className="hidden md:flex items-center gap-4 my-4">
                         <div className='gap-1 flex'>
@@ -71,7 +86,7 @@ export default function ProfileHeader(){
                 </div>
 
             </div>
-            {!userInfo.is_private &&
+            {!userInfo.is_private && highlights && highlights.length != 0 &&
                 <div className='p-4 flex my-4 w-full'>
                     {highlights?.map((item,index)=>{
                         return (

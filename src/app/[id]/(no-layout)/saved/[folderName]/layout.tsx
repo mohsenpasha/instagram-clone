@@ -4,6 +4,7 @@ import SideBar from "@/components/SideBar"
 import { UnfollowPopup, UserList } from "@/components/SinglePost"
 import { useClickOutside } from "@/hooks/useClickOutside"
 import { changeCommentId, changeListTitle, changeListUrl, clearUserList, remove } from "@/store/slices/postSlice"
+import { clearSavedPosts } from "@/store/slices/savedSlice"
 import { changeUnfollow } from "@/store/slices/userSlice"
 import { RootState } from "@/store/store"
 import React, { useEffect, useRef, useState } from "react"
@@ -50,6 +51,7 @@ export default function PostLayout({children}:{children:React.ReactNode}){
     },[listTitle])
     useEffect(()=>{
         dispatch(remove())
+        dispatch(clearSavedPosts())
     },[])
     return(
         <>

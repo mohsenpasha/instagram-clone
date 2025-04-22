@@ -19,6 +19,7 @@ export default function SavedPaged(){
     const [newFolderName,setNewFolderName] = useState('')
     const [selectPostToggle,setSelectPostToggle] = useState(false)
     async function fetchSaved(){
+        
         const response = await fetchSimpleGet('http://localhost:8000/savedposts')
         const jsonRes = await response.json()
         dispatch(addSavedPosts(jsonRes.posts))
@@ -29,10 +30,11 @@ export default function SavedPaged(){
         fetchSaved()
     },[isLoading])
     useEffect(()=>{
-        setIsloading(true)
-        dispatch(clearPostList())
         dispatch(clearSavedPosts())
         dispatch(clearSavedFolder())
+        dispatch(clearPostList())
+        console.log('startup')
+        setIsloading(true)
     },[])
     const { t } = useTranslation()
     function nextSection(){

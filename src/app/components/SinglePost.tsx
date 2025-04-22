@@ -37,6 +37,9 @@ export default function SinglePost({isPopup}:{isPopup:boolean}){
     function handleLikeList(){
         dispatch(changeListTitle('Likes'))
     }
+    useEffect(()=>{
+        console.log('startup')
+    },[])
     function handleCommentToggle(){
         if(underMd){
             if(commentToggle){
@@ -859,7 +862,7 @@ export function UserList({closePopup,listType='likeList',ref,hoverPreviewRef,tar
                         {listType == 'followerList' ?
                             <span>{t('followers')}</span>
                             :
-                            <span>{t('following')}}</span>
+                            <span>{t('following')}</span>
                         }
                     </>
                     }

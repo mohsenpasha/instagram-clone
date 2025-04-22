@@ -10,12 +10,13 @@ import { changeStoriesHolder } from "./store/slices/storySlice";
 import { RootState } from "./store/store";
 import { StoryList } from "./components/Story";
 import HomePosts from "./components/HomePosts";
-import { addPostList, changeCommentId, changeListTitle, changeListUrl, clearUserList } from "./store/slices/postSlice";
+import { addPostList, changeCommentId, changeListTitle, changeListUrl, clearPostList, clearUserList } from "./store/slices/postSlice";
 import { UserList } from "./components/SinglePost";
 import { useClickOutside } from "./hooks/useClickOutside";
 import { changeUnfollow } from "./store/slices/userSlice";
 import Link from "next/link";
 import Image from "next/image";
+import { Footer } from "./components/Footer";
 
 function Home() {
   const storyToggle = useSelector((state: RootState)=> state.story.storyToggle)
@@ -69,7 +70,6 @@ function Home() {
     setIsloading(false)
   }
   async function fetchStories(){
-    console.log('fetching story')
     setIsloading(true)
     const response = await fetchSimpleGet('http://localhost:8000/homestories')
     const jsonRes = await response.json()
@@ -77,7 +77,6 @@ function Home() {
     setIsloading(false)
   }
   async function fetchFeedPosts(){
-    console.log('fetching story')
     setIsloading(true)
     const response = await fetchSimpleGet('http://localhost:8000/feedposts')
     const jsonRes = await response.json()
@@ -86,47 +85,53 @@ function Home() {
     setIsloading(false)
   }
   useEffect(()=>{
-    fetchStories()
+    dispatch(clearPostList())
     fetchFeedPosts()
+    fetchStories()
     fetchSuggested()
   },[])
   const { t } = useTranslation();
+  if(isLoading) return
   return (
     <>
       <div className="flex justify-between">
         <SideBar/>
+        <div className="flex flex-col items-center gap-4 w-full">
         <div className="flex justify-center gap-4 w-full md:w-[100vw-72px] xl:w-10/12">
-          <div className="w-full md:ml-6 md:px-4 xl:px-0 lg:w-8/12 xl:w-[740px] flex flex-col justify-center items-center">
-            <StorySlider/>
-            <div className="flex w-full md:w-8/12">
-              <HomePosts/>
+            <div className="w-full md:ml-6 md:px-4 xl:px-0 lg:w-8/12 xl:w-[740px] flex flex-col justify-center items-center">
+              <StorySlider/>
+              <div className="flex flex-col w-full md:w-8/12">
+                <HomePosts/>
+              </div>
             </div>
-          </div>
-          <div className="mt-6 hidden w-[260px] xl:block">
-            <div className="text-gray text-sm font-medium my-4">{t('suggested')}</div>
-            {suggestedUsers.map((item,index)=>{
-             return(
-               <div key={index} className="py-2">
-                <div className={`flex gap-2 items-center justify-between`}>
-                  <div className="flex gap-2 items-center">
-                    <Link href={item.username} className={`size-11 rounded-full overflow-hidden flex-shrink-0 relative`}>
-                        <Image className="rounded-full" src={item.profile_pic || '/images/profile-img.jpeg'} alt="" width={44} height={44}></Image>
-                    </Link>
-                    <div className={`flex flex-col text-sm leading-[18px] relative`}>
-                        <Link className="font-semibold truncate inline-block w-fit" href={item.username}>
-                            {item.username}
-                        </Link>
-                        <span className="text-xs text-gray">{item.name}</span>
+            <div className="mt-6 hidden w-[260px] xl:block">
+              <div className="text-gray text-sm font-medium my-4">{t('suggested')}</div>
+              {suggestedUsers.map((item,index)=>{
+                return(
+                  <div key={index} className="py-2">
+                  <div className={`flex gap-2 items-center justify-between`}>
+                    <div className="flex gap-2 items-center">
+                      <Link href={item.username} className={`size-11 rounded-full overflow-hidden flex-shrink-0 relative`}>
+                          <Image className="rounded-full" src={item.profile_pic || '/images/profile-img.jpeg'} alt="" width={44} height={44}></Image>
+                      </Link>
+                      <div className={`flex flex-col text-sm leading-[18px] relative`}>
+                          <Link className="font-semibold truncate inline-block w-fit" href={item.username}>
+                              {item.username}
+                          </Link>
+                          <span className="text-xs text-gray">{item.name}</span>
+                      </div>
+                    </div>
+                    <div className="cursor-pointer flex-shrink-0 text-bl font-medium text-xs over">
+                      {t('follow')}
                     </div>
                   </div>
-                  <div className="cursor-pointer flex-shrink-0 text-bl font-medium text-xs over">
-                    {t('follow')}
-                  </div>
-                </div>
+              </div>
+              ) 
+            })}
             </div>
-            ) 
-           })}
           </div>
+          <Footer/>
+
         </div>
       </div>
       {storyToggle && 

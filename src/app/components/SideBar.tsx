@@ -24,9 +24,11 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
     const [isMinimal,setIsMinimal] = useState(false)
     const [newNotificationCount,setNewNotificationCount] = useState(0)
     const [toggleCreatePost,setToggleCreatePost] = useState(false)
+    const [myUsername,setMyUsername] = useState('')
   const socketRef = useRef<WebSocket>(null);
 
   useEffect(() => {
+    setMyUsername(localStorage.getItem('currentUsername'))
     const socket = new WebSocket(`ws://localhost:8000/ws/notifications/`);
     socketRef.current = socket;
     socket.onopen = () => {
@@ -49,9 +51,9 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
       console.log("WebSocket connection closed.");
     };
 
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+    // socket.onerror = (error) => {
+    //   console.error("WebSocket error:", error);
+    // };
 
     return () => {
       socket.close();
@@ -179,16 +181,16 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                                 }
                             </div>
                         </li>
-                        <li>
+                        {/* <li>
                             <Link title={t('direct')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
                                 <IconDirect className={'shrink-0'} />
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('direct')}</span>
                                 }
                             </Link>
-                        </li>
+                        </li> */}
                         <li className="hidden md:block">
-                            <div onClick={()=>notificationBarToggle(!isSearchActive)} title={t('notification')} className="relative flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
+                            <div onClick={()=>notificationBarToggle(!isSearchActive)} title={t('notification')} className="relative flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 cursor-pointer transition-all">
                                 <div className="relative">
                                     {newNotificationCount != 0 && 
                                         <UnSeenCounter counter={newNotificationCount}/>
@@ -209,8 +211,8 @@ export default function SideBar({isAlwaysMinimal}:{isAlwaysMinimal?:boolean}){
                             </div>
                         </li>
                         <li>
-                            <Link title={t('profile')} href="#" className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
-                                <IconAdd className={'shrink-0'} />
+                            <Link title={t('profile')} href={'/'+myUsername} className="flex gap-4 p-0 md:p-[12px] my-[10px] rounded-lg hover:bg-zinc-100 transition-all">
+                                <Image className="size-6 rounded-full " alt="" src={'/images/profile-img.jpeg'} width={24} height={24}></Image>
                                 {!isMinimal &&
                                     <span className="hidden xl:inline-block">{t('profile')}</span>
                                 }

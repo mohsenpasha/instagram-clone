@@ -29,12 +29,12 @@ export default function PostPreview({isReel,noIcon,postDetail,isHoverPreview=fal
             {!noIcon &&
                 <PostHover likeCount={postDetail.like_count} commentCount={postDetail.comment_count} isCommentDisable={postDetail.disable_comments} />
             }
-            {isReel && 
+            {/* {isReel && 
                 <div className="absolute bottom-4 left-4 size-[16px] text-white flex w-fit gap-1 items-center group-hover:opacity-0">
                     <IconView className="size-[16px]"/>
                     <span className="font-bold">192</span>
                 </div>
-            }
+            } */}
         </Link>
     )
 }

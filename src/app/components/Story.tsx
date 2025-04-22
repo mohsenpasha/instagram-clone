@@ -309,7 +309,7 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                             <div className={`rounded-full flex-shrink-0 cursor-pointer ${status == 'active' ? 'size-8' : 'size-16'} items-center`}>
                                 <Image className="rounded-full w-full h-full object-cover" src={
                                     storyListType == 'highlighs' || storyListType == 'homeStories'  ? 
-                                    storiesHolder && storiesHolder[listIndex].thumbnail
+                                    storiesHolder && storiesHolder[listIndex].thumbnail || '/images/profile-img.jpeg'
                                     :
                                     currentVisitingUser && currentVisitingUser.profile_pic || '/images/profile-img.jpeg'
                                 }
@@ -365,9 +365,9 @@ export default function StoryHolder({status,ref,changeHandler,listIndex,closeSta
                     // <Story mediaUrl={storyList[currentIndex].file} mediaType={storyList[currentIndex].media_type} />                    
                         <div className="absolute top-0 left-0 z-0 rounded-lg w-full h-full overflow-hidden">
                         {storyList[currentIndex].media_type == 'video'?
-                            <video ref={videoRef} src={storyList[currentIndex].file} autoPlay={status == 'active'} muted={isStoryMuted}></video>
+                            <video className="w-full object-cover" ref={videoRef} src={storyList[currentIndex].file} autoPlay={status == 'active'} muted={isStoryMuted}></video>
                         :
-                            <Image src={storyList[currentIndex].file} alt="" width={1080} height={1920}></Image>
+                            <Image className="w-full h-full object-cover" src={storyList[currentIndex].file} alt="" width={1080} height={1920}></Image>
 
                         }
                     </div>

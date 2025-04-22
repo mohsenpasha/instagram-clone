@@ -1,7 +1,7 @@
 'use client'
 import { fetchSimpleGet } from "@/api/simpleGet";
 import { ReelScroll } from "@/components/Reel";
-import { addPostList, changePostListUrl } from "@/store/slices/postSlice";
+import { addPostList, changePostListUrl, clearPostList } from "@/store/slices/postSlice";
 import { RootState } from "@/store/store";
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,6 +20,7 @@ export default function ReelPage(){
             nextUrl.current = jsonRes.next
         }
     useEffect(()=>{
+        dispatch(clearPostList())
         fetchPosts()
     },[])
     return(

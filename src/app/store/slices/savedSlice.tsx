@@ -30,7 +30,7 @@ const savedSlice = createSlice({
         state.folders = []
     },
     clearSavedPosts: (state) =>{
-      state.folders = []
+      state.posts = []
   },
   },
 });
